@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>
+<installation version="1.0">
+    <info>
+        <appname>Servlex</appname>
+        <appversion>0.7.0pre3</appversion>
+        <appsubpath>servlex</appsubpath>
+        <authors>
+            <author email="fgeorges@expath.org" name="Florent Georges"/>
+        </authors>
+        <url>http://code.google.com/p/servlex/</url>
+        <uninstaller name="uninstaller.jar" write="yes"/>
+        <requiresjdk>no</requiresjdk>
+        <writeinstallationinformation>no</writeinstallationinformation>
+        <pack200/>
+        <run-privileged condition="izpack.windowsinstall.vista|izpack.windowsinstall.7"/>
+    </info>
+    <guiprefs height="480" resizable="no" width="640">
+        <modifier key="useFlags" value="yes"/>
+        <modifier key="langDisplayType" value="default"/>
+    </guiprefs>
+    <locale>
+        <langpack iso3="eng"/>
+    </locale>
+    <!-- TODO: Add a panel at the end, pointing to the home page of
+         the newly installed server, and to the README file in the
+         install dir. -->
+    <!-- TODO: Add also a way to ask for the port number during the
+         installation process. -->
+    <panels>
+        <panel classname="CheckedHelloPanel"/>
+        <panel classname="PacksPanel"/>
+        <panel classname="TargetPanel"/>
+        <panel classname="InstallPanel"/>
+        <panel classname="SimpleFinishPanel"/>
+    </panels>
+    <packs>
+        <pack name="Servlex" preselected="yes" required="yes">
+            <description>The Servlex server, pre-packaged, including Apache Tomcat.</description>
+            <file src="README-SERVLEX-TOMCAT"              targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/LICENSE"       targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/NOTICE"        targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/RELEASE-NOTES" targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/RUNNING.txt"   targetdir="$INSTALL_PATH"/>
+            <!-- TODO: Add the execution bit to the files in bin/. Ideally, include only
+                 *.bat on Windows and *.sh on other systems. -->
+            <file src="apache-tomcat-7.0.35/bin/"          targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/conf/"         targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/lib/"          targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/logs/"         targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/repo/"         targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/temp/"         targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/webapps/"      targetdir="$INSTALL_PATH"/>
+            <file src="apache-tomcat-7.0.35/work/"         targetdir="$INSTALL_PATH"/>
+            <parsable targetfile="$INSTALL_PATH/conf/catalina.properties"/>
+        </pack>
+    </packs>
+</installation>

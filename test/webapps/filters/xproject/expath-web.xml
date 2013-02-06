@@ -1,0 +1,153 @@
+<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+        xmlns:app="http://expath.org/ns/test/servlex/filters-webapp"
+        name="http://expath.org/test/servlex/filters-webapp"
+        abbrev="filters"
+        version="0.1.0">
+
+   <title>Servlex test webapp for filters</title>
+
+   <!-- the 'in' filter is an XQuery in-only filter, it changes the value of the 'who' param -->
+   <filter name="in">
+      <in>
+         <xquery function="app:in-filter"/>
+      </in>
+   </filter>
+
+   <!-- the 'out' filter is an XSLT out-only filter, it changes the HTML page title -->
+   <filter name="out">
+      <out>
+         <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/out.xsl"/>
+      </out>
+   </filter>
+
+   <!-- the 'inout' filter uses the same components as the 'in' and 'out' filters, in a single
+        one filter (which is different than the 'in-out' chain) -->
+   <filter name="inout">
+      <in>
+         <xquery function="app:in-filter"/>
+      </in>
+      <out>
+         <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/out.xsl"/>
+      </out>
+   </filter>
+
+   <!-- the 'in-out' chain combines the 'in' and 'out' filters in one chain (containing 2 filters
+        then, which is different than the 'inout' filter) -->
+   <chain name="in-out">
+      <filter ref="in"/>
+      <filter ref="out"/>
+   </chain>
+
+   <error name="errors" catch="*">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/error-handler.xproc"/>
+   </error>
+
+   <resource pattern="/" rewrite="index.html" media-type="application/xhtml+xml" filters="out"/>
+
+   <servlet name="xslt-plain">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-plain"/>
+   </servlet>
+
+   <servlet name="xquery-plain">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-plain"/>
+   </servlet>
+
+   <servlet name="xproc-plain">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+      <url pattern="/xproc-plain"/>
+   </servlet>
+
+   <servlet name="xslt-in" filters="in">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-in"/>
+   </servlet>
+
+   <servlet name="xquery-in" filters="in">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-in"/>
+   </servlet>
+
+   <servlet name="xproc-in" filters="in">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+      <url pattern="/xproc-in"/>
+   </servlet>
+
+   <servlet name="xslt-out" filters="out">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-out"/>
+   </servlet>
+
+   <servlet name="xquery-out" filters="out">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-out"/>
+   </servlet>
+
+   <servlet name="xproc-out" filters="out">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+      <url pattern="/xproc-out"/>
+   </servlet>
+
+   <servlet name="xslt-inout" filters="inout">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-inout"/>
+   </servlet>
+
+   <servlet name="xquery-inout" filters="inout">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-inout"/>
+   </servlet>
+
+   <servlet name="xproc-inout" filters="inout">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+      <url pattern="/xproc-inout"/>
+   </servlet>
+
+   <servlet name="xslt-in-out" filters="in-out">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-in-out"/>
+   </servlet>
+
+   <servlet name="xquery-in-out" filters="in-out">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-in-out"/>
+   </servlet>
+
+   <servlet name="xproc-in-out" filters="in-out">
+      <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+      <url pattern="/xproc-in-out"/>
+   </servlet>
+
+   <group filters="inout">
+
+      <servlet name="xslt-grouped">
+         <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+               function="app:hello-xslt"/>
+         <url pattern="/xslt-grouped"/>
+      </servlet>
+
+      <servlet name="xquery-grouped">
+         <xquery function="app:hello-xquery"/>
+         <url pattern="/xquery-grouped"/>
+      </servlet>
+
+      <servlet name="xproc-grouped">
+         <xproc uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xproc"/>
+         <url pattern="/xproc-grouped"/>
+      </servlet>
+
+   </group>
+
+   <servlet name="error" filters="errors">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-webapp/servlet.xsl"
+            function="app:error"/>
+      <url pattern="/error"/>
+   </servlet>
+
+</webapp>

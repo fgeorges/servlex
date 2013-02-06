@@ -1,0 +1,40 @@
+
+
+                             * servlex *
+
+                                README
+
+
+
+     Servlex is an open-source implementation of the EXPath Webapp
+   specification <http://expath.org/wiki/Webapp>, based on Saxon and
+   Calabash as its XSLT, XQuery and XProc processors.  It is developed
+   as a Java EE application (based only on the Servlets technology).
+
+     To install it, just deploy the WAR file in your servlet
+   container.  If you are looking for a container, you can use Tomcat
+   from Apache <http://tomcat.apache.org/> which installs easily on
+   all usual OSes, and provide a simple administration interface in
+   HTML (just locate the WAR file on your system and press "Deploy").
+
+     To finish the install, you have to make sure the property
+   org.expath.servlex.repo.dir is correctly set to a directory where
+   the webapps will be installed.  For instance in Tomcat, by adding
+   in [tomcat]/conf/catalina.properties a property definition, i.e. a
+   line like: "org.expath.servlex.repo.dir=/usr/expath/servlex/repo".
+   This directory must exist and be empty.
+
+     Once installed, you can access the Servlex admin interface at,
+   say, http://localhost:8080/servlex/manager (assuming Tomcat is
+   running on the port 8080).  From there you can deploy the sample web
+   application in the release, hello-world-0.7.0.xaw, by filling in the
+   form.  Go to http://localhost:8080/servlex/hello-world/ to access
+   the sample once installed.  The sources are avilable in the dir
+   hello-world/src/.
+
+     This sample application is just three forms, sending a string to
+   either an XSLT function, an XQuery function or an XProc step, which
+   in turn displays a page based on this parameter.  You can use the
+   tool at http://h2oconsulting.be/tools/dump to display the XML
+   representation of the HTTP request which is send to the XSLT, XQuery
+   and/or XProc components in a web application.

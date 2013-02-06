@@ -1,0 +1,61 @@
+<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+        xmlns:app="http://expath.org/ns/test/servlex/mapping-webapp"
+        name="http://expath.org/test/servlex/mapping-webapp"
+        abbrev="mapping"
+        version="0.1.0">
+
+   <title>Servlex test webapp for request mapping to components</title>
+
+   <!-- XSLT: function, template and stylesheet -->
+
+   <servlet name="xslt-fun">
+      <xslt uri="http://expath.org/ns/test/servlex/mapping-webapp/servlets.xsl"
+            function="app:echo"/>
+      <url pattern="/xslt-fun"/>
+   </servlet>
+
+   <servlet name="xslt-tpl">
+      <xslt uri="http://expath.org/ns/test/servlex/mapping-webapp/servlets.xsl"
+            template="app:echo"/>
+      <url pattern="/xslt-tpl"/>
+   </servlet>
+
+   <servlet name="xslt-style">
+      <xslt uri="http://expath.org/ns/test/servlex/mapping-webapp/echo.xsl"/>
+      <url pattern="/xslt-style"/>
+   </servlet>
+
+   <!-- XQuery: function and query -->
+
+   <servlet name="xquery-fun">
+      <xquery function="app:echo"/>
+      <url pattern="/xquery-fun"/>
+   </servlet>
+
+   <servlet name="xquery-qry">
+      <xquery uri="http://expath.org/ns/test/servlex/mapping-webapp/echo.xq"/>
+      <url pattern="/xquery-qry"/>
+   </servlet>
+
+   <!-- XProc: step and pipeline -->
+
+   <servlet name="xproc-pipe">
+      <xproc uri="http://expath.org/ns/test/servlex/mapping-webapp/echo.xproc"/>
+      <url pattern="/xproc-pipe"/>
+   </servlet>
+
+   <servlet name="xproc-step">
+      <xproc uri="http://expath.org/ns/test/servlex/mapping-webapp/servlets.xpl"
+             step="app:echo"/>
+      <url pattern="/xproc-step"/>
+   </servlet>
+
+   <!-- With several nodes in the body (with PIs) -->
+
+   <servlet name="pis-in-body">
+      <xslt uri="http://expath.org/ns/test/servlex/mapping-webapp/servlets.xsl"
+            function="app:pis-in-body"/>
+      <url pattern="/pis-in-body"/>
+   </servlet>
+
+</webapp>

@@ -1,0 +1,43 @@
+<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+        xmlns:app="http://expath.org/ns/samples/servlex/hello"
+        name="http://expath.org/samples/servlex/hello"
+        abbrev="hello-world"
+        version="0.1">
+
+   <title>Servlex hello-world application</title>
+
+   <resource pattern="/" rewrite="index.html" media-type="application/xhtml+xml"/>
+
+   <servlet name="stylesheet">
+      <xslt uri="http://expath.org/ns/samples/servlex/hello.xsl"/>
+      <url pattern="/stylesheet"/>
+   </servlet>
+
+   <servlet name="template">
+      <xslt uri="http://expath.org/ns/samples/servlex/hello.xsl"
+            template="app:hello-template"/>
+      <url pattern="/template"/>
+   </servlet>
+
+   <servlet name="xslt-fun">
+      <xslt uri="http://expath.org/ns/samples/servlex/hello.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/xslt-fun"/>
+   </servlet>
+
+   <servlet name="query">
+      <xquery uri="http://expath.org/ns/samples/servlex/hello.xq"/>
+      <url pattern="/query"/>
+   </servlet>
+
+   <servlet name="xquery-fun">
+      <xquery function="app:hello-xquery"/>
+      <url pattern="/xquery-fun"/>
+   </servlet>
+
+   <servlet name="pipeline">
+      <xproc uri="http://expath.org/ns/samples/servlex/hello.xproc"/>
+      <url pattern="/pipeline"/>
+   </servlet>
+
+</webapp>

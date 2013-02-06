@@ -1,0 +1,80 @@
+The idea is to have a set of webapps (a set of xproject directories,
+which will be like a Standard Fixture), a set of XSpec suites, and an
+automated script which:
+
+  - start Tomcat (Jetty?)
+  - undeploy Servlex
+  - delete the repo
+  - deploy Servlex
+  - build the webapps
+  - install the webapps
+  - run the XSpec suites
+
+The XSpec suites will typically issue requests (using probably the
+HTTP Client) to Servlex (to some specific webapps) and compare the
+results.  There will be a file simple.xspec (for simple tests), a file
+filter.xspec (to test filters, chains, etc.), and so on.
+
+The script should be able to run all the test suites or just one (or a
+few).  For instance only simple.xspec or only filter.xspec.
+
+
+********** NEW **********
+
+The idea is to be able to share the same Tomcat instance for several
+tests, unit tests as well as functional and integration tests.  For
+each of them, deploy its own Servlex instance to a different path.
+For integration tests, create one for each website (H2O, EXPath, CXAN,
+etc.), plus one per real instance on the server (as for now, one for
+CXAN, and one for H2O + EXPath).
+
+In a first time, run a few smoke tests to be sure it "looks ok".
+
+
+
+********** TOMCAT CONFIG **********
+
+I've changed the following files in the Tomcat dir:
+- conf/catalina.properties
+- conf/server.xml
+- conf/tomcat-users.xml
+
+[**] conf/catalina.properties
+
+Added the prop org.expath.servlex.repo.dir (but should be removed if
+(when) deploy seevral Servlex instances on the same Tomcat):
+
+org.expath.servlex.repo.dir=/Users/fgeorges/projects/expath/servlex/test/test-repo
+
+
+[**] conf/server.xml
+
+@@ -21,7 +21,7 @@
+  -->
+-<Server port="8005" shutdown="SHUTDOWN">
++<Server port="9005" shutdown="SHUTDOWN">
+   <!-- Security listener. Documentation at /docs/config/listeners.html
+@@ -69,9 +69,9 @@
+     -->
+-    <Connector port="8080" protocol="HTTP/1.1" 
++    <Connector port="9090" protocol="HTTP/1.1" 
+                connectionTimeout="20000" 
+-               redirectPort="8443" />
++               redirectPort="9443" />
+     <!-- A "Connector" using the shared thread pool-->
+@@ -90,7 +90,7 @@
+     <!-- Define an AJP 1.3 Connector on port 8009 -->
+-    <Connector port="8009" protocol="AJP/1.3" redirectPort="8443" />
++    <Connector port="9009" protocol="AJP/1.3" redirectPort="9443" />
+ 
+
+[**] conf/tomcat-users.xml
+
+Added the config for the user "servlex":
+
+   <role rolename="admin-gui"/>
+   <role rolename="admin-script"/>
+   <role rolename="manager-gui"/>
+   <role rolename="manager-script"/>
+   <user username="servlex" password="servlex"
+         roles="admin-gui,admin-script,manager-gui,manager-script"/>

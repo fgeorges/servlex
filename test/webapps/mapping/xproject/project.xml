@@ -1,0 +1,8 @@
+<project xmlns="http://expath.org/ns/project"
+         name="http://expath.org/test/servlex/mapping-webapp"
+         abbrev="mapping-webapp"
+         version="0.2.0">
+
+   <title>Test webapp for request mapping with components</title>
+
+</project>

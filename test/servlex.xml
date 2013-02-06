@@ -1,0 +1,5 @@
+<Context path='/servlex'>
+   <Parameter name='org.expath.servlex.repo.dir'
+              value='/Users/fgeorges/projects/expath/servlex/test/test-repo'
+              override='false'/>
+</Context>

@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    This usage of @stylesheet is because we are not testing a stylesheet
+    actually, but we need this import statement in the compiled suite.  So...
+    
+    We should rather add support for testing webapps using XSpec a first-class
+    citizen support...
+-->
+
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:h="http://www.w3.org/1999/xhtml"
+               xmlns:http="http://expath.org/ns/http-client"
+               stylesheet="http://expath.org/ns/http-client.xsl">
+
+   <x:variable name="uri" select="'http://localhost:9090/servlex/filters'"/>
+
+   <x:scenario label="assertions" shared="yes">
+      <!-- first result item must be a http:response element -->
+      <x:expect label="result elem"   assert="$x:result[1] instance of element(http:response)"/>
+      <!-- its status attribute must be = 200 -->
+      <x:expect label="status is 200" assert="$x:result[1]/xs:integer(@status) eq 200"/>
+      <!-- in any way for a request test, the server must send back an
+           ML document, so the result sequence must have exactly 2
+           items (the http:response element, and the XML payload) -->
+      <x:expect label="result count"  assert="count($x:result) eq 2"/>
+      <!-- result is a HTML document -->
+      <x:expect label="content type"  assert="
+          matches(
+            $x:result[1]/http:header[@name eq 'content-type']/@value,
+            'application/xhtml\+xml(;charset=UTF-8)?')"/>
+      <x:expect label="document type" assert="
+          $x:result[2] instance of document-node(element(h:html))"/>
+   </x:scenario>
+
+   <x:scenario label="filters-001">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-plain?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>Hello, me!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-002">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-plain?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>Hello, you!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-003">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-plain?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Hello, yo!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-004">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-in?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>Hello, me (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me (in)! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-005">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-in?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>Hello, you (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you (in)! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-006">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-in?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Hello, yo (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo (in)! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-007">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-out?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, me!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-008">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-out?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, you!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-009">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-out?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, yo!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-010">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-inout?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, me (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me (in)! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-011">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-inout?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, you (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you (in)! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-012">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-inout?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, yo (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo (in)! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-013">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-in-out?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, me (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me (in)! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-014">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-in-out?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, you (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you (in)! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-015">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-in-out?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, yo (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo (in)! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-016">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-grouped?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, me (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, me (in)! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-017">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xquery-grouped?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="filtered"   context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, you (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, you (in)! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-018">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xproc-grouped?who=yo" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>(filtered) Hello, yo (in)!</h:title>
+      </x:expect>
+      <x:expect label="body title" context="$html/h:body/h:p">
+         <h:p>Hello, yo (in)! (in XProc)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="filters-019">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/error" method="get"/>
+         </x:param>
+      </x:call>
+      <!-- first result item must be a http:response element -->
+      <x:expect label="result elem"   assert="$x:result[1] instance of element(http:response)"/>
+      <!-- its status attribute must be = 200 -->
+      <x:expect label="status is 400" assert="$x:result[1]/xs:integer(@status) eq 400"/>
+      <!-- in any way for a request test, the server must send back an
+           ML document, so the result sequence must have exactly 2
+           items (the http:response element, and the XML payload) -->
+      <x:expect label="result count"  assert="count($x:result) eq 2"/>
+      <!-- result is a HTML document -->
+      <x:expect label="content type"  assert="
+          matches(
+            $x:result[1]/http:header[@name eq 'content-type']/@value,
+            'application/xhtml\+xml(;charset=UTF-8)?')"/>
+      <x:expect label="document type" assert="
+          $x:result[2] instance of document-node(element(h:html))"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Oops</h:title>
+      </x:expect>
+      <x:expect label="body content" context="$html/h:body/h:p[1]">
+         <h:p>err:FOER0000</h:p>
+      </x:expect>
+      <x:expect label="body content" context="$html/h:body/h:p[2]">
+         <h:p>http://www.w3.org/2005/xqt-errors</h:p>
+      </x:expect>
+      <x:expect label="body content" context="$html/h:body/h:p[3]">
+         <h:p>Error message.</h:p>
+      </x:expect>
+   </x:scenario>
+
+</x:description>

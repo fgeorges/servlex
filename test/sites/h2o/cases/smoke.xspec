@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    This usage of @stylesheet is because we are not testing a stylesheet
+    actually, but we need this import statement in the compiled suite.  So...
+    
+    We should rather add support for testing webapps using XSpec a first-class
+    citizen support...
+-->
+
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:h="http://www.w3.org/1999/xhtml"
+               xmlns:http="http://expath.org/ns/http-client"
+               stylesheet="http://expath.org/ns/http-client.xsl">
+
+   <x:scenario label="assertions" shared="yes">
+      <!-- first result item must be a http:response element -->
+      <x:expect label="result elem"   test="$x:result[1] instance of element(http:response)"/>
+      <!-- its status attribute must be = 200 -->
+      <x:expect label="status is 200" test="$x:result[1]/xs:integer(@status) eq 200"/>
+      <!-- in any way for a request test, the server must send back an
+           ML document, so the result sequence must have exactly 2
+           items (the http:response element, and the XML payload) -->
+      <x:expect label="result count"  test="count($x:result) eq 2"/>
+      <!-- result is a HTML document -->
+      <x:expect label="content type"  test="
+          matches(
+            $x:result[1]/http:header[@name eq 'content-type']/@value,
+            'text/html(;charset=UTF-8)?')"/>
+      <x:expect label="document type" test="
+          $x:result[2] instance of document-node(element(h:html))"/>
+   </x:scenario>
+
+   <x:scenario label="expath-smoke-001">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="http://localhost:9090/svx-h2o/h2o/" method="get"/>
+         </x:param>
+      </x:call>
+      <x:variable name="html"       select="$x:result[2]/h:html"/>
+      <x:variable name="head-title" select="$html/h:head/h:title"/>
+      <x:variable name="body-title" select="$html/h:body//h:h1"/>
+      <x:like label="assertions"/>
+      <x:expect label="count head title" test="count($head-title) eq 1"/>
+      <x:expect label="head title"       test="$head-title eq 'Consulting'"/>
+      <x:expect label="count body title" test="count($body-title) eq 1"/>
+      <x:expect label="body title"       test="$body-title eq 'H2O Consulting'"/>
+   </x:scenario>
+
+</x:description>

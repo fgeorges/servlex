@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    This usage of @stylesheet is because we are not testing a stylesheet
+    actually, but we need this import statement in the compiled suite.  So...
+    
+    We should rather add support for testing webapps using XSpec a first-class
+    citizen support...
+-->
+
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:web="http://expath.org/ns/webapp"
+               xmlns:app="http://expath.org/ns/test/servlex/mapping-webapp"
+               xmlns:http="http://expath.org/ns/http-client"
+               stylesheet="http://expath.org/ns/http-client.xsl">
+
+   <x:variable name="auth"   select="'http://localhost:9090'"/>
+   <x:variable name="root"   select="'/servlex/mapping'"/>
+   <x:variable name="webapp" select="concat($auth, $root)"/>
+
+   <x:scenario label="is-ok" shared="yes">
+      <!-- first result item must be a http:response element -->
+      <x:expect label="result elem"   assert="$x:result[1] instance of element(http:response)"/>
+      <!-- its status attribute must be = 200 -->
+      <x:expect label="status is 200" assert="$x:result[1]/xs:integer(@status) eq 200"/>
+      <!-- in any way for a request test, the server must send back an
+           XML document, so the result sequence must have exactly 2
+           items (the http:response element, and the XML payload) -->
+      <x:expect label="result count"  assert="count($x:result) eq 2"/>
+      <!-- result is an XML document -->
+      <x:expect label="content type"  assert="
+          matches(
+            $x:result[1]/http:header[@name eq 'content-type']/@value,
+            'application/xml(;\s*charset=UTF-8)?')"/>
+   </x:scenario>
+
+   <x:scenario label="echo" shared="yes">
+      <x:like label="is-ok"/>
+      <!-- this 'like' declares two variables -->
+      <x:variable name="request" select="$x:result[2]/app:request/app:http/web:request"/>
+      <x:variable name="bodies"  select="$x:result[2]/app:request/app:body"/>
+      <!-- the doc type of the result payload -->
+      <x:expect label="document type" assert="
+          $x:result[2] instance of document-node(element(app:request))"/>
+      <!-- the HTTP request element -->
+      <x:expect label="one request elem" assert="count($request) eq 1"/>
+      <x:expect label="the request elem" context="$request">
+         <web:request servlet="..." path="..." method="...">...</web:request>
+      </x:expect>
+      <x:expect label="the request uri"          assert="starts-with($request/web:uri, $webapp)"/>
+      <x:expect label="the request authority"    assert="$request/web:authority eq $auth"/>
+      <x:expect label="the request context root" assert="$request/web:context-root eq $root"/>
+      <x:expect label="the request path value"   assert="
+          string($request/web:path) eq $request/@path"/>
+      <x:expect label="the full request uri"     assert="
+          $request/web:uri eq concat($webapp, $request/@path)"/>
+   </x:scenario>
+
+   <x:scenario label="get-echo" shared="yes">
+      <x:like label="echo"/>
+      <x:expect label="the request method" assert="$request/@method eq 'get'"/>
+      <x:expect label="no request body"    assert="count($bodies) eq 0"/>
+   </x:scenario>
+
+   <x:scenario label="post-echo" shared="yes">
+      <x:like label="echo"/>
+      <x:expect label="the request method" assert="$request/@method eq 'post'"/>
+      <x:expect label="one body desc"      assert="count($request/web:body) eq 1"/>
+      <x:expect label="the body desc"      context="$request/web:body">
+         <web:body content-type="application/xml" position="1"/>
+      </x:expect>
+      <x:expect label="request body type"  assert="
+          matches(
+            $request/web:header[@name eq 'content-type']/@value,
+            'application/xml(;\s*charset=UTF-8)?')"/>
+      <x:expect label="one request body"   assert="count($bodies) eq 1"/>
+      <x:expect label="the request body"   context="$bodies">
+         <app:body position="1">
+            <hello>World!</hello>
+         </app:body>
+      </x:expect>
+   </x:scenario>
+
+   <!--
+       Test mapping to XSLT components (function, template then stylesheet).
+   -->
+
+   <x:scenario label="mapping-011: get to /xslt-fun">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-fun" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-fun'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-fun'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-012: post to /xslt-fun">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-fun" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-fun'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-fun'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-021: get to /xslt-tpl">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-tpl" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-tpl'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-tpl'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-022: post to /xslt-tpl">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-tpl" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-tpl'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-tpl'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-031: get to /xslt-style">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-style" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-style'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-style'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-032: post to /xslt-style">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xslt-style" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xslt-style'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xslt-style'"/>
+   </x:scenario>
+
+   <!--
+       Test mapping to XQuery components (function then query module).
+   -->
+
+   <x:scenario label="mapping-041: get to /xquery-fun">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xquery-fun" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xquery-fun'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xquery-fun'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-042: post to /xquery-fun">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xquery-fun" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xquery-fun'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xquery-fun'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-051: get to /xquery-qry">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xquery-qry" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xquery-qry'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xquery-qry'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-052: post to /xquery-qry">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xquery-qry" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xquery-qry'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xquery-qry'"/>
+   </x:scenario>
+
+   <!--
+       Test mapping to XProc components (step then pipeline).
+   -->
+
+   <x:scenario label="mapping-061: get to /xproc-step">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xproc-step" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xproc-step'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xproc-step'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-062: post to /xproc-step">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xproc-step" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xproc-step'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xproc-step'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-071: get to /xproc-pipe">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xproc-pipe" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xproc-pipe'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xproc-pipe'"/>
+   </x:scenario>
+
+   <x:scenario label="mapping-072: post to /xproc-pipe">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/xproc-pipe" method="post">
+               <http:body media-type="application/xml">
+                  <hello>World!</hello>
+               </http:body>
+            </http:request>
+         </x:param>
+      </x:call>
+      <x:like label="post-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq 'xproc-pipe'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/xproc-pipe'"/>
+   </x:scenario>
+
+   <!--
+       Test the result when it is a document with more than one children
+       (here it has 2 processing instruction before the root element).
+   -->
+
+   <x:scenario label="mapping-081: PIs in body">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/pis-in-body" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="is-ok"/>
+      <x:expect label="the result doc" context="$x:result[2]">
+         <?first-pi?>
+         <?second-pi with some data inside?>
+         <server>data</server>
+      </x:expect>
+   </x:scenario>
+
+</x:description>

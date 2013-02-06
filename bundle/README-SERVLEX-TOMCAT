@@ -1,0 +1,17 @@
+Servlex bundled with Apache Tomcat
+==================================
+
+To change the ports used by Servlex, look at the standard Tomcat
+configuration file in conf/server.xml.  By default, it is bound to
+port 19757.
+
+To run Servlex, run bin/startup.sh (or bin/startup.bat on Windows
+machines).  To shut it down, run bin/shutdown.sh (or bin/shutdown.bat
+on Windows).
+
+Once it runs, use your web browser to go to http://localhost:19757/
+(or adapt the port number if you changed it).  The page should tell
+you the installation was successful, and point you to the Webapp
+Manager at http://localhost:19757/manager.  The Webapp Manager let you
+install and remove webapp, packaged as XAW files (as described in the
+EXPath Webapp spec at http://expath.org/spec/webapp.

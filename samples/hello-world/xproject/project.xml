@@ -1,0 +1,12 @@
+<!--
+    The version number must be the same as the current Servlex
+    release number.  See servlex/build/make-dist.sh.
+-->
+<project xmlns="http://expath.org/ns/project"
+         name="http://expath.org/samples/servlex/hello"
+         abbrev="hello-world"
+         version="0.7.0pre3">
+
+   <title>Servlex hello-world application</title>
+
+</project>

@@ -1,0 +1,8 @@
+<project xmlns="http://expath.org/ns/project"
+         name="http://expath.org/test/servlex/filters-webapp"
+         abbrev="filters-webapp"
+         version="0.1.0">
+
+   <title>Test webapp for some filter cases</title>
+
+</project>

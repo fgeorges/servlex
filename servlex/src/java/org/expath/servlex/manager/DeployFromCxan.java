@@ -1,0 +1,222 @@
+/****************************************************************************/
+/*  File:       DeployFromCxan.java                                         */
+/*  Author:     F. Georges - H2O Consulting                                 */
+/*  Date:       2013-02-03                                                  */
+/*  Tags:                                                                   */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/* ------------------------------------------------------------------------ */
+
+
+package org.expath.servlex.manager;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Enumeration;
+import java.util.regex.Pattern;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+import org.expath.pkg.repo.PackageException;
+import org.expath.servlex.ServerConfig;
+import org.expath.servlex.ServlexException;
+import org.expath.servlex.parser.ParseException;
+
+/**
+ * Servlet used to install a webapp/package from CXAN.
+ *
+ * @author Florent Georges
+ * @date   2013-02-03
+ */
+public class DeployFromCxan
+        extends HttpServlet
+{
+    /**
+     * Returns a short description of the servlet.
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Deploy a XAW (or XAR) file from CXAN.";
+    }
+
+    /**
+     * Initialize the server config object.
+     */
+    @Override
+    public void init(ServletConfig config)
+            throws ServletException
+    {
+        try {
+            myConfig = ServerConfig.getInstance(config);
+        }
+        catch ( ParseException ex ) {
+            String msg = "Error in the servlet initialization...";
+            LOG.info(msg, ex);
+            throw new ServletException(msg, ex);
+        }
+        catch ( PackageException ex ) {
+            String msg = "Error in the servlet initialization...";
+            LOG.info(msg, ex);
+            throw new ServletException(msg, ex);
+        }
+    }
+
+    /** 
+     * GET is not supported.
+     */
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException
+    {
+        resp.addHeader("Allow", "POST");
+        resp.sendError(405, "Method Not Allowed");
+    }
+
+    /** 
+     * Deploy a XAW file.
+     */
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException
+    {
+        if ( ! myConfig.canInstall() ) {
+            resp.sendError(501, "Install not supported, storage is read-only");
+            return;
+        }
+
+        String name;
+        try {
+            // name will be null if the package is not a webapp
+            name = doInstall(req);
+        }
+        catch ( ServlexException ex ) {
+            ex.sendError(resp);
+            return;
+        }
+
+        resp.setContentType("text/html;charset=UTF-8");
+        View view = new View(resp.getWriter());
+        view.open("deploy", "Deploy");
+        view.print("<p>");
+        if ( name == null ) {
+            view.print("The package");
+        }
+        else {
+            view.print("<a href='../");
+            view.print(name);
+            view.print("/'>");
+            view.print(name);
+            view.print("</a>");
+        }
+        view.print(" has been successfully installed.</p>\n");
+        view.close();
+    }
+
+    private String doInstall(HttpServletRequest req)
+            throws ServlexException
+    {
+        String id      = getNonEmptyParam(req, "id");
+        String name    = getNonEmptyParam(req, "name");
+        String version = getNonEmptyParam(req, "version");
+        String server  = getNonEmptyParam(req, "server");
+
+        if ( server == null ) {
+            error(400, "The CXAN server to use has not been passed.");
+        }
+        if ( ! "prod".equals(server) && ! "sandbox".equals(server) ) {
+            error(400, "The CXAN server to use must be either 'prod' or 'sandbox', but is '" + server + "'.");
+        }
+        if ( id != null && name != null ) {
+            error(400, "Both CXAN ID and package name provided: resp. '" + id + "' and '" + name + "'.");
+        }
+
+        String uri = "prod".equals(server) ? "http://cxan.org/" : "http://test.cxan.org/";
+        if ( name == null ) {
+            uri += "file?id=" + id;
+        }
+        else {
+            uri += "file?name=" + name;
+        }
+        if ( version != null ) {
+            uri += "&version=" + version;
+        }
+
+        try {
+            return myConfig.install(new URI(uri));
+        }
+        catch ( URISyntaxException ex ) {
+            error(500, "Error constructing the package URI on CXAN: " + uri, ex);
+        }
+        catch ( PackageException ex ) {
+            // TODO: Be more user-friendly in case the user has made a typo in the
+            // ID or the name, resulting in a 404... (so in a FileNotFoundException
+            // as cause of this PackageException).
+            error(500, "Error installing the webapp", ex);
+        }
+        catch ( ParseException ex ) {
+            error(500, "Error installing the webapp", ex);
+        }
+        // cannot happen, because error() always throws an exception
+        throw new ServlexException(500, "Cannot happen (doInstall)");
+    }
+
+    private String getNonEmptyParam(HttpServletRequest req, String name)
+    {
+        String value = req.getParameter(name);
+        if ( value == null ) {
+            return null;
+        }
+        else if ( Pattern.matches("^\\s*$", value) ) {
+            return null;
+        }
+        else {
+            return value;
+        }
+    }
+
+    // TODO: Error management!
+    private void error(int code, String msg)
+            throws ServlexException
+    {
+        LOG.error(code + ": " + msg);
+        throw new ServlexException(code, msg);
+    }
+
+    private void error(int code, String msg, Throwable ex)
+            throws ServlexException
+    {
+        LOG.error(code + ": " + msg, ex);
+        throw new ServlexException(code, msg, ex);
+    }
+
+    /** The logger. */
+    private static final Logger LOG = Logger.getLogger(DeployFromCxan.class);
+
+    /** The server configuration. */
+    private ServerConfig myConfig;
+}
+
+
+/* ------------------------------------------------------------------------ */
+/*  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS COMMENT.               */
+/*                                                                          */
+/*  The contents of this file are subject to the Mozilla Public License     */
+/*  Version 1.0 (the "License"); you may not use this file except in        */
+/*  compliance with the License. You may obtain a copy of the License at    */
+/*  http://www.mozilla.org/MPL/.                                            */
+/*                                                                          */
+/*  Software distributed under the License is distributed on an "AS IS"     */
+/*  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See    */
+/*  the License for the specific language governing rights and limitations  */
+/*  under the License.                                                      */
+/*                                                                          */
+/*  The Original Code is: all this file.                                    */
+/*                                                                          */
+/*  The Initial Developer of the Original Code is Florent Georges.          */
+/*                                                                          */
+/*  Contributor(s): none.                                                   */
+/* ------------------------------------------------------------------------ */
