@@ -11,11 +11,17 @@
    Calabash as its XSLT, XQuery and XProc processors.  It is developed
    as a Java EE application (based only on the Servlets technology).
 
-     To install it, just deploy the WAR file in your servlet
-   container.  If you are looking for a container, you can use Tomcat
-   from Apache <http://tomcat.apache.org/> which installs easily on
-   all usual OSes, and provide a simple administration interface in
-   HTML (just locate the WAR file on your system and press "Deploy").
+     To install it, download the installer from the download area at
+   http://code.google.com/p/servlex/downloads, execute it (e.g. by
+   double-clicking on it) and follow the instructions.  This installs
+   Tomcat pre-packaged and set up with Servlex.
+
+     You can also download a WAR file from the same location, in to
+   order to deploy it into your servlet container.  If you are looking
+   for a container, you can use Tomcat from Apache which installs
+   easily on all usual OSes, and provides a simple administration
+   interface in HTML (just locate the WAR file on your system and
+   press "Deploy").
 
      To finish the install, you have to make sure the property
    org.expath.servlex.repo.dir is correctly set to a directory where
