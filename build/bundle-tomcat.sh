@@ -33,9 +33,6 @@ fi
 
 # the Tomcat dir
 TOMCAT=${BASEDIR}/${TOMCAT_NAME}
-if [[ ! -d "${TOMCAT}" ]]; then
-    die "INTERNAL ERROR: The install directory does not look to be correct?!?";
-fi
 
 # untar the archive
 rm -r "${TOMCAT}"
@@ -47,9 +44,6 @@ PROPS="${TOMCAT}/conf/catalina.properties"
 echo >> "${PROPS}"
 echo >> "${PROPS}"
 echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
-# FIXME: ...
-# echo 'org.expath.servlex.repo.dir=${catalina.base}/repo' >> "${PROPS}"
-# echo 'org.expath.servlex.repo.dir=/Users/fgeorges/projects/expath/servlex/bundle/apache-tomcat-7.0.35/repo' >> "${PROPS}"
 echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
 
 # changing the port numbers in conf/server.xml
