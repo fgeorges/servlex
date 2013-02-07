@@ -9,6 +9,7 @@
 
 package org.expath.servlex.manager;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -88,10 +89,11 @@ public class DeployFromCxan
             return;
         }
 
+        String cxanid = getNonEmptyParam(req, "id");
         String name;
         try {
             // name will be null if the package is not a webapp
-            name = doInstall(req);
+            name = doInstall(req, cxanid);
         }
         catch ( ServlexException ex ) {
             ex.sendError(resp);
@@ -102,24 +104,31 @@ public class DeployFromCxan
         View view = new View(resp.getWriter());
         view.open("deploy", "Deploy");
         view.print("<p>");
-        if ( name == null ) {
-            view.print("The package");
+        if ( "*not*found*on*cxan*".equals(name) ) {
+            view.print("The package with the CXAN ID '");
+            view.print(cxanid);
+            view.print("' does not exist.");
         }
         else {
-            view.print("<a href='../");
-            view.print(name);
-            view.print("/'>");
-            view.print(name);
-            view.print("</a>");
+            if ( name == null ) {
+                view.print("The package");
+            }
+            else {
+                view.print("<a href='../");
+                view.print(name);
+                view.print("/'>");
+                view.print(name);
+                view.print("</a>");
+            }
+            view.print(" has been successfully installed.");
         }
-        view.print(" has been successfully installed.</p>\n");
+        view.print("</p>\n");
         view.close();
     }
 
-    private String doInstall(HttpServletRequest req)
+    private String doInstall(HttpServletRequest req, String id)
             throws ServlexException
     {
-        String id      = getNonEmptyParam(req, "id");
         String name    = getNonEmptyParam(req, "name");
         String version = getNonEmptyParam(req, "version");
         String server  = getNonEmptyParam(req, "server");
@@ -130,7 +139,10 @@ public class DeployFromCxan
         if ( ! "prod".equals(server) && ! "sandbox".equals(server) ) {
             error(400, "The CXAN server to use must be either 'prod' or 'sandbox', but is '" + server + "'.");
         }
-        if ( id != null && name != null ) {
+        if ( id == null && name == null ) {
+            error(400, "Neither CXAN ID or package name provided, at least one is required.");
+        }
+        else if ( id != null && name != null ) {
             error(400, "Both CXAN ID and package name provided: resp. '" + id + "' and '" + name + "'.");
         }
 
@@ -152,10 +164,12 @@ public class DeployFromCxan
             error(500, "Error constructing the package URI on CXAN: " + uri, ex);
         }
         catch ( PackageException ex ) {
-            // TODO: Be more user-friendly in case the user has made a typo in the
-            // ID or the name, resulting in a 404... (so in a FileNotFoundException
-            // as cause of this PackageException).
-            error(500, "Error installing the webapp", ex);
+            if ( ex.getCause() != null && ex.getCause() instanceof FileNotFoundException ) {
+                return "*not*found*on*cxan*";
+            }
+            else {
+                error(500, "Error installing the webapp", ex);
+            }
         }
         catch ( ParseException ex ) {
             error(500, "Error installing the webapp", ex);
