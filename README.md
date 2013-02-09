@@ -47,3 +47,12 @@ and/or XProc components in a web application.
 
 Some docs about Servlex are also available [here](http://expath.org/wiki/Webapp)
 and [there](http://expath.org/wiki/Saxon:Webapp) on the EXPath's wiki.
+
+## Real-world usage
+
+Servlex is used to run [CXAN](http://cxan.org/) (as well as its
+[Sandbox](http://test.cxan.org/), the sources of which are
+available on [GitHub](https://github.com/fgeorges/cxan/).  The
+[EXPath website](http://expath.org/) runs on Servlex too (see the
+[sources](http://code.google.com/p/expath/source/browse/#svn%2Ftrunk%2Fwebsite)).
+[H2O Consulting](http://h2oconsulting.be/) website runs on Servlex as well.
