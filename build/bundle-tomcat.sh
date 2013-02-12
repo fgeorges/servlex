@@ -22,6 +22,15 @@ stop_tomcat() {
         || die "Tomcat failed to shutdown."
 }
 
+VERSION="$1"
+# the Servlex version number
+if [[ -z "${VERSION}" ]]; then
+    die "ERROR: The Servlex version number must be passed as first param!";
+fi
+
+# the IzPack "compile" script
+IZPACK=/Applications/IzPack/bin/compile
+
 # the Tomcat base name (both .tar.gz and dir must have the same name)
 TOMCAT_NAME=apache-tomcat-7.0.35
 
@@ -59,28 +68,11 @@ rm -r "${TOMCAT}"/webapps/*
 mkdir "${TOMCAT}/webapps/ROOT"
 ( cd "${TOMCAT}/webapps/ROOT"; unzip ../../../../servlex/dist/servlex.war )
 
+# replace the Servlex version number
+perl -e "s|<appversion>([-.0-9a-z]+)</appversion>|<appversion>${VERSION}</appversion>|g;" \
+    -pi izpack-tomcat.xml
+perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
+    -pi izpack-tomcat.xml
+
 # create the installer
-# TODO: Substitute version number and such in the IzPack descriptor...
-IZPACK=/Applications/IzPack/bin/compile
-VERSION=0.7.0pre3
 "${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-intaller.jar"
-
-# # the Tomcat manager URI
-# MANAGER=http://localhost:19757/manager/text
-# # the Servlex WAR file
-# WAR=${BASEDIR}/../servlex/dist/servlex.war
-
-# # start Tomcat up
-# start_tomcat
-
-# # deploy Servlex on Tomcat, as the root context
-# echo "Deploying Servlex..."
-# echo "  using: curl -u admin:admin $MANAGER/deploy?path=/&war=${WAR}"
-# res=`curl -u admin:admin "$MANAGER/deploy?path=/&war=${WAR}" 2>/dev/null`
-# if [[ "OK - " != `echo $res | head -n 1 | cut -c 1-5` ]]; then
-#    die "Tomcat manager failed to deploy Servlex
-# Output: $res"
-# fi
-
-# # stop Tomcat
-# stop_tomcat
