@@ -36,8 +36,8 @@
    </xsl:function>
 
    <xsl:template name="app:hello-template">
-      <xsl:param name="input" as="item()+"/>
-      <xsl:sequence select="app:hello-xslt($input)"/>
+      <xsl:param name="web:input" as="item()+"/>
+      <xsl:sequence select="app:hello-xslt($web:input)"/>
    </xsl:template>
 
    <xsl:template match="/">
