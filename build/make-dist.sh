@@ -3,7 +3,7 @@
 # The version number to build a release for.  To edit when changing
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml
-DIST_VER=0.7.0pre3
+DIST_VER=0.7.0
 DIR=servlex-${DIST_VER}
 
 WAR=../servlex/dist/servlex.war
@@ -38,13 +38,9 @@ if test \! -f "$HELLO_xaw"; then
     die "$HELLO_xaw does not exist"
 fi
 
-if test -e ${DIR}; then
-    die "${DIR} already exists, remove any previous build manually"
-fi
-
-if test -e ${DIR}.zip; then
-    die "${DIR}.zip already exists, remove any previous build manually"
-fi
+# clean up
+rm -rf ${DIR}
+rm -f ${DIR}.zip
 
 # the release dir
 mkdir ${DIR}
@@ -68,3 +64,6 @@ cp $HELLO_src/hello.* ${DIR}/hello-world/src/
 
 # zip up the whole thing
 zip -r ${DIR}.zip ${DIR}/
+
+# create the IzPack installer
+./bundle-tomcat.sh "${DIST_VER}"
