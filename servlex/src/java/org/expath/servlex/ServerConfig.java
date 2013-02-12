@@ -52,6 +52,8 @@ public class ServerConfig
     public static final String REPO_DIR_PROPERTY = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
     public static final String REPO_CP_PROPERTY  = "org.expath.servlex.repo.classpath";
+    /** The system property name for the log directory. */
+    public static final String LOG_DIR_PROPERTY  = "org.expath.servlex.log.dir";
 
     /**
      * Initialize the webapp list from the repository got from system properties.

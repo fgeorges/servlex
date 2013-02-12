@@ -14,6 +14,7 @@ import com.xmlcalabash.core.XProcMessageListener;
 import com.xmlcalabash.core.XProcRunnable;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
+import java.io.File;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -23,6 +24,7 @@ import org.expath.pkg.calabash.PkgConfigurer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.SaxonHelper;
@@ -70,6 +72,16 @@ public class CalabashPipeline
         SaxonRepository repo = myCalabash.getRepo();
         PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
         runtime.setConfigurer(configurer);
+        String logdir_prop = System.getProperty(ServerConfig.LOG_DIR_PROPERTY);
+        if ( logdir_prop != null ) {
+            File logdir = new File(logdir_prop);
+            if ( ! logdir.exists() ) {
+                throw new ServlexException(500, "Calabash log dir does not exist!");
+            }
+            File logfile = new File(logdir, System.nanoTime() + "-profile.xml");
+            // TODO: What if the file already exists?
+            runtime.setProfileFile(logfile.getAbsolutePath());
+        }
         try {
             // FIXME: Have to reconfigure the Saxon processor, because Calabash
             // install its own resolvers.  Should be ok though, but double-check!
