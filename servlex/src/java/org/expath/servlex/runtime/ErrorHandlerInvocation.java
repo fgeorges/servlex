@@ -9,9 +9,8 @@
 
 package org.expath.servlex.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
 import javax.xml.namespace.QName;
-import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
@@ -48,18 +47,18 @@ public class ErrorHandlerInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, Processor saxon, XProcRuntime calabash)
+    public Connector invoke(Connector connector, ServerConfig config)
             throws ServlexException
                  , ComponentError
     {
         try {
-            return myWrapped.invoke(connector, saxon, calabash);
+            return myWrapped.invoke(connector, config);
         }
         catch ( ComponentError ex ) {
             if ( matches(ex.getName()) ) {
                 try {
                     Connector c = new ErrorConnector(ex, getRequest());
-                    return myImpl.run(saxon, calabash, c);
+                    return myImpl.run(config, c);
                 }
                 catch ( ComponentError ex2 ) {
                     throw new ServlexException(500, "Internal error (error in an error handler)", ex2);

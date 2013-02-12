@@ -9,7 +9,6 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.StringReader;
 import javax.xml.transform.Source;
@@ -19,9 +18,13 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import org.apache.log4j.Logger;
+import org.expath.pkg.repo.PackageException;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
+import org.expath.servlex.processors.CalabashPipeline;
+import org.expath.servlex.processors.CalabashProcessor;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.SaxonHelper;
 
@@ -42,13 +45,13 @@ public class XProcStep
     }
 
     @Override
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
         throws ServlexException
              , ComponentError
     {
         try {
-            XPipeline pipeline = getPipeline(saxon, calabash);
-            return XProcPipeline.evaluatePipeline(saxon, calabash, pipeline, connector);
+            XPipeline pipeline = getPipeline(config);
+            return XProcPipeline.evaluatePipeline(config, pipeline, connector);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
@@ -57,20 +60,23 @@ public class XProcStep
     }
 
     /**
-     * TODO: See XProcPipelineEntryPoint.getPipeline() comment, about
-     * cacheability in Calabash...
+     * TODO: Cache using the new Servlex Calabash API...
      */
-    private XPipeline getPipeline(Processor saxon, XProcRuntime calabash)
+    private XPipeline getPipeline(ServerConfig config)
             throws SaxonApiException
+                 , ComponentError
+                 , ServlexException
     {
-        XdmNode pipe = makeCallPipe(saxon);
-        return calabash.use(pipe);
+        XdmNode pipe = makeCallPipe(config);
+        CalabashProcessor calabash = config.getCalabash();
+        CalabashPipeline compiled = calabash.compile(pipe);
+        return compiled.prepare();
     }
 
     /**
      * TODO: Use a tree builder instead of string concatenation!
      */
-    private XdmNode makeCallPipe(Processor proc)
+    private XdmNode makeCallPipe(ServerConfig config)
             throws SaxonApiException
     {
         StringBuilder b = new StringBuilder();
@@ -94,7 +100,7 @@ public class XProcStep
         LOG.debug(pipe);
         Source src = new StreamSource(new StringReader(pipe));
         src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
-        DocumentBuilder builder = proc.newDocumentBuilder();
+        DocumentBuilder builder = config.getSaxon().newDocumentBuilder();
         return builder.build(src);
     }
 

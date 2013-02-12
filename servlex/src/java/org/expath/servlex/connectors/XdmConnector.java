@@ -9,11 +9,9 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XdmItem;
@@ -23,6 +21,7 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltTransformer;
 import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.Result;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.tools.TreeBuilderHelper;
@@ -54,7 +53,7 @@ public class XdmConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, Processor saxon)
+    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         final QName param_name = new QName("input");
@@ -65,7 +64,7 @@ public class XdmConnector
      * TODO: No context node...?
      */
     @Override
-    public void connectToQuery(XQueryEvaluator eval, Processor saxon)
+    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         final QName input_name = new QName(ServlexConstants.WEBAPP_NS, "input");
@@ -76,7 +75,7 @@ public class XdmConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToXSLTComponent(XsltTransformer trans, Processor saxon)
+    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
         final QName param_name = new QName(ServlexConstants.PRIVATE_NS, "input");
@@ -96,7 +95,7 @@ public class XdmConnector
      * node, no need to declare a parameter...)
      */
     @Override
-    public void connectToStylesheet(XsltTransformer trans, Processor saxon)
+    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
         if ( mySequence.size() == 0 ) {
@@ -124,7 +123,7 @@ public class XdmConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToPipeline(XPipeline pipeline, Processor saxon, XProcRuntime calabash)
+    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
             throws ServlexException
     {
         if ( pipeline.getInputs().contains("source") ) {
@@ -140,7 +139,7 @@ public class XdmConnector
                 else {
                     try {
                         String c_ns = "http://www.w3.org/ns/xproc-step";
-                        TreeBuilderHelper b = new TreeBuilderHelper(saxon, c_ns, "c");
+                        TreeBuilderHelper b = new TreeBuilderHelper(config.getSaxon(), c_ns, "c");
                         b.startElem("data");
                         b.attribute("encoding", "base64");
                         b.startContent();
@@ -160,7 +159,7 @@ public class XdmConnector
      * TODO: ...
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, Processor saxon, XProcRuntime calabash)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
             throws ServlexException
                  , IOException
     {
@@ -168,7 +167,7 @@ public class XdmConnector
         // its content moved to this class, which is really the one responsible
         // to write an XDM sequence to the HTTP servlet response object.
         Result result = new Result(mySequence);
-        result.respond(saxon, resp);
+        result.respond(config.getSaxon(), resp);
     }
 
     private XdmValue mySequence;

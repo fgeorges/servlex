@@ -9,7 +9,6 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
 import java.io.IOException;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.*;
@@ -17,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.URISpace;
 import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
@@ -39,13 +39,13 @@ public class XQueryModule
     }
 
     @Override
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
             throws ServlexException
                  , ComponentError
     {
-        XQueryExecutable exec = getCompiled(saxon);
+        XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();
-        connector.connectToQuery(eval, saxon);
+        connector.connectToQuery(eval, config);
         XdmValue result;
         try {
             result = eval.evaluate();
@@ -62,13 +62,13 @@ public class XQueryModule
      * 
      * The compiled object is cached (it is compiled only once).
      */
-    private synchronized XQueryExecutable getCompiled(Processor saxon)
+    private synchronized XQueryExecutable getCompiled(ServerConfig config)
             throws ServlexException
     {
         if ( myCompiled == null ) {
             LOG.debug("Going to compile query: " + myUri);
             StreamSource src = resolve();
-            XQueryCompiler compiler = saxon.newXQueryCompiler();
+            XQueryCompiler compiler = config.getSaxon().newXQueryCompiler();
             try {
                 // TODO: Pass the system ID instead, to compiler.compile()?  If not,
                 // how to give Saxon the system ID?

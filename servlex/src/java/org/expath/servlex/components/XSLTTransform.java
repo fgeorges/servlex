@@ -9,7 +9,6 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.Source;
@@ -17,7 +16,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
@@ -29,6 +27,7 @@ import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
@@ -50,14 +49,14 @@ public class XSLTTransform
     }
 
     @Override
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
         throws ServlexException
              , ComponentError
     {
         try {
-            XsltExecutable exec = getCompiled(saxon);
+            XsltExecutable exec = getCompiled(config);
             XsltTransformer trans = exec.load();
-            connector.connectToStylesheet(trans, saxon);
+            connector.connectToStylesheet(trans, config);
             XdmDestination dest = new XdmDestination();
             trans.setDestination(dest);
             trans.transform();
@@ -86,13 +85,13 @@ public class XSLTTransform
         }
     }
  
-    private synchronized XsltExecutable getCompiled(Processor proc)
+    private synchronized XsltExecutable getCompiled(ServerConfig config)
             throws PackageException
                  , SaxonApiException
                  , TransformerException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = proc.newXsltCompiler();
+            XsltCompiler c = config.getSaxon().newXsltCompiler();
             // saxon's xslt compiler does not use its uri resolver on the param
             // passed directly to the stream source ctor; the resolver is used
             // only for xsl:import and xsl:include, so we have to call it first

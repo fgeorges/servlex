@@ -15,6 +15,7 @@ import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import net.sf.saxon.s9api.*;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.XProcPipeline;
@@ -55,24 +56,14 @@ public class ErrorConnector
      * access through the API of XPipeline, passed to the connectors.
      */
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, Processor saxon)
+    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public void connectToQuery(XQueryEvaluator eval, Processor saxon)
-            throws ServlexException
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * TODO: Mapping to define, then implement.
-     */
-    @Override
-    public void connectToXSLTComponent(XsltTransformer trans, Processor saxon)
+    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -82,7 +73,7 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToStylesheet(XsltTransformer trans, Processor saxon)
+    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -92,7 +83,17 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToPipeline(XPipeline pipe, Processor saxon, XProcRuntime calabash)
+    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
+            throws ServlexException
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * TODO: Mapping to define, then implement.
+     */
+    @Override
+    public void connectToPipeline(XPipeline pipe, ServerConfig config)
             throws ServlexException
     {
         // the code-name
@@ -112,13 +113,13 @@ public class ErrorConnector
         pipe.passOption(MESSAGE_ATTRIBUTE, new RuntimeValue(msg));
         // connect the web request to the source port
         final String src_port = XProcPipeline.INPUT_PORT_NAME;
-        XdmNode web_request = myRequest.getWebRequest(saxon);
-        CalabashHelper.writeTo(pipe, src_port, web_request, saxon, calabash);
+        XdmNode web_request = myRequest.getWebRequest(config);
+        CalabashHelper.writeTo(pipe, src_port, web_request, config);
         // connect the user sequence to the user-data port
         final String err_port = XProcPipeline.ERROR_PORT_NAME;
         XdmValue userdata = myError.getSequence();
         if ( userdata != null ) {
-            CalabashHelper.writeTo(pipe, err_port, userdata, saxon, calabash);
+            CalabashHelper.writeTo(pipe, err_port, userdata, config);
         }
     }
 
@@ -126,7 +127,7 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, Processor saxon, XProcRuntime calabash)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
             throws ServlexException
                  , IOException
     {

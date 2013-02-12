@@ -9,14 +9,13 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
@@ -39,13 +38,13 @@ public class XQueryFunction
     }
 
     @Override
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
         throws ServlexException
              , ComponentError
     {
-        XQueryExecutable exec = getCompiled(saxon);
+        XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();
-        connector.connectToXQueryFunction(eval, saxon);
+        connector.connectToXQueryFunction(eval, config);
         XdmValue result;
         try {
             result = eval.evaluate();
@@ -63,12 +62,12 @@ public class XQueryFunction
      * The query takes a global parameter $input, and passes it to the function
      * call.  The compiled object is cached (it is compiled only once).
      */
-    private synchronized XQueryExecutable getCompiled(Processor proc)
+    private synchronized XQueryExecutable getCompiled(ServerConfig config)
             throws ServlexException
     {
         if ( myCompiled == null ) {
             LOG.debug(formatMsg("Going to generate query for"));
-            XQueryCompiler c = proc.newXQueryCompiler();
+            XQueryCompiler c = config.getSaxon().newXQueryCompiler();
             try {
                 myCompiled = c.compile(
                     "import module namespace my = \"" + myNS + "\";\n"

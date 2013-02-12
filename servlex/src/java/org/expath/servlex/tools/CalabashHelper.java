@@ -10,15 +10,14 @@
 package org.expath.servlex.tools;
 
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import javax.xml.namespace.QName;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.ComponentError;
@@ -58,7 +57,7 @@ public class CalabashHelper
      * with name {@code port} on the pipeline {@code pipe}.  A node is written
      * directly, an item is written within a c:data element.
      */
-    public static void writeTo(XPipeline pipe, String port, XdmValue sequence, Processor saxon, XProcRuntime calabash)
+    public static void writeTo(XPipeline pipe, String port, XdmValue sequence, ServerConfig config)
             throws ServlexException
     {
         // TODO: Generate an error if not?
@@ -81,7 +80,7 @@ public class CalabashHelper
                     else {
                         try {
                             String c_ns = "http://www.w3.org/ns/xproc-step";
-                            TreeBuilderHelper b = new TreeBuilderHelper(saxon, c_ns, "c");
+                            TreeBuilderHelper b = new TreeBuilderHelper(config.getSaxon(), c_ns, "c");
                             b.startElem("data");
                             b.attribute("encoding", "base64");
                             b.startContent();

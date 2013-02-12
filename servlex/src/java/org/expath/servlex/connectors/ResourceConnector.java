@@ -9,15 +9,14 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XsltTransformer;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 
 /**
@@ -44,42 +43,42 @@ public class ResourceConnector
     }
 
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, Processor saxon)
+    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XQuery function.");
     }
 
     @Override
-    public void connectToQuery(XQueryEvaluator eval, Processor saxon)
+    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XQuery main module.");
     }
 
     @Override
-    public void connectToXSLTComponent(XsltTransformer trans, Processor saxon)
+    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XSLT function or template.");
     }
 
     @Override
-    public void connectToStylesheet(XsltTransformer trans, Processor saxon)
+    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to a stylesheet.");
     }
 
     @Override
-    public void connectToPipeline(XPipeline pipeline, Processor saxon, XProcRuntime calabash)
+    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to a pipeline.");
     }
 
     @Override
-    public void connectToResponse(HttpServletResponse resp, Processor saxon, XProcRuntime calabash)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
             throws ServlexException
                  , IOException
     {

@@ -9,7 +9,6 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +26,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryEvaluator;
@@ -44,6 +42,7 @@ import org.apache.james.mime4j.parser.Field;
 import org.apache.james.mime4j.parser.MimeTokenStream;
 import org.apache.log4j.Logger;
 import org.ccil.cowan.tagsoup.Parser;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
@@ -80,25 +79,25 @@ public class RequestConnector
         myServlet = servlet;
     }
 
-    public XdmNode getWebRequest(Processor saxon)
+    public XdmNode getWebRequest(ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         return myWebRequest;
     }
 
-    private synchronized void ensureParsing(Processor saxon)
+    private synchronized void ensureParsing(ServerConfig config)
             throws ServlexException
     {
         if ( myInput == null ) {
             try {
                 // where to put the web:request element
-                TreeBuilderHelper builder = new TreeBuilderHelper(saxon, NS_URI, NS_PREFIX);
+                TreeBuilderHelper builder = new TreeBuilderHelper(config.getSaxon(), NS_URI, NS_PREFIX);
                 // parse the request (to web:request + sequence of bodies)
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
                 List<XdmItem> input = new ArrayList<XdmItem>();
-                myWebRequest = parseRequest(saxon, builder, input);
+                myWebRequest = parseRequest(config, builder, input);
                 myInput = new XdmValue(input);
             }
             catch ( XPathException ex ) {
@@ -111,36 +110,36 @@ public class RequestConnector
     }
 
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, Processor saxon)
+    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         eval.setExternalVariable(new QName("input"), myInput);
     }
 
-    public void connectToQuery(XQueryEvaluator eval, Processor saxon)
+    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         final QName input_name = new QName(ServlexConstants.WEBAPP_NS, "input");
         eval.setContextItem(myWebRequest);
         eval.setExternalVariable(input_name, myInput);
     }
 
     @Override
-    public void connectToXSLTComponent(XsltTransformer trans, Processor saxon)
+    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         final QName input_name = new QName(ServlexConstants.PRIVATE_NS, "input");
         trans.setParameter(input_name, myInput);
     }
 
     @Override
-    public void connectToStylesheet(XsltTransformer trans, Processor saxon)
+    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         // TODO: Is it possible to set it only if it is declared?  Is this
         // actually an error if it is not declared?
         final QName bod_name = new QName(ServlexConstants.WEBAPP_NS, "input");
@@ -149,19 +148,19 @@ public class RequestConnector
     }
 
     @Override
-    public void connectToPipeline(XPipeline pipe, Processor saxon, XProcRuntime calabash)
+    public void connectToPipeline(XPipeline pipe, ServerConfig config)
             throws ServlexException
     {
-        ensureParsing(saxon);
+        ensureParsing(config);
         final String port = XProcPipeline.INPUT_PORT_NAME;
-        CalabashHelper.writeTo(pipe, port, myInput, saxon, calabash);
+        CalabashHelper.writeTo(pipe, port, myInput, config);
     }
 
     /**
      * Throws an error, as a request cannot be connected directly to the response.
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, Processor saxon, XProcRuntime calabash)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
             throws ServlexException
                  , IOException
     {
@@ -204,7 +203,7 @@ public class RequestConnector
      * and the bodies, which will end up as the $input sequence of most of the
      * components)
      */
-    private XdmNode parseRequest(Processor proc, TreeBuilderHelper b, List<XdmItem> input)
+    private XdmNode parseRequest(ServerConfig config, TreeBuilderHelper b, List<XdmItem> input)
             throws XPathException
                  , ServlexException
                  , TechnicalException
@@ -289,7 +288,7 @@ public class RequestConnector
         // once it has been built
         input.add(null);
         // parse the bodies
-        makeBodies(proc, b, input);
+        makeBodies(config, b, input);
         // end the request element
         b.endElem();
         // return the request document node
@@ -307,7 +306,7 @@ public class RequestConnector
      *
      * TODO: Must add more info on web:multipart and web:body elements.
      */
-    private void makeBodies(Processor proc, TreeBuilderHelper builder, List<XdmItem> input)
+    private void makeBodies(ServerConfig config, TreeBuilderHelper builder, List<XdmItem> input)
             throws ServlexException
                  , XPathException
     {
@@ -328,7 +327,7 @@ public class RequestConnector
                       state != MimeTokenStream.T_END_OF_STREAM;
                       state = parser.next() )
                 {
-                    handleParserState(parser, builder, input, position, proc);
+                    handleParserState(parser, builder, input, position, config);
                     if ( parser.getState() == MimeTokenStream.T_BODY ) {
                         ++position;
                     }
@@ -343,7 +342,7 @@ public class RequestConnector
                 }
                 ctype = ctype.trim();
                 InputStream in = myRequest.getInputStream();
-                XdmItem parsed = parseBody(proc, in, ctype, 1, builder);
+                XdmItem parsed = parseBody(config, in, ctype, 1, builder);
                 input.add(parsed);
             }
         }
@@ -358,7 +357,7 @@ public class RequestConnector
     /**
      * Do the job for one parser event, in case of a multipart.
      */
-    private void handleParserState(MimeTokenStream parser, TreeBuilderHelper builder, List<XdmItem> items, int position, Processor proc)
+    private void handleParserState(MimeTokenStream parser, TreeBuilderHelper builder, List<XdmItem> items, int position, ServerConfig config)
             throws ServlexException
                  , XPathException
                  , MimeException
@@ -402,7 +401,7 @@ public class RequestConnector
                 // (that is, always except for binary content).  That needs some
                 // refactoring wrt how input are passed to parseBody().
                 InputStream in = parser.getInputStream();
-                XdmItem part = parseBody(proc, in, ctype, position, builder);
+                XdmItem part = parseBody(config, in, ctype, position, builder);
                 items.add(part);
                 break;
             // START_HEADER is handled in the calling analyzeParts()
@@ -441,7 +440,7 @@ public class RequestConnector
      *
      * TODO: Ensure we use the correct encoding when reading parts...
      */
-    private XdmItem parseBody(Processor proc, InputStream input, String type, int position, TreeBuilderHelper builder)
+    private XdmItem parseBody(ServerConfig config, InputStream input, String type, int position, TreeBuilderHelper builder)
             throws ServlexException
                  , XPathException
     {
@@ -454,12 +453,12 @@ public class RequestConnector
             builder.startContent();
             XdmItem body;
             if ( "text/html".equals(type) ) {
-                body = parseBodyXml(proc, input, true);
+                body = parseBodyXml(config, input, true);
             }
             else if ( type.endsWith("+xml")
                     || type.endsWith("/xml")
                     || type.endsWith("/xml-external-parsed-entity") ) {
-                body = parseBodyXml(proc, input, false);
+                body = parseBodyXml(config, input, false);
             }
             else if ( type.startsWith("text/")
                     || "application/xml-dtd".equals(type) ) {
@@ -489,7 +488,7 @@ public class RequestConnector
     /**
      * Parse content as XML (tidied up from HTML if {@code html} is true).
      */
-    private XdmNode parseBodyXml(Processor proc, InputStream input, boolean html)
+    private XdmNode parseBodyXml(ServerConfig config, InputStream input, boolean html)
             throws SaxonApiException
                  , SAXException
     {
@@ -506,7 +505,7 @@ public class RequestConnector
         else {
             src = new StreamSource(input, sys_id);
         }
-        return proc.newDocumentBuilder().build(src);
+        return config.getSaxon().newDocumentBuilder().build(src);
     }
 
     /**

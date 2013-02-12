@@ -11,7 +11,6 @@ package org.expath.servlex;
 
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.model.Application;
-import com.xmlcalabash.core.XProcRuntime;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.processors.CalabashProcessor;
 import org.expath.servlex.runtime.ComponentError;
 
 
@@ -164,8 +164,8 @@ public class Servlex
             }
             else {
                 Processor saxon = myConfig.getSaxon();
-                XProcRuntime calabash = myConfig.getCalabash();
-                invoke(saxon, calabash, req, resp);
+                CalabashProcessor calabash = myConfig.getCalabash();
+                invoke(req, resp);
             }
         }
         catch ( ServlexException ex ) {
@@ -206,7 +206,7 @@ public class Servlex
     /**
      * TODO: ...
      */
-    private void invoke(Processor saxon, XProcRuntime calabash, HttpServletRequest req, HttpServletResponse resp)
+    private void invoke(HttpServletRequest req, HttpServletResponse resp)
             throws IOException
                  , ServlexException
     {
@@ -232,14 +232,14 @@ public class Servlex
         // invoke the component
         Connector result;
         try {
-            result = invoc.invoke(request, saxon, calabash);
+            result = invoc.invoke(request, myConfig);
         }
         catch ( ComponentError ex ) {
             // TODO: Shouldn't we set the result even in this case...?
             throw new ServlexException(500, "Internal error", ex);
         }
         // connect the result to the client
-        result.connectToResponse(resp, saxon, calabash);
+        result.connectToResponse(resp, myConfig);
     }
 
     /** The logger. */

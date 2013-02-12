@@ -9,8 +9,7 @@
 
 package org.expath.servlex.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
-import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
@@ -34,19 +33,19 @@ public class FilterInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, Processor saxon, XProcRuntime calabash)
+    public Connector invoke(Connector connector, ServerConfig config)
             throws ServlexException
                  , ComponentError
     {
         // inbound filter
         if ( myIn != null ) {
-            connector = myIn.run(saxon, calabash, connector);
+            connector = myIn.run(config, connector);
         }
         // the filtered component
-        connector = myWrapped.invoke(connector, saxon, calabash);
+        connector = myWrapped.invoke(connector, config);
         // outbound filter
         if ( myOut != null ) {
-            connector = myOut.run(saxon, calabash, connector);
+            connector = myOut.run(config, connector);
         }
         // return the filtered result
         return connector;

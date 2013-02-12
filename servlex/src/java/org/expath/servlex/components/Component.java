@@ -9,8 +9,7 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
-import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.runtime.ComponentError;
@@ -41,7 +40,7 @@ public interface Component
      *          entity content. It can be different if there are any filter or
      *          error handler in between.
      */
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
             throws ServlexException
                  , ComponentError;
 }

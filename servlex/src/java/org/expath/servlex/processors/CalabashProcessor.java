@@ -1,48 +1,54 @@
 /****************************************************************************/
-/*  File:       Connector.java                                              */
+/*  File:       CalabashProcessor.java                                      */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-02-06                                                  */
+/*  Date:       2013-02-12                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.connectors;
+package org.expath.servlex.processors;
 
-import com.xmlcalabash.runtime.XPipeline;
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XsltTransformer;
-import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexException;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.XdmNode;
+import org.expath.pkg.saxon.SaxonRepository;
 
 /**
- * Encapsulate a connection between two components.
+ * Abstract an XProc processor.
  *
  * @author Florent Georges
- * @date   2011-02-06
+ * @date   2013-02-12
  */
-public interface Connector
+public class CalabashProcessor
 {
-    /** Connect to an XQuery function. */
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
-            throws ServlexException;
-    /** Connect to an XQuery main module. */
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
-            throws ServlexException;
-    /** Connect to an XSLT component, either a function or a named template. */
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
-            throws ServlexException;
-    /** Connect to an XSLT stylesheet. */
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
-            throws ServlexException;
-    /** Connect to an XProc pipeline. */
-    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
-            throws ServlexException;
-    /** Connect to the final HTTP Servlet response. */
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
-            throws ServlexException, IOException;
+    public CalabashProcessor(Processor saxon, SaxonRepository repo)
+    {
+        mySaxon = saxon;
+        myRepo = repo;
+    }
+
+    public CalabashPipeline compile(String pipe)
+    {
+        return new CalabashPipeline(this, pipe);
+    }
+
+    public CalabashPipeline compile(XdmNode pipe)
+    {
+        return new CalabashPipeline(this, pipe);
+    }
+
+    public Processor getSaxon()
+    {
+        return mySaxon;
+    }
+
+    public SaxonRepository getRepo()
+    {
+        return myRepo;
+    }
+
+    private Processor mySaxon;
+    private SaxonRepository myRepo;
 }
 
 

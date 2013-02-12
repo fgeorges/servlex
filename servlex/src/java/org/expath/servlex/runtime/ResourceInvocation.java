@@ -10,16 +10,15 @@
 package org.expath.servlex.runtime;
 
 import org.expath.servlex.model.Resource;
-import com.xmlcalabash.core.XProcRuntime;
 import java.io.InputStream;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.functions.regex.JRegularExpression;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Storage;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
@@ -43,7 +42,7 @@ public class ResourceInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, Processor saxon, XProcRuntime calabash)
+    public Connector invoke(Connector connector, ServerConfig config)
             throws ServlexException
     {
         String path = replaceMatches(getPath());

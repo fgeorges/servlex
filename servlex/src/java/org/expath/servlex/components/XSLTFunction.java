@@ -9,14 +9,12 @@
 
 package org.expath.servlex.components;
 
-import com.xmlcalabash.core.XProcRuntime;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
@@ -29,6 +27,7 @@ import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
@@ -53,15 +52,15 @@ public class XSLTFunction
     }
 
     @Override
-    public Connector run(Processor saxon, XProcRuntime calabash, Connector connector)
+    public Connector run(ServerConfig config, Connector connector)
         throws ServlexException
              , ComponentError
     {
         try {
-            XsltExecutable exec = getCompiled(saxon);
+            XsltExecutable exec = getCompiled(config);
             XsltTransformer trans = exec.load();
             trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            connector.connectToXSLTComponent(trans, saxon);
+            connector.connectToXSLTComponent(trans, config);
             XdmDestination dest = new XdmDestination();
             trans.setDestination(dest);
             trans.transform();
@@ -86,12 +85,12 @@ public class XSLTFunction
         }
     }
 
-    private synchronized XsltExecutable getCompiled(Processor proc)
+    private synchronized XsltExecutable getCompiled(ServerConfig config)
             throws PackageException
                  , SaxonApiException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = proc.newXsltCompiler();
+            XsltCompiler c = config.getSaxon().newXsltCompiler();
             String style = makeCallSheet(true, myImportUri, myNS, myLocal);
             Source src = new StreamSource(new StringReader(style));
             src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);

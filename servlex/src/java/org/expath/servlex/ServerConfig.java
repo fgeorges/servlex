@@ -10,10 +10,6 @@
 package org.expath.servlex;
 
 import org.expath.servlex.model.Application;
-import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcMessageListener;
-import com.xmlcalabash.core.XProcRunnable;
-import com.xmlcalabash.core.XProcRuntime;
 import java.io.File;
 import java.net.URI;
 import java.util.Enumeration;
@@ -25,10 +21,7 @@ import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
 import org.apache.log4j.Logger;
-import org.expath.pkg.calabash.PkgConfigurer;
 import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.Package;
@@ -40,6 +33,7 @@ import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.functions.*;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.processors.CalabashProcessor;
 
 
 /**
@@ -57,7 +51,7 @@ public class ServerConfig
     /** The system property name for the repo directory. */
     public static final String REPO_DIR_PROPERTY = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
-    public static final String REPO_CP_PROPERTY = "org.expath.servlex.repo.classpath";
+    public static final String REPO_CP_PROPERTY  = "org.expath.servlex.repo.classpath";
 
     /**
      * Initialize the webapp list from the repository got from system properties.
@@ -131,14 +125,7 @@ public class ServerConfig
         // the parse header function
         mySaxon.registerExtensionFunction(new ParseHeaderValueFunction(mySaxon));
         // the Calabash processor
-        XProcConfiguration xconf = new XProcConfiguration(mySaxon);
-        myCalabash = new XProcRuntime(xconf);
-        myCalabash.setMessageListener(new MsgListener());
-        PkgConfigurer configurer = new PkgConfigurer(myCalabash, myRepo.getUnderlyingRepo());
-        myCalabash.setConfigurer(configurer);
-        // FIXME: Have to reconfigure the Saxon processor, because Calabash
-        // install its own resolvers.  Should be ok though, but double-check!
-        helper.config(mySaxon.getUnderlyingConfiguration());
+        myCalabash = new CalabashProcessor(mySaxon, myRepo);
     }
 
     private static Storage getStorage(String repo_dir, String repo_classpath)
@@ -292,7 +279,7 @@ public class ServerConfig
     /**
      * Return the shared Calabash configuration.
      */
-    public XProcRuntime getCalabash()
+    public CalabashProcessor getCalabash()
     {
         return myCalabash;
     }
@@ -382,7 +369,7 @@ public class ServerConfig
     /** The Saxon instance. */
     private Processor mySaxon;
     /** The Calabash instance. */
-    private XProcRuntime myCalabash;
+    private CalabashProcessor myCalabash;
     /** The application map. */
     private Map<String, Application> myApps;
 
@@ -426,51 +413,6 @@ public class ServerConfig
         {
             return dflt;
         }
-    }
-
-    /**
-     * TODO: We should keep the default implementation from Calabash (that is,
-     * not defining this class and not calling setMessageListener() on
-     * myCalabash).  The default implem uses java.util.logging, just find how
-     * to configure it properly (also used by EXPath Repo...)
-     */
-    private static class MsgListener
-            implements XProcMessageListener
-    {
-        public void error(XProcRunnable step, XdmNode node, String message, QName code) {
-            LOG.error("[calabash] ERROR: " + message + ", " + code + " in " + step + ": " + node);
-        }
-
-        public void error(Throwable exception) {
-            LOG.error("[calabash] ERROR: " + exception, exception);
-        }
-
-        public void warning(XProcRunnable step, XdmNode node, String message) {
-            LOG.warn("[calabash] WARNING: " + message + " in " + step + ": " + node);
-        }
-
-        public void warning(Throwable exception) {
-            LOG.warn("[calabash] WARNING: " + exception, exception);
-        }
-
-        public void info(XProcRunnable step, XdmNode node, String message) {
-            LOG.info("[calabash] INFO: " + message + " in " + step + ": " + node);
-        }
-
-        public void fine(XProcRunnable step, XdmNode node, String message) {
-            LOG.debug("[calabash] FINE: " + message + " in " + step + ": " + node);
-        }
-
-        public void finer(XProcRunnable step, XdmNode node, String message) {
-            LOG.debug("[calabash] FINER: " + message + " in " + step + ": " + node);
-        }
-
-        public void finest(XProcRunnable step, XdmNode node, String message) {
-            LOG.trace("[calabash] FINEST: " + message + " in " + step + ": " + node);
-        }
-
-        /** The specific logger. */
-        private static final Logger LOG = Logger.getLogger(MsgListener.class);
     }
 }
 

@@ -9,8 +9,7 @@
 
 package org.expath.servlex.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
-import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
@@ -43,7 +42,7 @@ public abstract class Invocation
         return myRequest;
     }
 
-    public abstract Connector invoke(Connector connector, Processor saxon, XProcRuntime calabash)
+    public abstract Connector invoke(Connector connector, ServerConfig config)
             throws ServlexException
                  , ComponentError;
 
