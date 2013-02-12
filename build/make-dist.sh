@@ -3,7 +3,7 @@
 # The version number to build a release for.  To edit when changing
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml
-DIST_VER=0.7.0
+DIST_VER=0.8.0dev
 DIR=servlex-${DIST_VER}
 
 WAR=../servlex/dist/servlex.war
