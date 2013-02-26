@@ -23,13 +23,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.s9api.Processor;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.parser.ParseException;
-import org.expath.servlex.processors.CalabashProcessor;
 import org.expath.servlex.runtime.ComponentError;
 
 
@@ -163,8 +161,6 @@ public class Servlex
                 welcome(resp);
             }
             else {
-                Processor saxon = myConfig.getSaxon();
-                CalabashProcessor calabash = myConfig.getCalabash();
                 invoke(req, resp);
             }
         }

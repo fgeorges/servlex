@@ -28,12 +28,11 @@ import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
-import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
-import org.expath.servlex.functions.*;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.processors.CalabashProcessor;
+import org.expath.servlex.tools.SaxonHelper;
 
 
 /**
@@ -103,31 +102,9 @@ public class ServerConfig
             LOG.info("Add the application to the store: " + app.getName());
         }
         // the Saxon processor
-        mySaxon = new Processor(false);
-        ConfigHelper helper = new ConfigHelper(myRepo);
-        helper.config(mySaxon.getUnderlyingConfiguration());
-        // the request fields management functions
-        mySaxon.registerExtensionFunction(new GetRequestFieldFunction());
-        mySaxon.registerExtensionFunction(new GetRequestFieldNamesFunction());
-        mySaxon.registerExtensionFunction(new SetRequestFieldFunction());
-        // the session fields management functions
-        mySaxon.registerExtensionFunction(new GetSessionFieldFunction());
-        mySaxon.registerExtensionFunction(new GetSessionFieldNamesFunction());
-        mySaxon.registerExtensionFunction(new SetSessionFieldFunction());
-        // the webapp fields management functions
-        mySaxon.registerExtensionFunction(new GetWebappFieldFunction());
-        mySaxon.registerExtensionFunction(new GetWebappFieldNamesFunction());
-        mySaxon.registerExtensionFunction(new SetWebappFieldFunction());
-        // the server fields management functions
-        mySaxon.registerExtensionFunction(new GetServerFieldFunction());
-        mySaxon.registerExtensionFunction(new GetServerFieldNamesFunction());
-        mySaxon.registerExtensionFunction(new SetServerFieldFunction());
-        // the parse basic authentication function
-        mySaxon.registerExtensionFunction(new ParseBasicAuthFunction(mySaxon));
-        // the parse header function
-        mySaxon.registerExtensionFunction(new ParseHeaderValueFunction(mySaxon));
+        mySaxon = SaxonHelper.makeSaxon(myRepo);
         // the Calabash processor
-        myCalabash = new CalabashProcessor(mySaxon, myRepo);
+        myCalabash = new CalabashProcessor(myRepo);
     }
 
     private static Storage getStorage(String repo_dir, String repo_classpath)

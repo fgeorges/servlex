@@ -13,14 +13,19 @@ import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.saxon.ConfigHelper;
+import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.WebappFunctions;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -31,6 +36,16 @@ import org.expath.servlex.runtime.ComponentError;
  */
 public class SaxonHelper
 {
+    public static Processor makeSaxon(SaxonRepository repo)
+            throws PackageException
+    {
+        Processor saxon = new Processor(false);
+        ConfigHelper helper = new ConfigHelper(repo);
+        helper.config(saxon.getUnderlyingConfiguration());
+        WebappFunctions.setup(saxon);
+        return saxon;
+    }
+
     /**
      * Return the root element of the document node passed in param.
      *

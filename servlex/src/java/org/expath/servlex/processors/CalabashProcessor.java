@@ -11,7 +11,9 @@ package org.expath.servlex.processors;
 
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmNode;
+import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * Abstract an XProc processor.
@@ -21,10 +23,11 @@ import org.expath.pkg.saxon.SaxonRepository;
  */
 public class CalabashProcessor
 {
-    public CalabashProcessor(Processor saxon, SaxonRepository repo)
+    public CalabashProcessor(SaxonRepository repo)
+            throws PackageException
     {
-        mySaxon = saxon;
         myRepo = repo;
+        mySaxon = SaxonHelper.makeSaxon(myRepo);
     }
 
     public CalabashPipeline compile(String pipe)
