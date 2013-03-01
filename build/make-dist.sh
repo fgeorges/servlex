@@ -5,6 +5,7 @@
 # too: samples/hello-world/xproject/project.xml
 DIST_VER=0.8.0dev
 DIR=servlex-${DIST_VER}
+REVISION=`git describe --always`
 
 WAR=../servlex/dist/servlex.war
 JAR=../servlex/dist/servlex.jar
@@ -48,7 +49,12 @@ mkdir ${DIR}
 # README and VERSION
 cp README ${DIR}/
 echo "Version: ${DIST_VER}" > ${DIR}/VERSION
-echo "Subversion revision:" `svnversion` >> ${DIR}/VERSION
+echo "Subversion revision: ${REVISION}" >> ${DIR}/VERSION
+VERSION_PROP=../servlex/src/java/org/expath/servlex/tools/version.properties
+echo "org.expath.servlex.version=${DIST_VER}" > ${VERSION_PROP}
+echo "org.expath.servlex.revision=${REVISION}" >> ${VERSION_PROP}
+# build it
+( cd ../servlex/ && ant ) || die "Build failed"
 # WAR and JAR
 cp "$WAR" ${DIR}/
 cp "$JAR" ${DIR}/
