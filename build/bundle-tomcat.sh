@@ -49,11 +49,14 @@ rm -r "${TOMCAT}"
 
 # creating the repo and adding the repo property to conf/catalina.properties
 mkdir "${TOMCAT}/repo"
+mkdir "${TOMCAT}/profiling"
 PROPS="${TOMCAT}/conf/catalina.properties"
 echo >> "${PROPS}"
 echo >> "${PROPS}"
 echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
 echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
+echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
+echo '# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling' >> "${PROPS}"
 
 # changing the port numbers in conf/server.xml
 ( cd "${TOMCAT}"; patch -p0 < ../bundle-tomcat-server.patch )

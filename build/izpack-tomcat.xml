@@ -47,6 +47,7 @@
          <file src="apache-tomcat-7.0.35/conf/"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.35/lib/"          targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.35/logs/"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.35/profiling/"    targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.35/repo/"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.35/temp/"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.35/webapps/"      targetdir="$INSTALL_PATH"/>
