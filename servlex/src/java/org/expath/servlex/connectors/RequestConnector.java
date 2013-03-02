@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.Source;
@@ -50,6 +51,7 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.XProcPipeline;
 import org.expath.servlex.tools.CalabashHelper;
 import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.tools.TraceInputStream;
 import org.expath.servlex.tools.TreeBuilderHelper;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -208,18 +210,73 @@ public class RequestConnector
                  , ServlexException
                  , TechnicalException
     {
+        // some values
+        String servlet   = myServlet.getName();
+        String path      = myPath;
+        String method    = myRequest.getMethod();
+        String uri       = getRequestUri();
+        String authority = getAuthority(uri);
+        String ctxt_root =
+                myRequest.getContextPath()
+                + myRequest.getServletPath()
+                + "/"
+                + myServlet.getApplication().getName();
+        // log them?
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("Request - servlet  : " + servlet);
+            LOG.debug("Request - path     : " + path);
+            LOG.debug("Request - method   : " + method);
+            LOG.debug("Request - uri      : " + uri);
+            LOG.debug("Request - authority: " + authority);
+            LOG.debug("Request - ctxt_root: " + ctxt_root);
+        }
+        // use them in web:request
         b.startElem("request");
-        b.attribute("servlet", myServlet.getName());
-        b.attribute("path", myPath);
-        b.attribute("method", myRequest.getMethod().toLowerCase());
+        b.attribute("servlet", servlet);
+        b.attribute("path", path);
+        b.attribute("method", method.toLowerCase());
         b.startContent();
+        b.textElem("uri", uri);
+        b.textElem("authority", authority);
+        b.textElem("context-root", ctxt_root);
+        // the path
+        makeElementPath(b);
+        // the parameters
+        makeElementsParam(b);
+        // the headers
+        makeElementsHeader(b);
+        // add null as the first item, as a placeholder for the request element
+        // once it has been built
+        input.add(null);
+        // parse the bodies
+        makeBodies(config, b, input);
+        // end the request element
+        b.endElem();
+        // return the request document node
+        XdmNode doc = b.getRoot();
+        XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
+        input.set(0, elem);
+        return doc;
+    }
+
+    /**
+     * Return the request URI as a string.
+     */
+    private String getRequestUri()
+    {
         StringBuffer uribuf = myRequest.getRequestURL();
         if ( myRequest.getQueryString() != null ) {
             uribuf.append('?');
             uribuf.append(myRequest.getQueryString());
         }
-        String uri = uribuf.toString();
-        b.textElem("uri", uri);
+        return uribuf.toString();
+    }
+
+    /**
+     * Return the request URI as a string.
+     */
+    private String getAuthority(String uri)
+    {
         int slash = uri.indexOf('/');
         if ( slash >= 0 ) {
             slash = uri.indexOf('/', slash + 1); // second slash
@@ -228,13 +285,19 @@ public class RequestConnector
             slash = uri.indexOf('/', slash + 1); // third slash
         }
         if ( slash >= 0 ) {
-            b.textElem("authority", uri.substring(0, slash));
+            return uri.substring(0, slash);
         }
         else {
-            b.textElem("authority", uri);
+            return uri;
         }
-        b.textElem("context-root", myRequest.getContextPath() + myRequest.getServletPath() + "/" + myServlet.getApplication().getName());
-        // the path
+    }
+
+    /**
+     * Make the element web:path within the web:request, and put it in {@code b}.
+     */
+    private void makeElementPath(TreeBuilderHelper b)
+            throws XPathException
+    {
         b.startElem("path");
         b.startContent();
         if ( myMatcher == null ) { // -> welcome file
@@ -263,39 +326,47 @@ public class RequestConnector
             }
         }
         b.endElem();
-        // the parameters
+    }
+
+    /**
+     * Make the elements web:param within the web:request, and put them in {@code b}.
+     */
+    private void makeElementsParam(TreeBuilderHelper b)
+            throws XPathException
+    {
         for ( Enumeration<String> e = myRequest.getParameterNames(); e.hasMoreElements(); /* */ ) {
             String name = e.nextElement();
             for ( String value : myRequest.getParameterValues(name) ) {
+                if ( LOG.isDebugEnabled() ) {
+                    LOG.debug("Request - param    : " + name + " / " + value);
+                }
                 b.startElem("param");
                 b.attribute("name", name);
                 b.attribute("value", value);
                 b.endElem();
             }
         }
-        // the headers
+    }
+
+    /**
+     * Make the elements web:header within the web:request, and put them in {@code b}.
+     */
+    private void makeElementsHeader(TreeBuilderHelper b)
+            throws XPathException
+    {
         for ( Enumeration<String> e = myRequest.getHeaderNames(); e.hasMoreElements(); /* */ ) {
             String name = e.nextElement();
             for ( Enumeration<String> e2 = myRequest.getHeaders(name); e2.hasMoreElements(); /* */ ) {
                 String value = e2.nextElement();
+                if ( LOG.isDebugEnabled() ) {
+                    LOG.debug("Request - header   : " + name + " / " + value);
+                }
                 b.startElem("header");
                 b.attribute("name", name);
                 b.attribute("value", value);
                 b.endElem();
             }
         }
-        // add null as the first item, as a placeholder for the request element
-        // once it has been built
-        input.add(null);
-        // parse the bodies
-        makeBodies(config, b, input);
-        // end the request element
-        b.endElem();
-        // return the request document node
-        XdmNode doc = b.getRoot();
-        XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
-        input.set(0, elem);
-        return doc;
     }
 
     /**
@@ -313,6 +384,10 @@ public class RequestConnector
         try {
             String ctype = myRequest.getContentType();
             LOG.debug("Raw body content type: " + ctype);
+            ServletInputStream in = myRequest.getInputStream();
+            if ( LOG.isTraceEnabled() ) {
+                in = new TraceInputStream(in);
+            }
             if ( ctype == null ) {
                 // if the content type is null, we assume there is no content
             }
@@ -320,7 +395,6 @@ public class RequestConnector
                 builder.startElem("multipart");
                 builder.startContent();
                 MimeTokenStream parser = new MimeTokenStream();
-                InputStream in = myRequest.getInputStream();
                 parser.parseHeadless(in, ctype);
                 int position = 1;
                 for ( int state = parser.getState();
@@ -336,12 +410,12 @@ public class RequestConnector
             }
             else {
                 // content type can be of the form "main/sub; charset=xxx"
+                // TODO: Use Apache's HeaderValueParser to parse ctype...
                 int semicolon = ctype.indexOf(';');
                 if ( semicolon > 0 ) {
                     ctype = ctype.substring(0, semicolon);
                 }
                 ctype = ctype.trim();
-                InputStream in = myRequest.getInputStream();
                 XdmItem parsed = parseBody(config, in, ctype, 1, builder);
                 input.add(parsed);
             }
