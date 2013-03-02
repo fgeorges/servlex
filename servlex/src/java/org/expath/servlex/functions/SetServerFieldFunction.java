@@ -73,7 +73,7 @@ public class SetServerFieldFunction
         return new SetServerFieldCall();
     }
 
-    private static final String LOCAL_NAME = "set-server-field";
+    private static final String LOCAL_NAME = "set-container-field";
 }
 
 

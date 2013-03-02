@@ -71,7 +71,7 @@ public class GetServerFieldFunction
         return new GetServerFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-server-field";
+    private static final String LOCAL_NAME = "get-container-field";
 }
 
 
