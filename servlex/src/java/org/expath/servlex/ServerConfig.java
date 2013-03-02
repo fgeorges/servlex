@@ -11,10 +11,13 @@ package org.expath.servlex;
 
 import org.expath.servlex.model.Application;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -48,11 +51,11 @@ import org.expath.servlex.tools.SaxonHelper;
 public class ServerConfig
 {
     /** The system property name for the repo directory. */
-    public static final String REPO_DIR_PROPERTY = "org.expath.servlex.repo.dir";
+    public static final String REPO_DIR_PROPERTY    = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
-    public static final String REPO_CP_PROPERTY  = "org.expath.servlex.repo.classpath";
+    public static final String REPO_CP_PROPERTY     = "org.expath.servlex.repo.classpath";
     /** The system property name for the log directory. */
-    public static final String LOG_DIR_PROPERTY  = "org.expath.servlex.log.dir";
+    public static final String PROFILE_DIR_PROPERTY = "org.expath.servlex.profile.dir";
 
     /**
      * Initialize the webapp list from the repository got from system properties.
@@ -105,6 +108,29 @@ public class ServerConfig
         mySaxon = SaxonHelper.makeSaxon(myRepo);
         // the Calabash processor
         myCalabash = new CalabashProcessor(myRepo);
+        setVersion();
+    }
+
+    /**
+     * Set the version and revision number by reading the properties file.
+     */
+    private void setVersion()
+            throws ParseException
+    {
+        Properties props = new Properties();
+        InputStream rsrc = ServerConfig.class.getResourceAsStream(VERSION_RSRC);
+        if ( rsrc == null ) {
+            throw new ParseException("Version properties file does not exist: " + VERSION_RSRC);
+        }
+        try {
+            props.load(rsrc);
+            rsrc.close();
+        }
+        catch ( IOException ex ) {
+            throw new ParseException("Error reading the version properties: " + VERSION_RSRC, ex);
+        }
+        myVersion  = props.getProperty(VERSION_PROP);
+        myRevision = props.getProperty(REVISION_PROP);
     }
 
     private static Storage getStorage(String repo_dir, String repo_classpath)
@@ -132,6 +158,22 @@ public class ServerConfig
             store = new ClasspathStorage(repo_classpath);
         }
         return store;
+    }
+
+    /**
+     * Return the Servlex version number.
+     */
+    public String getVersion()
+    {
+        return myVersion;
+    }
+
+    /**
+     * Return the Servlex revision number.
+     */
+    public String getRevision()
+    {
+        return myRevision;
     }
 
     public boolean canInstall()
@@ -337,10 +379,20 @@ public class ServerConfig
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ServerConfig.class);
+    /** The resource name of the version properties file. */
+    private static final String VERSION_RSRC = "/org/expath/servlex/tools/version.properties";
+    /** The property for the version number. */
+    private static final String VERSION_PROP = "org.expath.servlex.version";
+    /** The property for the revision number. */
+    private static final String REVISION_PROP = "org.expath.servlex.revision";
 
     /** The singleton instance. */
     private static ServerConfig INSTANCE;
 
+    /** The Servlex implementation version. */
+    private String myVersion;
+    /** The Servlex implementation revision number. */
+    private String myRevision;
     /** The repository for webapps. */
     private SaxonRepository myRepo;
     /** The storage used by the repository. */
