@@ -9,7 +9,6 @@
 
 package org.expath.servlex.functions;
 
-import java.util.Map;
 import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,6 +20,7 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.tools.Properties;
 
 /**
  * TODO: Doc...
@@ -42,13 +42,13 @@ public class GetServerFieldNamesCall
         // returning the name of every fields in the server
         try {
             LOG.debug("Get server field names");
-            Map<String, SequenceIterator> server = Servlex.getServerMap();
-            if ( server.size() == 0 ) {
+            Properties props = Servlex.getServerMap();
+            if ( props.size() == 0 ) {
                 return EmptyIterator.getInstance();
             }
-            Item[] items = new Item[server.size()];
+            Item[] items = new Item[props.size()];
             int i = 0;
-            for ( String name : server.keySet() ) {
+            for ( String name : props.keys() ) {
                 items[i] = new StringValue(name);
                 ++i;
             }

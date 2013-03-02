@@ -9,7 +9,6 @@
 
 package org.expath.servlex.functions;
 
-import java.util.Map;
 import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -20,6 +19,8 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Properties;
 
 /**
  * TODO: Doc...
@@ -55,12 +56,15 @@ public class SetServerFieldCall
         // setting the sequence in the server
         try {
             LOG.debug("Set server field: '" + name + "'");
-            Map<String, SequenceIterator> server = Servlex.getServerMap();
-            server.put(name, value.getAnother());
+            Properties props = Servlex.getServerMap();
+            props.set(name, value.getAnother());
             return EmptyIterator.getInstance();
         }
         catch ( ServletException ex ) {
             throw new XPathException("Error in the Servlex server management", ex);
+        }
+        catch ( TechnicalException ex ) {
+            throw new XPathException("Error setting a server property", ex);
         }
     }
 
