@@ -84,6 +84,7 @@ public class DeployWebapp
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException
+                 , ServletException
     {
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
@@ -125,6 +126,7 @@ public class DeployWebapp
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException
+                 , ServletException
     {
         if ( ! myConfig.canInstall() ) {
             resp.sendError(501, "Install not supported, storage is read-only");

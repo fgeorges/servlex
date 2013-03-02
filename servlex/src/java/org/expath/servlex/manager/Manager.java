@@ -45,7 +45,7 @@ public class Manager
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
         view.open("home", "Manager");
-        view.println("<p>Choose one of the page in the menu above.</p>");
+        view.println("<p>Choose one of the pages in the menu above.</p>");
         view.close();
     } 
 

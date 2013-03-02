@@ -10,9 +10,16 @@
 package org.expath.servlex.manager;
 
 import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.trans.XPathException;
+import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Properties;
 
 /**
- * TODO: ...
+ * Apply a unified view to the console pages.
  *
  * @author Florent Georges
  * @date   2013-02-03
@@ -88,14 +95,45 @@ public class View
     }
 
     public void close()
+            throws ServletException
     {
+        String vendor = getVendor();
         myOut.println("               </div>");
         myOut.println("            </div>");
+        myOut.println("         </div>");
+        myOut.println("         <div id='footer'>");
+        if ( vendor == null ) {
+            myOut.println("            <div class='right'>[ version not loaded yet ]</div>");
+        }
+        else {
+            myOut.println("            <div class='right'>" + vendor + "</div>");
+        }
         myOut.println("         </div>");
         myOut.println("      </div>");
         myOut.println("   </body>");
         myOut.println("</html>");
         myOut.close();
+    }
+
+    private String getVendor()
+            throws ServletException
+    {
+        Properties props = Servlex.getServerMap();
+        if ( props == null ) {
+            // Servlex has not been initialized yet
+            return null;
+        }
+        try {
+            SequenceIterator vendor = props.get("web:vendor-html");
+            Item item = vendor.next();
+            return item.getStringValue();
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServletException("Error getting the system property web:vendor", ex);
+        }
+        catch ( XPathException ex ) {
+            throw new ServletException("Error extracting the value of the system property web:vendor", ex);
+        }
     }
 
     private PrintWriter myOut;

@@ -13,7 +13,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Enumeration;
 import java.util.regex.Pattern;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -83,6 +82,7 @@ public class DeployFromCxan
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException
+                 , ServletException
     {
         if ( ! myConfig.canInstall() ) {
             resp.sendError(501, "Install not supported, storage is read-only");
