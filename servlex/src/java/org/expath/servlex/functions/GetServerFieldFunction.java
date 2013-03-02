@@ -51,9 +51,9 @@ public class GetServerFieldFunction
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
+        final int      one   = StaticProperty.EXACTLY_ONE;
         final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, any);
+        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
         return new SequenceType[]{ stype };
     }
 
