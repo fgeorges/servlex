@@ -107,7 +107,7 @@ public class ServerConfig
         // the Saxon processor
         mySaxon = SaxonHelper.makeSaxon(myRepo);
         // the Calabash processor
-        myCalabash = new CalabashProcessor(myRepo);
+        myCalabash = new CalabashProcessor(myRepo, mySaxon);
         setVersion();
     }
 

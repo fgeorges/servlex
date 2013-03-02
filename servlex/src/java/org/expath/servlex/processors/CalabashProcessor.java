@@ -9,11 +9,13 @@
 
 package org.expath.servlex.processors;
 
+import java.io.File;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmNode;
+import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.SaxonRepository;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.ServerConfig;
 
 /**
  * Abstract an XProc processor.
@@ -23,35 +25,80 @@ import org.expath.servlex.tools.SaxonHelper;
  */
 public class CalabashProcessor
 {
-    public CalabashProcessor(SaxonRepository repo)
+    /**
+     * Construct a new Calabash processor, from its underlying Saxon processor and repository.
+     * 
+     * It uses the value of the property {@code ServerConfig.PROFILE_DIR_PROPERTY},
+     * if it exists, to enable Calabash profiling data generation, the value of
+     * the property being a directory where to put the corresponding files.  If
+     * the directory does not exist, profiling is disabled and a message is logged
+     * (but this is not an error).  If the property does not exist, profiling is
+     * not enabled.
+     */
+    public CalabashProcessor(SaxonRepository repo, Processor saxon)
             throws PackageException
     {
         myRepo = repo;
-        mySaxon = SaxonHelper.makeSaxon(myRepo);
+        mySaxon = saxon;
+        String prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
+        if ( prop != null ) {
+            myProfileDir = new File(prop);
+            if ( ! myProfileDir.exists() ) {
+                LOG.error("Calabash profile dir does not exist, disabling profiling (" + myProfileDir + ")");
+                myProfileDir = null;
+            }
+        }
     }
 
+    /**
+     * Compile a pipeline from a URI.
+     */
     public CalabashPipeline compile(String pipe)
     {
         return new CalabashPipeline(this, pipe);
     }
 
+    /**
+     * Compile a pipeline from an in-memory XML tree.
+     */
     public CalabashPipeline compile(XdmNode pipe)
     {
         return new CalabashPipeline(this, pipe);
     }
 
+    /**
+     * Return the underlying Saxon processor.
+     */
     public Processor getSaxon()
     {
         return mySaxon;
     }
 
+    /**
+     * Return the underlying repository.
+     */
     public SaxonRepository getRepo()
     {
         return myRepo;
     }
 
+    /**
+     * Return the directory to save profiling data, when enabled.  Null if disabled.
+     */
+    public File getProfileDir()
+    {
+        return myProfileDir;
+    }
+
+    /** The specific logger. */
+    private static final Logger LOG = Logger.getLogger(CalabashProcessor.class);
+
+    /** The Saxon processor. */
     private Processor mySaxon;
+    /** The repository. */
     private SaxonRepository myRepo;
+    /** The profile directory, if profiling is enabled. */
+    private File myProfileDir;
 }
 
 

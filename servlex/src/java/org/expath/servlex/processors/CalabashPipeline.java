@@ -15,6 +15,9 @@ import com.xmlcalabash.core.XProcRunnable;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -24,7 +27,6 @@ import org.expath.pkg.calabash.PkgConfigurer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.SaxonHelper;
@@ -65,28 +67,9 @@ public class CalabashPipeline
             throws ComponentError
                  , ServlexException
     {
-        Processor saxon = myCalabash.getSaxon();
-        XProcConfiguration xconf = new XProcConfiguration(saxon);
-        XProcRuntime runtime = new XProcRuntime(xconf);
-        runtime.setMessageListener(new MsgListener());
-        SaxonRepository repo = myCalabash.getRepo();
-        PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
-        runtime.setConfigurer(configurer);
-        String logdir_prop = System.getProperty(ServerConfig.LOG_DIR_PROPERTY);
-        if ( logdir_prop != null ) {
-            File logdir = new File(logdir_prop);
-            if ( ! logdir.exists() ) {
-                throw new ServlexException(500, "Calabash log dir does not exist!");
-            }
-            File logfile = new File(logdir, System.nanoTime() + "-profile.xml");
-            // TODO: What if the file already exists?
-            runtime.setProfileFile(logfile.getAbsolutePath());
-        }
         try {
-            // FIXME: Have to reconfigure the Saxon processor, because Calabash
-            // install its own resolvers.  Should be ok though, but double-check!
-            ConfigHelper helper = new ConfigHelper(repo);
-            helper.config(saxon.getUnderlyingConfiguration());
+            // instantiate the runtime
+            XProcRuntime runtime = getRuntime();
             // compile the pipeline
             if ( myPipeNode == null ) {
                 LOG.debug("About to compile the pipeline: " + myPipe);
@@ -107,11 +90,52 @@ public class CalabashPipeline
         }
     }
 
-    private String myPipe;
-    private XdmNode myPipeNode;
-    private CalabashProcessor myCalabash;
+    /**
+     * Prepare a new runtime, not compiling any pipeline, not handling errors.
+     */
+    private XProcRuntime getRuntime()
+            throws PackageException
+                 , ServlexException
+    {
+        Processor saxon = myCalabash.getSaxon();
+        XProcConfiguration xconf = new XProcConfiguration(saxon);
+        XProcRuntime runtime = new XProcRuntime(xconf);
+        runtime.setMessageListener(new MsgListener());
+        SaxonRepository repo = myCalabash.getRepo();
+        PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
+        runtime.setConfigurer(configurer);
+        setProfiling(runtime);
+        // FIXME: Have to reconfigure the Saxon processor, because Calabash
+        // install its own resolvers.  Should be ok though, but double-check!
+        ConfigHelper helper = new ConfigHelper(repo);
+        helper.config(saxon.getUnderlyingConfiguration());
+        return runtime;
+    }
+
+    /**
+     * Set profiling file on the runtime, if profiling is enabled.
+     */
+    private void setProfiling(XProcRuntime runtime)
+    {
+        File prof_dir = myCalabash.getProfileDir();
+        if ( prof_dir != null ) {
+            String now = NOW_FORMAT.format(new Date());
+            File prof_file = new File(prof_dir, "xproc-profile-" + now + ".xml");
+            // TODO: What if the file already exists?
+            runtime.setProfileFile(prof_file.getAbsolutePath());
+        }
+    }
+
     /** The specific logger. */
     private static final Logger LOG = Logger.getLogger(CalabashPipeline.class);
+    private static final DateFormat NOW_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
+
+    /** The pipeline URI. Mutually exclusive with myPipeNode. */
+    private String myPipe;
+    /** The pipeline XML representation in memory. Mutually exclusive with myPipe. */
+    private XdmNode myPipeNode;
+    /** The Calabash processor. */
+    private CalabashProcessor myCalabash;
 
     /**
      * TODO: We should keep the default implementation from Calabash (that is,
