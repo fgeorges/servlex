@@ -29,6 +29,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Properties;
 
 
 /**
@@ -40,73 +41,116 @@ import org.expath.servlex.runtime.ComponentError;
 public class Servlex
         extends HttpServlet
 {
+    /**
+     * Get the request properties.
+     * 
+     * TODO: Use a Properties object, like getServerMap().
+     */
     public static Map<String, SequenceIterator> getRequestMap()
             throws ServletException
     {
         HttpServletRequest request = myCurrentRequest.get();
-        Object obj = request.getAttribute("servlex.request.map");
+        Object obj = request.getAttribute(REQUEST_MAP_ATTR);
         if ( obj == null ) {
             Map<String, SequenceIterator> map = new HashMap<String, SequenceIterator>();
-            request.setAttribute("servlex.request.map", map);
+            request.setAttribute(REQUEST_MAP_ATTR, map);
             return map;
         }
         else if ( ! ( obj instanceof Map ) ) {
-            throw new ServletException("servlex.request.map is invalid: " + obj.getClass());
+            throw new ServletException(REQUEST_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
             return ( Map<String, SequenceIterator> ) obj;
         }
     }
 
+    /**
+     * Get the session properties.
+     * 
+     * TODO: Use a Properties object, like getServerMap().
+     */
     public static Map<String, SequenceIterator> getSessionMap()
             throws ServletException
     {
         HttpServletRequest request = myCurrentRequest.get();
         HttpSession session = request.getSession();
-        Object obj = session.getAttribute("servlex.session.map");
+        Object obj = session.getAttribute(SESSION_MAP_ATTR);
         if ( obj == null ) {
             Map<String, SequenceIterator> map = new HashMap<String, SequenceIterator>();
-            session.setAttribute("servlex.session.map", map);
+            session.setAttribute(SESSION_MAP_ATTR, map);
             return map;
         }
         else if ( ! ( obj instanceof Map ) ) {
-            throw new ServletException("servlex.session.map is invalid: " + obj.getClass());
+            throw new ServletException(SESSION_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
             return ( Map<String, SequenceIterator> ) obj;
         }
     }
 
+    /**
+     * Get the webapp properties.
+     * 
+     * TODO: Use a Properties object, like getServerMap().
+     */
     public static Map<String, SequenceIterator> getWebappMap()
             throws ServletException
     {
         HttpServletRequest request = myCurrentRequest.get();
-        Object obj = request.getAttribute("servlex.webapp");
+        Object obj = request.getAttribute(WEBAPP_ATTR);
         if ( obj == null ) {
-            throw new ServletException("servlex.webapp is not set on the request");
+            throw new ServletException(WEBAPP_ATTR + " is not set on the request");
         }
         if ( ! ( obj instanceof Application ) ) {
-            throw new ServletException("servlex.webapp is invalid: " + obj.getClass());
+            throw new ServletException(WEBAPP_ATTR + " is invalid: " + obj.getClass());
         }
         Application app = (Application) obj;
         return app.getAttributesMap();
     }
 
-    public static Map<String, SequenceIterator> getServerMap()
+    /**
+     * Get the server properties.
+     */
+    public static Properties getServerMap()
             throws ServletException
     {
-        ServletContext ctxt = ourServletConfig.getServletContext();
-        Object obj = ctxt.getAttribute("servlex.webapp.map");
-        if ( obj == null ) {
-            Map<String, SequenceIterator> map = new HashMap<String, SequenceIterator>();
-            ctxt.setAttribute("servlex.webapp.map", map);
-            return map;
+        if ( ourServletConfig == null ) {
+            // Servlex has not been initialized yet (that is, the servlet has not been used yet)
+            return null;
         }
-        else if ( ! ( obj instanceof Map ) ) {
-            throw new ServletException("servlex.webapp.map is invalid: " + obj.getClass());
+        ServletContext ctxt = ourServletConfig.getServletContext();
+        Object obj = ctxt.getAttribute(SERVER_MAP_ATTR);
+        if ( obj == null ) {
+            Properties props = new Properties("web:");
+            // TODO: Define the standard system properties.  See XSLT 2.0.
+            try {
+                ServerConfig config = ServerConfig.getInstance(ourServletConfig);
+                String ver = config.getVersion();
+                String rev = config.getRevision();
+                String vendor = "Servlex version " + ver + " (revision #" + rev + ")";
+                props.setPrivate("web:vendor", vendor);
+                String html = "<a href='https://github.com/fgeorges/servlex'>Servlex</a> version "
+                        + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
+                        + rev + "'>" + rev + "</a>)";
+                props.setPrivate("web:vendor-html", html);
+            }
+            catch ( TechnicalException ex ) {
+                throw new ServletException("Unexpected exception", ex);
+            }
+            catch ( ParseException ex ) {
+                throw new ServletException("Unexpected exception", ex);
+            }
+            catch ( PackageException ex ) {
+                throw new ServletException("Unexpected exception", ex);
+            }
+            ctxt.setAttribute(SERVER_MAP_ATTR, props);
+            return props;
+        }
+        else if ( ! ( obj instanceof Properties ) ) {
+            throw new ServletException(SERVER_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Map<String, SequenceIterator> ) obj;
+            return ( Properties ) obj;
         }
     }
 
@@ -237,6 +281,12 @@ public class Servlex
         // connect the result to the client
         result.connectToResponse(resp, myConfig);
     }
+
+    /** The name of the attributes used in this class (on the requests, sessions, and contexts). */
+    private static final String WEBAPP_ATTR      = "servlex.webapp";
+    private static final String REQUEST_MAP_ATTR = "servlex.request.map";
+    private static final String SESSION_MAP_ATTR = "servlex.session.map";
+    private static final String SERVER_MAP_ATTR  = "servlex.server.map";
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(Servlex.class);
