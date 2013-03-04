@@ -27,6 +27,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryEvaluator;
@@ -50,6 +52,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.XProcPipeline;
 import org.expath.servlex.tools.CalabashHelper;
+import org.expath.servlex.tools.ContentType;
 import org.expath.servlex.tools.SaxonHelper;
 import org.expath.servlex.tools.TraceInputStream;
 import org.expath.servlex.tools.TreeBuilderHelper;
@@ -380,22 +383,27 @@ public class RequestConnector
     private void makeBodies(ServerConfig config, TreeBuilderHelper builder, List<XdmItem> input)
             throws ServlexException
                  , XPathException
+                 , TechnicalException
     {
+        // the content type
+        String ctype_raw = myRequest.getContentType();
+        if ( ctype_raw == null ) {
+            // if the content type is null, we assume there is no content
+            return;
+        }
+        ContentType ctype = new ContentType(ctype_raw);
         try {
-            String ctype = myRequest.getContentType();
-            LOG.debug("Raw body content type: " + ctype);
+            // the input stream
             ServletInputStream in = myRequest.getInputStream();
-            if ( LOG.isTraceEnabled() ) {
+            if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
                 in = new TraceInputStream(in);
             }
-            if ( ctype == null ) {
-                // if the content type is null, we assume there is no content
-            }
-            else if( ctype.toLowerCase().startsWith("multipart/") ) {
+            // either multipart or single part
+            if( ctype.isMultipart() ) {
                 builder.startElem("multipart");
                 builder.startContent();
                 MimeTokenStream parser = new MimeTokenStream();
-                parser.parseHeadless(in, ctype);
+                parser.parseHeadless(in, ctype_raw);
                 int position = 1;
                 for ( int state = parser.getState();
                       state != MimeTokenStream.T_END_OF_STREAM;
@@ -409,13 +417,6 @@ public class RequestConnector
                 builder.endElem();
             }
             else {
-                // content type can be of the form "main/sub; charset=xxx"
-                // TODO: Use Apache's HeaderValueParser to parse ctype...
-                int semicolon = ctype.indexOf(';');
-                if ( semicolon > 0 ) {
-                    ctype = ctype.substring(0, semicolon);
-                }
-                ctype = ctype.trim();
                 XdmItem parsed = parseBody(config, in, ctype, 1, builder);
                 input.add(parsed);
             }
@@ -435,6 +436,7 @@ public class RequestConnector
             throws ServlexException
                  , XPathException
                  , MimeException
+                 , TechnicalException
     {
         int state = parser.getState();
         if ( LOG.isDebugEnabled() ) {
@@ -445,32 +447,39 @@ public class RequestConnector
             // right after START_MESSAGE (without the corresponding
             // START_HEADER).  So if headers == null, we can just ignore
             // this state.
-            case MimeTokenStream.T_END_HEADER:
+            case MimeTokenStream.T_END_HEADER: {
                 // TODO: Just ignore anyway...?
                 break;
-            case MimeTokenStream.T_FIELD:
+            }
+            case MimeTokenStream.T_FIELD: {
                 Field f = parser.getField();
                 if ( LOG.isDebugEnabled() ) {
                     LOG.debug("  field: " + f);
                 }
+                String body  = Integer.toString(position);
+                String name  = f.getName().toLowerCase();
+                String value = AbstractField.parse(f.getRaw()).getBody();
                 builder.startElem("header");
-                builder.attribute("body", Integer.toString(position));
-                builder.attribute("name", f.getName().toLowerCase());
-                builder.attribute("value", AbstractField.parse(f.getRaw()).getBody());
+                builder.attribute("body", body);
+                builder.attribute("name", name);
+                builder.attribute("value", value);
                 builder.startContent();
                 builder.endElem();
                 break;
-            case MimeTokenStream.T_BODY:
+            }
+            case MimeTokenStream.T_BODY: {
                 // TOD: Do I really need to maintain the subtype value, or has the
                 // body descriptor get it?
                 if ( LOG.isDebugEnabled() ) {
                     LOG.debug("  body desc: " + parser.getBodyDescriptor());
                 }
-                String ctype = parser.getBodyDescriptor().getMimeType();
-                if ( ctype == null ) {
+                String ctype_raw = parser.getBodyDescriptor().getMimeType();
+                if ( ctype_raw == null ) {
+                    LOG.error("Content type of a subpart is null, at position " + position);
                     // is it really a bad request if a subpart hasn't a content type?
                     error(400, "Bad request");
                 }
+                ContentType ctype = new ContentType(ctype_raw);
                 // TODO: Use getReader() instead of getInputStream() when possible
                 // (that is, always except for binary content).  That needs some
                 // refactoring wrt how input are passed to parseBody().
@@ -478,6 +487,7 @@ public class RequestConnector
                 XdmItem part = parseBody(config, in, ctype, position, builder);
                 items.add(part);
                 break;
+            }
             // START_HEADER is handled in the calling analyzeParts()
             case MimeTokenStream.T_START_HEADER:
             case MimeTokenStream.T_END_BODYPART:
@@ -487,17 +497,19 @@ public class RequestConnector
             case MimeTokenStream.T_PREAMBLE:
             case MimeTokenStream.T_START_BODYPART:
             case MimeTokenStream.T_START_MESSAGE:
-            case MimeTokenStream.T_START_MULTIPART:
+            case MimeTokenStream.T_START_MULTIPART: {
                 // ignore
                 break;
+            }
             // In a first time, take a very defensive approach, and
             // throw an error for all unexpected states, even if we
             // should discover slowly that we should probably just
             // ignore some of them.
-            default:
+            default: {
                 String s = MimeTokenStream.stateToString(state);
                 LOG.error("Unknown parsing state: " + s);
                 error(500, "Internal error");
+            }
         }
     }
 
@@ -514,7 +526,7 @@ public class RequestConnector
      *
      * TODO: Ensure we use the correct encoding when reading parts...
      */
-    private XdmItem parseBody(ServerConfig config, InputStream input, String type, int position, TreeBuilderHelper builder)
+    private XdmItem parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilderHelper builder)
             throws ServlexException
                  , XPathException
     {
@@ -522,29 +534,31 @@ public class RequestConnector
             // TODO: Add more information on the web:body element (@content-type,
             // etc., see the HTTP Client module and the XProc p:http-request).
             builder.startElem("body");
-            builder.attribute("content-type", type);
+            builder.attribute("content-type", ctype.getMainType() + "/" + ctype.getSubType());
             builder.attribute("position", Integer.toString(position));
             builder.startContent();
-            XdmItem body;
-            if ( "text/html".equals(type) ) {
-                body = parseBodyXml(config, input, true);
-            }
-            else if ( type.endsWith("+xml")
-                    || type.endsWith("/xml")
-                    || type.endsWith("/xml-external-parsed-entity") ) {
-                body = parseBodyXml(config, input, false);
-            }
-            else if ( type.startsWith("text/")
-                    || "application/xml-dtd".equals(type) ) {
-                // TODO: Retrieve the encoding from the HTTP headers...
-                String encoding = "utf-8";
-                body = parseBodyText(input, encoding);
-            }
-            else {
-                body = parseBodyBinary(input);
-            }
             builder.endElem();
-            return body;
+            switch ( ctype.getMediaType() ) {
+                case HTML: {
+                    // TODO: Pass the charset as well, if it is set explicitly
+                    return parseBodyXml(config, input, true);
+                }
+                case XML: {
+                    // TODO: Pass the charset as well, if it is set explicitly
+                    return parseBodyXml(config, input, false);
+                }
+                case TEXT: {
+                    String charset = ctype.getCharset();
+                    if ( charset == null ) {
+                        // use UTF-8 by default...
+                        charset = "utf-8";
+                    }
+                    return parseBodyText(config, input, charset);
+                }
+                case BINARY: {
+                    return parseBodyBinary(input);
+                }
+            }
         }
         catch ( SaxonApiException ex ) {
             error(500, "Internal error", ex);
@@ -579,19 +593,25 @@ public class RequestConnector
         else {
             src = new StreamSource(input, sys_id);
         }
-        return config.getSaxon().newDocumentBuilder().build(src);
+        Processor saxon = config.getSaxon();
+        DocumentBuilder builder = saxon.newDocumentBuilder();
+        XdmNode doc = builder.build(src);
+        if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
+            LOG.trace("Content parsed as document node: " + doc);
+        }
+        return doc;
     }
 
     /**
      * Parse content as text.
      */
-    private XdmAtomicValue parseBodyText(InputStream input, String encoding)
+    private XdmAtomicValue parseBodyText(ServerConfig config, InputStream input, String charset)
             throws IOException
     {
         // BufferedReader handles the ends of line (all \n, \r, and \r\n are
-        // transformed to \n)
+        // treated as end-of-line)
         StringBuilder builder = new StringBuilder();
-        Reader reader = new InputStreamReader(input, encoding);
+        Reader reader = new InputStreamReader(input, charset);
         BufferedReader buf_in = new BufferedReader(reader);
         String buf;
         while ( (buf = buf_in.readLine()) != null ) {
@@ -599,6 +619,9 @@ public class RequestConnector
             builder.append('\n');
         }
         String str = builder.toString();
+        if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
+            LOG.trace("Content parsed as text: " + str);
+        }
         return new XdmAtomicValue(str);
     }
 
@@ -654,13 +677,13 @@ public class RequestConnector
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(RequestConnector.class);
 
-    /** ... */
+    /** The Java EE HTTP request object. */
     private final HttpServletRequest myRequest;
-    /** ... */
+    /** The path for this request. */
     private final String myPath;
-    /** ... */
+    /** The servlet to serve this request. */
     private Servlet myServlet = null;
-    /** ... */
+    /** The regex matcher to get the groups out of the URI. */
     private Matcher myMatcher = null;
     /** The all input sequence, that is, the request element followed by bodies. */
     private XdmValue myInput = null;
