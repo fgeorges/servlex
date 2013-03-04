@@ -57,6 +57,8 @@ echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
 echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
 echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
 echo '# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling' >> "${PROPS}"
+echo "# Uncomment to log (in trace level) the actual content of requests/responses" >> "${PROPS}"
+echo "# org.expath.servlex.trace.content=true" >> "${PROPS}"
 
 # changing the port numbers in conf/server.xml
 ( cd "${TOMCAT}"; patch -p0 < ../bundle-tomcat-server.patch )

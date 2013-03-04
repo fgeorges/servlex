@@ -15,7 +15,6 @@ import net.sf.saxon.s9api.XdmNode;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.SaxonRepository;
-import org.expath.servlex.ServerConfig;
 
 /**
  * Abstract an XProc processor.
@@ -35,19 +34,12 @@ public class CalabashProcessor
      * (but this is not an error).  If the property does not exist, profiling is
      * not enabled.
      */
-    public CalabashProcessor(SaxonRepository repo, Processor saxon)
+    public CalabashProcessor(SaxonRepository repo, Processor saxon, File profile_dir)
             throws PackageException
     {
         myRepo = repo;
         mySaxon = saxon;
-        String prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
-        if ( prop != null ) {
-            myProfileDir = new File(prop);
-            if ( ! myProfileDir.exists() ) {
-                LOG.error("Calabash profile dir does not exist, disabling profiling (" + myProfileDir + ")");
-                myProfileDir = null;
-            }
-        }
+        myProfileDir = profile_dir;
     }
 
     /**

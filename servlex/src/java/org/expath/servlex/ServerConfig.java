@@ -19,8 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import net.sf.saxon.s9api.Processor;
@@ -51,11 +49,13 @@ import org.expath.servlex.tools.SaxonHelper;
 public class ServerConfig
 {
     /** The system property name for the repo directory. */
-    public static final String REPO_DIR_PROPERTY    = "org.expath.servlex.repo.dir";
+    private static final String REPO_DIR_PROPERTY      = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
-    public static final String REPO_CP_PROPERTY     = "org.expath.servlex.repo.classpath";
+    private static final String REPO_CP_PROPERTY       = "org.expath.servlex.repo.classpath";
     /** The system property name for the log directory. */
-    public static final String PROFILE_DIR_PROPERTY = "org.expath.servlex.profile.dir";
+    private static final String PROFILE_DIR_PROPERTY   = "org.expath.servlex.profile.dir";
+    /** The system property name for whether logging HTTP entity content. */
+    private static final String TRACE_CONTENT_PROPERTY = "org.expath.servlex.trace.content";
 
     /**
      * Initialize the webapp list from the repository got from system properties.
@@ -84,9 +84,9 @@ public class ServerConfig
             throws ParseException
                  , PackageException
     {
-        // TODO: FIXME: MUST NOT BE HERE!
-        java.util.logging.Logger.global.setLevel(Level.ALL);
-        java.util.logging.Logger.global.addHandler(new ConsoleHandler());
+//        // TODO: FIXME: MUST NOT BE HERE!
+//        java.util.logging.Logger.global.setLevel(Level.ALL);
+//        java.util.logging.Logger.global.addHandler(new ConsoleHandler());
         LOG.info("ServerConfig with storage: " + repo_storage);
         myStorage = repo_storage;
         // the repository object
@@ -106,9 +106,43 @@ public class ServerConfig
         }
         // the Saxon processor
         mySaxon = SaxonHelper.makeSaxon(myRepo);
+        // Calabash profiling
+        String prof_prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
+        File prof_dir = null;
+        if ( prof_prop != null ) {
+            prof_dir = new File(prof_prop);
+            if ( ! prof_dir.exists() ) {
+                LOG.error("Calabash profile dir does not exist, disabling profiling (" + prof_dir + ")");
+                prof_dir = null;
+            }
+        }
         // the Calabash processor
-        myCalabash = new CalabashProcessor(myRepo, mySaxon);
+        myCalabash = new CalabashProcessor(myRepo, mySaxon, prof_dir);
+        // set version and revision numbers
         setVersion();
+        // the trace content property
+        String trace_prop = System.getProperty(ServerConfig.TRACE_CONTENT_PROPERTY);
+        if ( trace_prop == null ) {
+            myTraceContent = false;
+        }
+        else if ( "true".equals(trace_prop) ) {
+            myTraceContent = true;
+        }
+        else if ( "false".equals(trace_prop) ) {
+            myTraceContent = false;
+        }
+        else {
+            // TODO: Don't use a package exception, use another exception type.
+            throw new PackageException("Invalid value for the property " + TRACE_CONTENT_PROPERTY + ": " + trace_prop);
+        }
+    }
+
+    /**
+     * Return true if needs to include request and response content in the logs.
+     */
+    public boolean isTraceContentEnabled()
+    {
+        return myTraceContent;
     }
 
     /**
@@ -209,18 +243,18 @@ public class ServerConfig
             throws ParseException
                  , PackageException
     {
-        ServletContext ctxt = config.getServletContext();
-        if ( LOG.isInfoEnabled() ) {
-            Enumeration<String> names = ctxt.getInitParameterNames();
-            while ( names.hasMoreElements() ) {
-                String n = names.nextElement();
-                LOG.info("Init Servlex - param " + n + ": " + ctxt.getInitParameter(n));
-            }
-        }
-        String dir = ctxt.getInitParameter(REPO_DIR_PROPERTY);
-        String cp  = ctxt.getInitParameter(REPO_CP_PROPERTY);
-        LOG.info("Init Servlex - dir=" + dir + ", cp=" + cp);
         if ( INSTANCE == null ) {
+            ServletContext ctxt = config.getServletContext();
+            if ( LOG.isInfoEnabled() ) {
+                Enumeration<String> names = ctxt.getInitParameterNames();
+                while ( names.hasMoreElements() ) {
+                    String n = names.nextElement();
+                    LOG.info("Init Servlex - param " + n + ": " + ctxt.getInitParameter(n));
+                }
+            }
+            String dir = ctxt.getInitParameter(REPO_DIR_PROPERTY);
+            String cp  = ctxt.getInitParameter(REPO_CP_PROPERTY);
+            LOG.info("Init Servlex - dir=" + dir + ", cp=" + cp);
             if ( dir == null && cp == null ) {
                 INSTANCE = new ServerConfig();
             }
@@ -403,6 +437,8 @@ public class ServerConfig
     private CalabashProcessor myCalabash;
     /** The application map. */
     private Map<String, Application> myApps;
+    /** Include request and response content in the logs? */
+    private boolean myTraceContent = false;
 
     /**
      * Interaction always return default, and log messages.
