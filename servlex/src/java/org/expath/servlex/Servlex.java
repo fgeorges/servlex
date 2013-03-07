@@ -199,7 +199,16 @@ public class Servlex
             throws IOException
     {
         LOG.info("Received request: " + req.getMethod() + " " + req.getRequestURL());
+        // set the contextual request
         myCurrentRequest.set(req);
+        // set the encoding if not explicit
+        if ( req.getCharacterEncoding() == null ) {
+            String charset = myConfig.getDefaultCharset();
+            if ( charset != null ) {
+                req.setCharacterEncoding(charset);
+            }
+        }
+        // do it!
         try {
             if ( req.getPathInfo().equals("/") ) {
                 welcome(resp);

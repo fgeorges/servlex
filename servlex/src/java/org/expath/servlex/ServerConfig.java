@@ -49,13 +49,15 @@ import org.expath.servlex.tools.SaxonHelper;
 public class ServerConfig
 {
     /** The system property name for the repo directory. */
-    private static final String REPO_DIR_PROPERTY      = "org.expath.servlex.repo.dir";
+    private static final String REPO_DIR_PROPERTY        = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
-    private static final String REPO_CP_PROPERTY       = "org.expath.servlex.repo.classpath";
+    private static final String REPO_CP_PROPERTY         = "org.expath.servlex.repo.classpath";
     /** The system property name for the log directory. */
-    private static final String PROFILE_DIR_PROPERTY   = "org.expath.servlex.profile.dir";
+    private static final String PROFILE_DIR_PROPERTY     = "org.expath.servlex.profile.dir";
     /** The system property name for whether logging HTTP entity content. */
-    private static final String TRACE_CONTENT_PROPERTY = "org.expath.servlex.trace.content";
+    private static final String TRACE_CONTENT_PROPERTY   = "org.expath.servlex.trace.content";
+    /** The system property name for whether logging HTTP entity content. */
+    private static final String DEFAULT_CHARSET_PROPERTY = "org.expath.servlex.default.charset";
 
     /**
      * Initialize the webapp list from the repository got from system properties.
@@ -84,9 +86,6 @@ public class ServerConfig
             throws ParseException
                  , PackageException
     {
-//        // TODO: FIXME: MUST NOT BE HERE!
-//        java.util.logging.Logger.global.setLevel(Level.ALL);
-//        java.util.logging.Logger.global.addHandler(new ConsoleHandler());
         LOG.info("ServerConfig with storage: " + repo_storage);
         myStorage = repo_storage;
         // the repository object
@@ -135,6 +134,8 @@ public class ServerConfig
             // TODO: Don't use a package exception, use another exception type.
             throw new PackageException("Invalid value for the property " + TRACE_CONTENT_PROPERTY + ": " + trace_prop);
         }
+        // the default charset property
+        myDefaultCharset = System.getProperty(ServerConfig.DEFAULT_CHARSET_PROPERTY);
     }
 
     /**
@@ -143,6 +144,14 @@ public class ServerConfig
     public boolean isTraceContentEnabled()
     {
         return myTraceContent;
+    }
+
+    /**
+     * Return the default charset to use in case none is set on the request. Can be null.
+     */
+    public String getDefaultCharset()
+    {
+        return myDefaultCharset;
     }
 
     /**
@@ -439,6 +448,8 @@ public class ServerConfig
     private Map<String, Application> myApps;
     /** Include request and response content in the logs? */
     private boolean myTraceContent = false;
+    /** Default charset to use when none is set on the request. */
+    private String myDefaultCharset = null;
 
     /**
      * Interaction always return default, and log messages.
