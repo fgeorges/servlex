@@ -59,8 +59,11 @@ echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
 echo '# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling' >> "${PROPS}"
 echo "# Uncomment to log (in trace level) the actual content of requests/responses" >> "${PROPS}"
 echo "# org.expath.servlex.trace.content=true" >> "${PROPS}"
+echo "# Uncomment to set the default charset of requests (if not set in a request)" >> "${PROPS}"
+echo "# org.expath.servlex.default.charset=UTF-8" >> "${PROPS}"
 
 # changing the port numbers in conf/server.xml
+# TODO: Set URIEncoding="UTF-8" on the connector as well?
 ( cd "${TOMCAT}"; patch -p0 < ../bundle-tomcat-server.patch )
 
 # setting the users and roles
