@@ -39,7 +39,7 @@ public class SaxonHelper
     public static Processor makeSaxon(SaxonRepository repo)
             throws PackageException
     {
-        Processor saxon = new Processor(false);
+        Processor saxon = new Processor(true);
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
         WebappFunctions.setup(saxon);

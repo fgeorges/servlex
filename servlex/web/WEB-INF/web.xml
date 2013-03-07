@@ -6,6 +6,7 @@
     <servlet>
         <servlet-name>Servlex</servlet-name>
         <servlet-class>org.expath.servlex.Servlex</servlet-class>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>Resource</servlet-name>
