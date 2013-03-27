@@ -1,0 +1,8 @@
+<project xmlns="http://expath.org/ns/project"
+         name="http://expath.org/test/servlex/xsltforms-webapp"
+         abbrev="xsltforms-webapp"
+         version="0.1.0">
+
+   <title>Test webapp with XSLTForms</title>
+
+</project>

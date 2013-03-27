@@ -1,0 +1,18 @@
+<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+        xmlns:app="http://expath.org/ns/test/servlex/xsltforms-webapp"
+        name="http://expath.org/test/servlex/xsltforms-webapp"
+        abbrev="xsltforms"
+        version="0.1.0">
+
+   <title>Servlex test webapp with XSLTForms</title>
+
+   <resource pattern="/" rewrite="home.xhtml" media-type="application/xhtml+xml"/>
+   <resource pattern="/xsltforms/(.+)" rewrite="xsltforms/$1"/>
+
+   <servlet name="echo">
+      <xslt uri="http://expath.org/ns/test/servlex/xsltforms-webapp/servlet.xsl"
+            function="app:echo"/>
+      <url pattern="/echo"/>
+   </servlet>
+
+</webapp>

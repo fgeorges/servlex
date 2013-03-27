@@ -1,0 +1,25 @@
+<?xml-stylesheet href="xsltforms/xsltforms.xsl" type="text/xsl"?>
+<?xsltforms-options debug="yes"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xf="http://www.w3.org/2002/xforms"
+      xmlns:ev="http://www.w3.org/2001/xml-events">
+   <head>
+      <title>Encoding Test</title>
+      <xf:model>
+         <xf:instance>
+            <data xmlns=""/>
+         </xf:instance>
+         <xf:submission id="s01" method="xml-urlencoded-post" replace="all" action="echo">
+            <xf:message level="modeless" ev:event="xforms-submit-error">Submit error.</xf:message>
+         </xf:submission>
+      </xf:model>
+   </head>
+   <body>
+      <xf:input ref=".">
+         <xf:label>Input:</xf:label>
+      </xf:input>
+      <xf:submit>
+         <xf:label>Send</xf:label>
+      </xf:submit>
+   </body>
+</html>

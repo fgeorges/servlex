@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    This usage of @stylesheet is because we are not testing a stylesheet
+    actually, but we need this import statement in the compiled suite.  So...
+    
+    We should rather add support for testing webapps using XSpec a first-class
+    citizen support...
+-->
+
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:web="http://expath.org/ns/webapp"
+               xmlns:app="http://expath.org/ns/test/servlex/xsltforms-webapp"
+               xmlns:http="http://expath.org/ns/http-client"
+               stylesheet="http://expath.org/ns/http-client.xsl">
+
+   <x:variable name="auth"   select="'http://localhost:9090'"/>
+   <x:variable name="root"   select="'/servlex/xsltforms'"/>
+   <x:variable name="webapp" select="concat($auth, $root)"/>
+
+   <x:scenario label="is-ok" shared="yes">
+      <!-- first result item must be a http:response element -->
+      <x:expect label="result elem"   assert="$x:result[1] instance of element(http:response)"/>
+      <!-- its status attribute must be = 200 -->
+      <x:expect label="status is 200" assert="$x:result[1]/xs:integer(@status) eq 200"/>
+      <!-- in any way for a request test, the server must send back an
+           XML document, so the result sequence must have exactly 2
+           items (the http:response element, and the XML payload) -->
+      <x:expect label="result count"  assert="count($x:result) eq 2"/>
+      <!-- result is an XML document -->
+      <x:expect label="content type"  assert="
+          matches(
+            $x:result[1]/http:header[@name eq 'content-type']/@value,
+            'application/xml(;\s*charset=UTF-8)?')"/>
+   </x:scenario>
+
+   <x:scenario label="echo" shared="yes">
+      <x:like label="is-ok"/>
+      <!-- this 'like' declares two variables -->
+      <x:variable name="request" select="$x:result[2]/app:request/app:http/web:request"/>
+      <x:variable name="bodies"  select="$x:result[2]/app:request/app:body"/>
+      <!-- the doc type of the result payload -->
+      <x:expect label="document type" assert="
+          $x:result[2] instance of document-node(element(app:request))"/>
+      <!-- the HTTP request element -->
+      <x:expect label="one request elem" assert="count($request) eq 1"/>
+      <x:expect label="the request elem" context="$request">
+         <web:request servlet="..." path="..." method="...">...</web:request>
+      </x:expect>
+      <x:expect label="the request uri"          assert="starts-with($request/web:uri, $webapp)"/>
+      <x:expect label="the request authority"    assert="$request/web:authority eq $auth"/>
+      <x:expect label="the request context root" assert="$request/web:context-root eq $root"/>
+      <x:expect label="the request path value"   assert="
+          string($request/web:path) eq $request/@path"/>
+      <x:expect label="the full request uri"     assert="
+          $request/web:uri eq concat($webapp, $request/@path)"/>
+   </x:scenario>
+
+   <x:scenario label="get-echo" shared="yes">
+      <x:like label="echo"/>
+      <x:expect label="the request method" assert="$request/@method eq 'get'"/>
+      <x:expect label="no request body"    assert="count($bodies) eq 0"/>
+   </x:scenario>
+
+   <x:scenario label="post-echo" shared="yes">
+      <x:like label="echo"/>
+      <x:expect label="the request method" assert="$request/@method eq 'post'"/>
+      <x:expect label="one body desc"      assert="count($request/web:body) eq 1"/>
+      <x:expect label="the body desc"      context="$request/web:body">
+         <web:body content-type="application/xml" position="1"/>
+      </x:expect>
+      <x:expect label="request body type"  assert="
+          matches(
+            $request/web:header[@name eq 'content-type']/@value,
+            'application/xml(;\s*charset=UTF-8)?')"/>
+      <x:expect label="one request body"   assert="count($bodies) eq 1"/>
+      <x:expect label="the request body"   context="$bodies">
+         <app:body position="1">
+            <hello>World!</hello>
+         </app:body>
+      </x:expect>
+   </x:scenario>
+
+   <!--
+       Test XSLTForms in Servlex.
+   -->
+
+   <x:scenario label="xsltforms-001: TODO: ...">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $webapp }/..." method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="get-echo"/>
+      <x:expect label="the servlet name" assert="$request/@servlet eq '...'"/>
+      <x:expect label="the request path" assert="$request/@path eq '/...'"/>
+   </x:scenario>
+
+</x:description>
