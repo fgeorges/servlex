@@ -24,11 +24,11 @@
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.calabash.jar}</file>
+                    <file>${file.reference.log4j-1.2.15.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.log4j-1.2.15.jar}</file>
+                    <file>${file.reference.calabash-1.0.9a-fgeorges.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
