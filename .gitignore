@@ -1,1 +1,10 @@
 .~
+/test/apache-tomcat-7.0.35/
+/test/cases/filters.html
+/test/cases/mapping.html
+/test/cases/simple.html
+/test/cases/xsltforms.html
+/test/test-repo/
+/test/webapps/filters/dist/
+/test/webapps/mapping/dist/
+/test/webapps/xsltforms/dist/
