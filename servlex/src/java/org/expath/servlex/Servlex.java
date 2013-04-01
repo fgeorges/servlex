@@ -13,8 +13,10 @@ import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.model.Application;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -22,13 +24,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import net.sf.saxon.om.SequenceIterator;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Properties;
 
 
@@ -46,21 +48,31 @@ public class Servlex
      * 
      * TODO: Use a Properties object, like getServerMap().
      */
-    public static Map<String, SequenceIterator> getRequestMap()
-            throws ServletException
+    public static Properties getRequestMap()
+            throws TechnicalException
     {
         HttpServletRequest request = myCurrentRequest.get();
         Object obj = request.getAttribute(REQUEST_MAP_ATTR);
         if ( obj == null ) {
-            Map<String, SequenceIterator> map = new HashMap<String, SequenceIterator>();
-            request.setAttribute(REQUEST_MAP_ATTR, map);
-            return map;
+            Properties props = new Properties("web:");
+            // TODO: Add a request unique identifier in the properties, in order to identify a
+            // request uniquely, e.g. to create file name for the audit..., say "web:request-id"...
+            try {
+                String now  = NOW_FORMAT.format(new Date());
+                String uuid = UUID.randomUUID().toString();
+                props.setPrivate("web:request-id", now + "-" + uuid);
+            }
+            catch ( TechnicalException ex ) {
+                throw new TechnicalException("Unexpected exception", ex);
+            }
+            request.setAttribute(REQUEST_MAP_ATTR, props);
+            return props;
         }
-        else if ( ! ( obj instanceof Map ) ) {
-            throw new ServletException(REQUEST_MAP_ATTR + " is invalid: " + obj.getClass());
+        else if ( ! ( obj instanceof Properties ) ) {
+            throw new TechnicalException(REQUEST_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Map<String, SequenceIterator> ) obj;
+            return ( Properties ) obj;
         }
     }
 
@@ -69,22 +81,22 @@ public class Servlex
      * 
      * TODO: Use a Properties object, like getServerMap().
      */
-    public static Map<String, SequenceIterator> getSessionMap()
-            throws ServletException
+    public static Properties getSessionMap()
+            throws TechnicalException
     {
         HttpServletRequest request = myCurrentRequest.get();
         HttpSession session = request.getSession();
         Object obj = session.getAttribute(SESSION_MAP_ATTR);
         if ( obj == null ) {
-            Map<String, SequenceIterator> map = new HashMap<String, SequenceIterator>();
-            session.setAttribute(SESSION_MAP_ATTR, map);
-            return map;
+            Properties props = new Properties("web:");
+            session.setAttribute(SESSION_MAP_ATTR, props);
+            return props;
         }
-        else if ( ! ( obj instanceof Map ) ) {
-            throw new ServletException(SESSION_MAP_ATTR + " is invalid: " + obj.getClass());
+        else if ( ! ( obj instanceof Properties ) ) {
+            throw new TechnicalException(SESSION_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Map<String, SequenceIterator> ) obj;
+            return ( Properties ) obj;
         }
     }
 
@@ -93,26 +105,26 @@ public class Servlex
      * 
      * TODO: Use a Properties object, like getServerMap().
      */
-    public static Map<String, SequenceIterator> getWebappMap()
-            throws ServletException
+    public static Properties getWebappMap()
+            throws TechnicalException
     {
         HttpServletRequest request = myCurrentRequest.get();
         Object obj = request.getAttribute(WEBAPP_ATTR);
         if ( obj == null ) {
-            throw new ServletException(WEBAPP_ATTR + " is not set on the request");
+            throw new TechnicalException(WEBAPP_ATTR + " is not set on the request");
         }
         if ( ! ( obj instanceof Application ) ) {
-            throw new ServletException(WEBAPP_ATTR + " is invalid: " + obj.getClass());
+            throw new TechnicalException(WEBAPP_ATTR + " is invalid: " + obj.getClass());
         }
         Application app = (Application) obj;
-        return app.getAttributesMap();
+        return app.getProperties();
     }
 
     /**
      * Get the server properties.
      */
     public static Properties getServerMap()
-            throws ServletException
+            throws TechnicalException
     {
         if ( ourServletConfig == null ) {
             // Servlex has not been initialized yet (that is, the servlet has not been used yet)
@@ -127,27 +139,35 @@ public class Servlex
                 ServerConfig config = ServerConfig.getInstance(ourServletConfig);
                 String ver = config.getVersion();
                 String rev = config.getRevision();
-                String vendor = "Servlex version " + ver + " (revision #" + rev + ")";
-                props.setPrivate("web:vendor", vendor);
-                String html = "<a href='https://github.com/fgeorges/servlex'>Servlex</a> version "
+                String product = "Servlex version " + ver + " (revision #" + rev + ")";
+                props.setPrivate("web:product", product);
+                String product_html
+                        = "<a href='https://github.com/fgeorges/servlex'>Servlex</a> version "
                         + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
-                props.setPrivate("web:vendor-html", html);
+                props.setPrivate("web:product-html", product_html);
+                String vendor = "Florent Georges, H2O Consulting, for EXPath";
+                props.setPrivate("web:product", vendor);
+                String vendor_html
+                        = "<a href='http://fgeorges.org/'>Florent Georges</a>,"
+                        + " <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
+                        + " for <a href='http://expath.org/'>EXPath</a>";
+                props.setPrivate("web:product", vendor_html);
             }
             catch ( TechnicalException ex ) {
-                throw new ServletException("Unexpected exception", ex);
+                throw new TechnicalException("Unexpected exception", ex);
             }
             catch ( ParseException ex ) {
-                throw new ServletException("Unexpected exception", ex);
+                throw new TechnicalException("Unexpected exception", ex);
             }
             catch ( PackageException ex ) {
-                throw new ServletException("Unexpected exception", ex);
+                throw new TechnicalException("Unexpected exception", ex);
             }
             ctxt.setAttribute(SERVER_MAP_ATTR, props);
             return props;
         }
         else if ( ! ( obj instanceof Properties ) ) {
-            throw new ServletException(SERVER_MAP_ATTR + " is invalid: " + obj.getClass());
+            throw new TechnicalException(SERVER_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
             return ( Properties ) obj;
@@ -276,12 +296,15 @@ public class Servlex
         Application app = myConfig.getApplication(appname);
         req.setAttribute("servlex.webapp", app);
         // resolve the component
-        RequestConnector request = new RequestConnector(req, path);
+        RequestConnector request = new RequestConnector(req, path, appname);
         Invocation invoc = app.resolve(path, req.getMethod(), request);
+        // log request and profiling info
+        Auditor auditor = new Auditor(myConfig);
+        auditor.begin(request);
         // invoke the component
         Connector result;
         try {
-            result = invoc.invoke(request, myConfig);
+            result = invoc.invoke(request, myConfig, auditor);
         }
         catch ( ComponentError ex ) {
             // TODO: Shouldn't we set the result even in this case...?
@@ -289,6 +312,8 @@ public class Servlex
         }
         // connect the result to the client
         result.connectToResponse(resp, myConfig);
+        // end the audit
+        auditor.end();
     }
 
     /** The name of the attributes used in this class (on the requests, sessions, and contexts). */
@@ -299,6 +324,9 @@ public class Servlex
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(Servlex.class);
+
+    /** The date formatter. */
+    private static final DateFormat NOW_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
 
     /** The HTTP request currently handled (thread-local storage). */
     private static final ThreadLocal<HttpServletRequest> myCurrentRequest
