@@ -10,15 +10,13 @@
 package org.expath.servlex.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import net.sf.saxon.om.SequenceIterator;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Properties;
 
 
 /**
@@ -65,9 +63,9 @@ public class Application
         myHandlers.add(h);
     }
 
-    public Map<String, SequenceIterator> getAttributesMap()
+    public Properties getProperties()
     {
-        return myAttrMap;
+        return myProps;
     }
 
     /**
@@ -97,7 +95,7 @@ public class Application
     private String myTitle;
     private Package myPkg;
     private List<AddressHandler> myHandlers = new ArrayList<AddressHandler>();
-    private Map<String, SequenceIterator> myAttrMap = new HashMap<String, SequenceIterator>();
+    private Properties myProps = new Properties("web:");
 }
 
 
