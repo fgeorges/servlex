@@ -139,7 +139,7 @@ public class StreamParser
     {
         try {
             nextTag();
-            return ensureElement(local_name, error);
+            return ensureStartTag(local_name, error);
         }
         catch ( XMLStreamException ex ) {
             parseError("Error parsing the webapp descriptor", ex);
@@ -194,9 +194,9 @@ public class StreamParser
     }
 
     /**
-     * Ensure the current event is a start tag, and ensure its name.
+     * Ensure the current event is a start tag.
      */
-    public boolean ensureElement(String local_name, boolean error)
+    public boolean ensureStartTag(boolean error)
             throws ParseException
     {
         int event = myParser.getEventType();
@@ -205,6 +205,56 @@ public class StreamParser
                 ? eventError("The current event is not START_ELEMENT", event)
                 : false;
         }
+        return true;
+    }
+
+    /**
+     * Ensure the current event is a start tag, and ensure its name.
+     */
+    public boolean ensureStartTag(String local_name, boolean error)
+            throws ParseException
+    {
+        boolean res = ensureStartTag(error);
+        if ( res ) {
+            res = ensureName(local_name, error);
+        }
+        return res;
+    }
+
+    /**
+     * Ensure the current event is an end tag.
+     */
+    public boolean ensureEndTag(boolean error)
+            throws ParseException
+    {
+        int event = myParser.getEventType();
+        if ( event != XMLStreamConstants.END_ELEMENT ) {
+            return error
+                ? eventError("The current event is not END_ELEMENT", event)
+                : false;
+        }
+        return true;
+    }
+
+    /**
+     * Ensure the current event is an end tag, and ensure its name.
+     */
+    public boolean ensureEndTag(String local_name, boolean error)
+            throws ParseException
+    {
+        boolean res = ensureEndTag(error);
+        if ( res ) {
+            res = ensureName(local_name, error);
+        }
+        return res;
+    }
+
+    /**
+     * Ensure the name of the current event.
+     */
+    public boolean ensureName(String local_name, boolean error)
+            throws ParseException
+    {
         QName ref    = new QName(myTargetNs, local_name);
         QName actual = myParser.getName();
         if ( ! ref.equals(actual) ) {
@@ -224,12 +274,7 @@ public class StreamParser
     public boolean ensureNamespace(boolean error)
             throws ParseException
     {
-        int event = myParser.getEventType();
-        if ( event != XMLStreamConstants.START_ELEMENT ) {
-            return error
-                ? eventError("The current event is not START_ELEMENT", event)
-                : false;
-        }
+        ensureStartTag(error);
         if ( ! myTargetNs.equals(myParser.getNamespaceURI()) ) {
             if ( error ) {
                 parseError("The element is not in the webapp namespace");
@@ -237,36 +282,6 @@ public class StreamParser
             else {
                 return false;
             }
-        }
-        return true;
-    }
-
-    /**
-     * Ensure the current event is a start tag.
-     */
-    public boolean ensureStartTag(boolean error)
-            throws ParseException
-    {
-        int event = myParser.getEventType();
-        if ( event != XMLStreamConstants.START_ELEMENT ) {
-            return error
-                ? eventError("The current event is not START_ELEMENT", event)
-                : false;
-        }
-        return true;
-    }
-
-    /**
-     * Ensure the current event is a start tag.
-     */
-    public boolean ensureEndTag(boolean error)
-            throws ParseException
-    {
-        int event = myParser.getEventType();
-        if ( event != XMLStreamConstants.END_ELEMENT ) {
-            return error
-                ? eventError("The current event is not END_ELEMENT", event)
-                : false;
         }
         return true;
     }

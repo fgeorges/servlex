@@ -260,7 +260,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("error", true);
+        parser.ensureStartTag("error", true);
         String name = parser.getAttribute("name");
         String catc = parser.getAttribute("catch");
         LOG.debug("expath-web parser: error: " + name + " catching " + catc);
@@ -307,7 +307,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("resource", true);
+        parser.ensureStartTag("resource", true);
         String pattern = parser.getAttribute("pattern");
         String rewrite = parser.getAttribute("rewrite");
         String type    = parser.getAttribute("media-type");
@@ -348,7 +348,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("filter", true);
+        parser.ensureStartTag("filter", true);
         String name = parser.getAttribute("name");
         parser.nextTag();
         parser.ensureNamespace(true);
@@ -382,20 +382,21 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("chain", true);
+        parser.ensureStartTag("chain", true);
         String name_s = parser.getAttribute("name");
         QName name = parser.parseLiteralQName(name_s);
         ParsingChain chain = new ParsingChain(name);
         parser.nextTag();
         while ( parser.getLocalName().equals("filter") ) {
-            parser.ensureElement("filter", true);
+            parser.ensureStartTag("filter", true);
             String ref = parser.getAttribute("ref");
             QName qname = parser.parseLiteralQName(ref);
             chain.addFilter(qname);
             parser.nextTag(); // </filter>
             parser.nextTag(); // <filter> or </chain>
         }
-        // TODO: Ensure we are on </chain>
+        // ensuring end tag only (without the name) should be enough...
+        parser.ensureEndTag("chain", true);
         return chain;
     }
 
@@ -418,7 +419,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("servlet", true);
+        parser.ensureStartTag("servlet", true);
         String name = parser.getAttribute("name");
         LOG.debug("expath-web parser: servlet: " + name);
         ParsingGroup   group   = ctxt.getCurrentGroup();
@@ -436,12 +437,12 @@ public class EXPathWebParser
         // to several URL patterns)
         // go to the next element: 'url'
         parser.nextTag();
-        parser.ensureElement("url", true);
+        parser.ensureStartTag("url", true);
         String pattern = parser.getAttribute("pattern");
         servlet.setPattern(pattern);
         int last_group = 0;
         while ( XMLStreamConstants.START_ELEMENT == parser.nextTag() ) {
-            parser.ensureElement("match", true);
+            parser.ensureStartTag("match", true);
             String re_group = parser.getAttribute("group");
             int num = Integer.parseInt(re_group);
             while ( last_group + 1 < num ) {
@@ -462,7 +463,7 @@ public class EXPathWebParser
         }
         parser.ensureEndTag(true);
         while ( XMLStreamConstants.START_ELEMENT == parser.nextTag() ) {
-            parser.ensureElement("param", true);
+            parser.ensureStartTag("param", true);
             // FIXME: ignore for now
             parser.debug_skipElement();
         }
@@ -535,7 +536,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("xquery", true);
+        parser.ensureStartTag("xquery", true);
         String uri      = parser.getAttribute("uri");
         String function = parser.getAttribute("function");
         String file     = parser.getAttribute("file");
@@ -580,7 +581,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("xslt", true);
+        parser.ensureStartTag("xslt", true);
         String uri      = parser.getAttribute("uri");
         String function = parser.getAttribute("function");
         String template = parser.getAttribute("template");
@@ -629,7 +630,7 @@ public class EXPathWebParser
             throws ParseException
                  , XMLStreamException
     {
-        parser.ensureElement("xproc", true);
+        parser.ensureStartTag("xproc", true);
         String uri  = parser.getAttribute("uri");
         String step = parser.getAttribute("step");
         String file = parser.getAttribute("file");
