@@ -68,10 +68,11 @@ import org.xml.sax.SAXException;
 public class RequestConnector
         implements Connector
 {
-    public RequestConnector(HttpServletRequest request, String path)
+    public RequestConnector(HttpServletRequest request, String path, String appname)
     {
         myRequest = request;
         myPath = path;
+        myAppName = appname;
     }
 
     public void setMatcher(Matcher matcher)
@@ -214,7 +215,7 @@ public class RequestConnector
                  , TechnicalException
     {
         // some values
-        String servlet   = myServlet.getName();
+        String servlet   = myServlet == null ? null : myServlet.getName();
         String path      = myPath;
         String method    = myRequest.getMethod();
         String uri       = getRequestUri();
@@ -223,7 +224,7 @@ public class RequestConnector
                 myRequest.getContextPath()
                 + myRequest.getServletPath()
                 + "/"
-                + myServlet.getApplication().getName();
+                + myAppName;
         // log them?
         if ( LOG.isDebugEnabled() ) {
             LOG.debug("Request - servlet  : " + servlet);
@@ -235,7 +236,9 @@ public class RequestConnector
         }
         // use them in web:request
         b.startElem("request");
-        b.attribute("servlet", servlet);
+        if ( servlet != null ) {
+            b.attribute("servlet", servlet);
+        }
         b.attribute("path", path);
         b.attribute("method", method.toLowerCase());
         b.startContent();
@@ -303,8 +306,8 @@ public class RequestConnector
     {
         b.startElem("path");
         b.startContent();
-        if ( myMatcher == null ) { // -> welcome file
-            b.textElem("part", "/");
+        if ( myMatcher == null || myServlet == null ) { // -> welcome file or resource
+            b.textElem("part", myPath);
         }
         else {
             int last_index = 0;
@@ -681,6 +684,8 @@ public class RequestConnector
     private final HttpServletRequest myRequest;
     /** The path for this request. */
     private final String myPath;
+    /** The name of the webapp (used in the URL). */
+    private final String myAppName;
     /** The servlet to serve this request. */
     private Servlet myServlet = null;
     /** The regex matcher to get the groups out of the URI. */
