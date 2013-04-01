@@ -24,6 +24,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.processors.CalabashPipeline;
 import org.expath.servlex.processors.CalabashProcessor;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
@@ -43,12 +44,12 @@ public class XProcStep
     }
 
     @Override
-    public Connector run(ServerConfig config, Connector connector)
+    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError
     {
         try {
-            XPipeline pipeline = getPipeline(config);
+            XPipeline pipeline = getPipeline(config, auditor);
             return XProcPipeline.evaluatePipeline(config, pipeline, connector);
         }
         catch ( SaxonApiException ex ) {
@@ -60,7 +61,7 @@ public class XProcStep
     /**
      * TODO: Cache using the new Servlex Calabash API...
      */
-    private XPipeline getPipeline(ServerConfig config)
+    private XPipeline getPipeline(ServerConfig config, Auditor auditor)
             throws SaxonApiException
                  , ComponentError
                  , ServlexException
@@ -68,7 +69,7 @@ public class XProcStep
         XdmNode pipe = makeCallPipe(config);
         CalabashProcessor calabash = config.getCalabash();
         CalabashPipeline compiled = calabash.compile(pipe);
-        return compiled.prepare();
+        return compiled.prepare(auditor);
     }
 
     /**

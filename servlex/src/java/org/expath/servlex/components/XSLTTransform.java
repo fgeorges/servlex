@@ -32,6 +32,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
@@ -49,7 +50,7 @@ public class XSLTTransform
     }
 
     @Override
-    public Connector run(ServerConfig config, Connector connector)
+    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError
     {

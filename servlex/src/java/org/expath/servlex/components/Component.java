@@ -13,6 +13,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * A servlet entry point.
@@ -40,7 +41,7 @@ public interface Component
      *          entity content. It can be different if there are any filter or
      *          error handler in between.
      */
-    public Connector run(ServerConfig config, Connector connector)
+    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError;
 }

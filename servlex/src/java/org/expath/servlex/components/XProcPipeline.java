@@ -33,6 +33,7 @@ import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.CalabashPipeline;
 import org.expath.servlex.processors.CalabashProcessor;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.CalabashHelper;
 import org.expath.servlex.tools.SaxonHelper;
 
@@ -74,12 +75,12 @@ public class XProcPipeline
      * ...
      */
     @Override
-    public Connector run(ServerConfig config, Connector connector)
+    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
         try {
-            XPipeline pipeline = getPipeline(config);
+            XPipeline pipeline = getPipeline(config, auditor);
             return evaluatePipeline(config, pipeline, connector);
         }
         catch ( SaxonApiException ex ) {
@@ -107,14 +108,14 @@ public class XProcPipeline
      * will have a much cleaner distinction between compile- and evaluation-time
      * objects (see the above-mentioned thread on XProc-Dev).
      */
-    private XPipeline getPipeline(ServerConfig config)
+    private XPipeline getPipeline(ServerConfig config, Auditor auditor)
             throws SaxonApiException
                  , ComponentError
                  , ServlexException
     {
         CalabashProcessor calabash = config.getCalabash();
         CalabashPipeline compiled = calabash.compile(myPipe);
-        return compiled.prepare();
+        return compiled.prepare(auditor);
     }
 
     /**
@@ -138,9 +139,9 @@ public class XProcPipeline
             }
             LOG.debug("The pipeline: " + pipeline);
             LOG.debug("The Calabash processor: " + config.getCalabash());
-            LOG.debug("The Calabash config: " + config.getCalabash().getSaxon().getUnderlyingConfiguration());
-            LOG.debug("The URI resolver: " + config.getCalabash().getSaxon().getUnderlyingConfiguration().getURIResolver());
-            LOG.debug("The source resolver: " + config.getCalabash().getSaxon().getUnderlyingConfiguration().getSourceResolver());
+            LOG.debug("The Calabash config: " + config.getSaxon().getUnderlyingConfiguration());
+            LOG.debug("The URI resolver: " + config.getSaxon().getUnderlyingConfiguration().getURIResolver());
+            LOG.debug("The source resolver: " + config.getSaxon().getUnderlyingConfiguration().getSourceResolver());
         }
         // check before running
         if ( ! pipeline.getOutputs().contains(OUTPUT_PORT_NAME) ) {
