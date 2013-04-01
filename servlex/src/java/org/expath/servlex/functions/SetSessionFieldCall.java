@@ -9,8 +9,6 @@
 
 package org.expath.servlex.functions;
 
-import java.util.Map;
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.tree.iter.EmptyIterator;
@@ -20,6 +18,8 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Properties;
 
 /**
  * TODO: Doc...
@@ -55,11 +55,11 @@ public class SetSessionFieldCall
         // setting the sequence in the session
         try {
             LOG.debug("Set session field: '" + name + "'");
-            Map<String, SequenceIterator> session = Servlex.getSessionMap();
-            session.put(name, value.getAnother());
+            Properties props = Servlex.getSessionMap();
+            props.set(name, value.getAnother());
             return EmptyIterator.getInstance();
         }
-        catch ( ServletException ex ) {
+        catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex session management", ex);
         }
     }

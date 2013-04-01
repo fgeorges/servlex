@@ -9,17 +9,13 @@
 
 package org.expath.servlex.functions;
 
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.tree.iter.ArrayIterator;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.tools.Properties;
 
 /**
@@ -43,18 +39,9 @@ public class GetServerFieldNamesCall
         try {
             LOG.debug("Get server field names");
             Properties props = Servlex.getServerMap();
-            if ( props.size() == 0 ) {
-                return EmptyIterator.getInstance();
-            }
-            Item[] items = new Item[props.size()];
-            int i = 0;
-            for ( String name : props.keys() ) {
-                items[i] = new StringValue(name);
-                ++i;
-            }
-            return new ArrayIterator(items);
+            return props.keys();
         }
-        catch ( ServletException ex ) {
+        catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex server management", ex);
         }
     }

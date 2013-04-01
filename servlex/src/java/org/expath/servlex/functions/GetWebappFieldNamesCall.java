@@ -9,18 +9,14 @@
 
 package org.expath.servlex.functions;
 
-import java.util.Map;
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.tree.iter.ArrayIterator;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Properties;
 
 /**
  * TODO: Doc...
@@ -42,19 +38,10 @@ public class GetWebappFieldNamesCall
         // returning the name of every fields in the webapp
         try {
             LOG.debug("Get webapp field names");
-            Map<String, SequenceIterator> webapp = Servlex.getWebappMap();
-            if ( webapp.size() == 0 ) {
-                return EmptyIterator.getInstance();
-            }
-            Item[] items = new Item[webapp.size()];
-            int i = 0;
-            for ( String name : webapp.keySet() ) {
-                items[i] = new StringValue(name);
-                ++i;
-            }
-            return new ArrayIterator(items);
+            Properties props = Servlex.getWebappMap();
+            return props.keys();
         }
-        catch ( ServletException ex ) {
+        catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex webapp management", ex);
         }
     }

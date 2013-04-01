@@ -9,10 +9,8 @@
 
 package org.expath.servlex.functions;
 
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
@@ -55,14 +53,7 @@ public class GetServerFieldCall
         try {
             LOG.debug("Get server field: '" + name + "'");
             Properties props = Servlex.getServerMap();
-            SequenceIterator sequence = props.get(name);
-            if ( sequence == null ) {
-                return EmptyIterator.getInstance();
-            }
-            return sequence.getAnother();
-        }
-        catch ( ServletException ex ) {
-            throw new XPathException("Error in the Servlex server management", ex);
+            return props.get(name);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error getting the value of the property: " + name, ex);

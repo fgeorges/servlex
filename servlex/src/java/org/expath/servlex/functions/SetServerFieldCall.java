@@ -9,7 +9,6 @@
 
 package org.expath.servlex.functions;
 
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.tree.iter.EmptyIterator;
@@ -59,9 +58,6 @@ public class SetServerFieldCall
             Properties props = Servlex.getServerMap();
             props.set(name, value.getAnother());
             return EmptyIterator.getInstance();
-        }
-        catch ( ServletException ex ) {
-            throw new XPathException("Error in the Servlex server management", ex);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error setting a server property", ex);

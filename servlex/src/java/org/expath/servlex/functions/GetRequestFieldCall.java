@@ -9,8 +9,6 @@
 
 package org.expath.servlex.functions;
 
-import java.util.Map;
-import javax.servlet.ServletException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Item;
@@ -20,6 +18,8 @@ import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Properties;
 
 /**
  * TODO: Doc...
@@ -53,14 +53,10 @@ public class GetRequestFieldCall
         // getting the sequence in the request
         try {
             LOG.debug("Get request field: '" + name + "'");
-            Map<String, SequenceIterator> request = Servlex.getRequestMap();
-            SequenceIterator sequence = request.get(name);
-            if ( sequence == null ) {
-                return EmptyIterator.getInstance();
-            }
-            return sequence.getAnother();
+            Properties props = Servlex.getRequestMap();
+            return props.get(name);
         }
-        catch ( ServletException ex ) {
+        catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex request management", ex);
         }
     }
