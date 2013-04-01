@@ -11,10 +11,11 @@ package org.expath.servlex.tools;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.ArrayIterator;
+import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
@@ -47,11 +48,16 @@ public class Properties
 
     /**
      * Get a property value.
+     * 
+     * Never return null.
      */
     public SequenceIterator get(String key)
             throws TechnicalException
     {
         SequenceIterator value = myMap.get(key);
+        if ( value == null ) {
+            return EmptyIterator.getInstance();
+        }
         // don't consume the initial iterator
         SequenceIterator copy;
         try {
@@ -61,9 +67,46 @@ public class Properties
             }
         }
         catch ( XPathException ex ) {
-            throw new TechnicalException("Error copying the sequence iterator for web:vendor", ex);
+            throw new TechnicalException("Error copying the sequence iterator for " + key, ex);
         }
         return copy;
+    }
+
+    /**
+     * Get a private property value (return it as a String).
+     * 
+     * Return null if not set.
+     */
+    public String getPrivate(String key)
+            throws TechnicalException
+    {
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("Properties.getPrivate: " + key);
+        }
+        if ( key == null ) {
+            throw new NullPointerException("Key is null");
+        }
+        if ( ! key.startsWith(myPrivatePrefix) ) {
+            throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
+        }
+        SequenceIterator value = get(key);
+        try {
+            Item item = value.next();
+            if ( item == null ) {
+                return null;
+            }
+            if ( value.next() != null ) {
+                throw new TechnicalException("The value of " + key + " contains more than one item.");
+            }
+            if ( ! (item instanceof StringValue) ) {
+                throw new TechnicalException("The value of " + key + " is not a string: " + item.getClass());
+            }
+            StringValue string = (StringValue) item;
+            return string.getPrimitiveStringValue().toString();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error accessing the string for " + key, ex);
+        }
     }
 
     private void logGetValue(String key, SequenceIterator value)
@@ -93,7 +136,7 @@ public class Properties
         if ( key == null ) {
             throw new NullPointerException("Key is null");
         }
-        if ( key.startsWith(key) ) {
+        if ( key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key starts with the private prefix (" + myPrivatePrefix + "): " + key);
         }
         return myMap.put(key, value);
@@ -114,7 +157,7 @@ public class Properties
         if ( value == null ) {
             throw new NullPointerException("Value is null");
         }
-        if ( ! key.startsWith(key) ) {
+        if ( ! key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
         }
         StringValue string = StringValue.makeStringValue(value);
@@ -133,9 +176,18 @@ public class Properties
     /**
      * Return all the property names, as a set.
      */
-    public Set<String> keys()
+    public SequenceIterator<StringValue> keys()
     {
-        return myMap.keySet();
+        if ( size() == 0 ) {
+            return EmptyIterator.getInstance();
+        }
+        StringValue[] items = new StringValue[size()];
+        int i = 0;
+        for ( String name : myMap.keySet() ) {
+            items[i] = new StringValue(name);
+            ++i;
+        }
+        return new ArrayIterator<StringValue>(items);
     }
 
     /** The logger. */
