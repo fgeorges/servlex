@@ -9,12 +9,10 @@
 
 package org.expath.servlex.processors;
 
-import java.io.File;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmNode;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
-import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.ServerConfig;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Abstract an XProc processor.
@@ -34,12 +32,10 @@ public class CalabashProcessor
      * (but this is not an error).  If the property does not exist, profiling is
      * not enabled.
      */
-    public CalabashProcessor(SaxonRepository repo, Processor saxon, File profile_dir)
+    public CalabashProcessor(ServerConfig config)
             throws PackageException
     {
-        myRepo = repo;
-        mySaxon = saxon;
-        myProfileDir = profile_dir;
+        myConfig = config;
     }
 
     /**
@@ -47,7 +43,7 @@ public class CalabashProcessor
      */
     public CalabashPipeline compile(String pipe)
     {
-        return new CalabashPipeline(this, pipe);
+        return new CalabashPipeline(this, pipe, myConfig);
     }
 
     /**
@@ -55,42 +51,11 @@ public class CalabashProcessor
      */
     public CalabashPipeline compile(XdmNode pipe)
     {
-        return new CalabashPipeline(this, pipe);
+        return new CalabashPipeline(this, pipe, myConfig);
     }
 
-    /**
-     * Return the underlying Saxon processor.
-     */
-    public Processor getSaxon()
-    {
-        return mySaxon;
-    }
-
-    /**
-     * Return the underlying repository.
-     */
-    public SaxonRepository getRepo()
-    {
-        return myRepo;
-    }
-
-    /**
-     * Return the directory to save profiling data, when enabled.  Null if disabled.
-     */
-    public File getProfileDir()
-    {
-        return myProfileDir;
-    }
-
-    /** The specific logger. */
-    private static final Logger LOG = Logger.getLogger(CalabashProcessor.class);
-
-    /** The Saxon processor. */
-    private Processor mySaxon;
-    /** The repository. */
-    private SaxonRepository myRepo;
-    /** The profile directory, if profiling is enabled. */
-    private File myProfileDir;
+    /** The configuration object. */
+    private ServerConfig myConfig;
 }
 
 

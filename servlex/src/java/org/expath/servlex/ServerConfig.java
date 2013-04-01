@@ -107,16 +107,15 @@ public class ServerConfig
         mySaxon = SaxonHelper.makeSaxon(myRepo);
         // Calabash profiling
         String prof_prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
-        File prof_dir = null;
         if ( prof_prop != null ) {
-            prof_dir = new File(prof_prop);
-            if ( ! prof_dir.exists() ) {
-                LOG.error("Calabash profile dir does not exist, disabling profiling (" + prof_dir + ")");
-                prof_dir = null;
+            myProfileDir = new File(prof_prop);
+            if ( ! myProfileDir.exists() ) {
+                LOG.error("Calabash profile dir does not exist, disabling profiling (" + myProfileDir + ")");
+                myProfileDir = null;
             }
         }
         // the Calabash processor
-        myCalabash = new CalabashProcessor(myRepo, mySaxon, prof_dir);
+        myCalabash = new CalabashProcessor(this);
         // set version and revision numbers
         setVersion();
         // the trace content property
@@ -152,6 +151,34 @@ public class ServerConfig
     public String getDefaultCharset()
     {
         return myDefaultCharset;
+    }
+
+    /**
+     * Return the directory to save profiling data, when enabled.  Null if disabled.
+     */
+    public File getProfileDir()
+    {
+        return myProfileDir;
+    }
+
+    /**
+     * Return a file in the profile dir, with a name based on current time.
+     */
+    public File getProfileFile(String prefix)
+            throws TechnicalException
+    {
+        if ( myProfileDir != null ) {
+            String id = Servlex.getRequestMap().getPrivate("web:request-id");
+            File file = new File(myProfileDir, prefix + "-" + id + ".xml");
+            if ( file.exists() ) {
+                // TODO: What if the file already exists?
+                LOG.error("Profiling file already exists! (" + file + ")");
+            }
+            return file;
+        }
+        else {
+            return null;
+        }
     }
 
     /**
@@ -450,6 +477,8 @@ public class ServerConfig
     private boolean myTraceContent = false;
     /** Default charset to use when none is set on the request. */
     private String myDefaultCharset = null;
+    /** The profile directory, if profiling is enabled. */
+    private File myProfileDir;
 
     /**
      * Interaction always return default, and log messages.
