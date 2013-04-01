@@ -186,7 +186,14 @@ public class Serializer
      */
     private String methodFromMime(String mime)
     {
-        if ( mime.startsWith("multipart/") ) {
+        if ( myMethod != null ) {
+            // if an explicit method, return it
+            return myMethod;
+        }
+        else if ( mime == null ) {
+            return "binary";
+        }
+        else if ( mime.startsWith("multipart/") ) {
             throw new IllegalArgumentException("Multipart not handled yet!");
         }
         else if ( "text/html".equals(mime) ) {
@@ -237,7 +244,6 @@ public class Serializer
     private static Set<String> TEXT_TYPES;
     static {
         Set<String> types = new HashSet<String>();
-        types = new HashSet<String>();
         types.add("application/x-www-form-urlencoded");
         types.add("application/xml-dtd");
         TEXT_TYPES = types;
