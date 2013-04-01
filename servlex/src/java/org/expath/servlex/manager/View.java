@@ -11,9 +11,6 @@ package org.expath.servlex.manager;
 
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.tools.Properties;
@@ -118,21 +115,18 @@ public class View
     private String getVendor()
             throws ServletException
     {
-        Properties props = Servlex.getServerMap();
-        if ( props == null ) {
-            // Servlex has not been initialized yet
-            return null;
-        }
         try {
-            SequenceIterator vendor = props.get("web:vendor-html");
-            Item item = vendor.next();
-            return item.getStringValue();
+            Properties props = Servlex.getServerMap();
+            if ( props == null ) {
+                // Servlex has not been initialized yet
+                return null;
+            }
+            String product = props.getPrivate("web:product-html");
+            String vendor  = props.getPrivate("web:vendor-html");
+            return product + ", by " + vendor;
         }
         catch ( TechnicalException ex ) {
             throw new ServletException("Error getting the system property web:vendor", ex);
-        }
-        catch ( XPathException ex ) {
-            throw new ServletException("Error extracting the value of the system property web:vendor", ex);
         }
     }
 
