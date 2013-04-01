@@ -28,7 +28,7 @@
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.calabash-1.0.9a-fgeorges.jar}</file>
+                    <file>${file.reference.calabash.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
