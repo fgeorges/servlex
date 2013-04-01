@@ -14,6 +14,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Represent a specific invocation of an application's servlet, at a specific URI.
@@ -31,11 +32,11 @@ public class ServletInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config)
+    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
-        return myImpl.run(config, connector);
+        return myImpl.run(connector, config, auditor);
     }
 
     /** ... */

@@ -23,6 +23,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Represent a specific invocation of an application's resource, at a specific URI.
@@ -42,7 +43,7 @@ public class ResourceInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config)
+    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
     {
         String path = replaceMatches(getPath());

@@ -16,6 +16,7 @@ import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.ErrorConnector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * The runtime part of an error handler.
@@ -47,18 +48,18 @@ public class ErrorHandlerInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config)
+    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
         try {
-            return myWrapped.invoke(connector, config);
+            return myWrapped.invoke(connector, config, auditor);
         }
         catch ( ComponentError ex ) {
             if ( matches(ex.getName()) ) {
                 try {
                     Connector c = new ErrorConnector(ex, getRequest());
-                    return myImpl.run(config, c);
+                    return myImpl.run(c, config, auditor);
                 }
                 catch ( ComponentError ex2 ) {
                     throw new ServlexException(500, "Internal error (error in an error handler)", ex2);

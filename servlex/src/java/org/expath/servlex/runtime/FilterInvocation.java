@@ -14,6 +14,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * The invocation of a filter, with its filtering components and it wrapped invocation.
@@ -33,19 +34,23 @@ public class FilterInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config)
+    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
         // inbound filter
         if ( myIn != null ) {
-            connector = myIn.run(config, connector);
+            // TODO: If this returns a web:response, we should return straight
+            // to the client, without calling the filtered component...
+            // Use case: an authentication filter (if non authenticated, the
+            // filter returns an authentication demand to the client).
+            connector = myIn.run(connector, config, auditor);
         }
         // the filtered component
-        connector = myWrapped.invoke(connector, config);
+        connector = myWrapped.invoke(connector, config, auditor);
         // outbound filter
         if ( myOut != null ) {
-            connector = myOut.run(config, connector);
+            connector = myOut.run(connector, config, auditor);
         }
         // return the filtered result
         return connector;
