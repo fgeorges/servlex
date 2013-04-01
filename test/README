@@ -42,7 +42,7 @@ I've changed the following files in the Tomcat dir:
 [**] conf/catalina.properties
 
 Added the prop org.expath.servlex.repo.dir (but should be removed if
-(when) deploy seevral Servlex instances on the same Tomcat):
+(when) deploy several Servlex instances on the same Tomcat):
 
 org.expath.servlex.repo.dir=/Users/fgeorges/projects/expath/servlex/test/test-repo
 
