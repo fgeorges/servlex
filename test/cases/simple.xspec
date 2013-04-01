@@ -48,16 +48,20 @@
       <x:expect label="body title"  context="$html/h:body/h:h2">
          <h:h2>Hello, world!</h:h2>
       </x:expect>
-      <x:expect label="form count"  assert="count($html//h:form) eq 4"/>
-      <x:expect label="xslt form"   assert="count($html//h:form[@action eq 'xslt']) eq 1"/>
-      <x:expect label="xquery form" assert="count($html//h:form[@action eq 'xquery']) eq 1"/>
-      <x:expect label="xproc form"  assert="count($html//h:form[@action eq 'xproc']) eq 1"/>
+      <x:expect label="form count"  assert="count($html//h:form) eq 7"/>
+      <x:expect label="xslt form"   assert="count($html//h:form[@action eq 'stylesheet']) eq 1"/>
+      <x:expect label="xslt form"   assert="count($html//h:form[@action eq 'template']) eq 1"/>
+      <x:expect label="xslt form"   assert="count($html//h:form[@action eq 'xslt-fun']) eq 1"/>
+      <x:expect label="xslt form"   assert="count($html//h:form[@action eq 'query']) eq 1"/>
+      <x:expect label="xquery form" assert="count($html//h:form[@action eq 'xquery-fun']) eq 1"/>
+      <x:expect label="xproc form"  assert="count($html//h:form[@action eq 'pipeline']) eq 1"/>
    </x:scenario>
 
+   <!-- TODO: How to test that this is the stylesheet that is actually run? -->
    <x:scenario label="simple-002">
       <x:call function="http:send-request">
          <x:param>
-            <http:request href="{ $uri }/xslt?who=me" method="get"/>
+            <http:request href="{ $uri }/stylesheet?who=me" method="get"/>
          </x:param>
       </x:call>
       <x:like label="assertions"/>
@@ -65,15 +69,50 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, me!</h:title>
       </x:expect>
-      <x:expect label="body title" context="$html/h:body/h:p">
+      <x:expect label="body para xslt" context="$html/h:body/h:p">
          <h:p>Hello, me! (in XSLT)</h:p>
       </x:expect>
    </x:scenario>
 
+   <!-- TODO: How to test that this is the template that is actually run? -->
    <x:scenario label="simple-003">
       <x:call function="http:send-request">
          <x:param>
-            <http:request href="{ $uri }/xquery?who=you" method="get"/>
+            <http:request href="{ $uri }/template?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Hello, me!</h:title>
+      </x:expect>
+      <x:expect label="body para xslt" context="$html/h:body/h:p">
+         <h:p>Hello, me! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <!-- TODO: How to test that this is the function that is actually run? -->
+   <x:scenario label="simple-004">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/xslt-fun?who=me" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Hello, me!</h:title>
+      </x:expect>
+      <x:expect label="body para xslt" context="$html/h:body/h:p">
+         <h:p>Hello, me! (in XSLT)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <!-- TODO: How to test that this is the query that is actually run? -->
+   <x:scenario label="simple-005">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/query?who=you" method="get"/>
          </x:param>
       </x:call>
       <x:like label="assertions"/>
@@ -81,15 +120,32 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, you!</h:title>
       </x:expect>
-      <x:expect label="body title" context="$html/h:body/h:p">
+      <x:expect label="body para xquery" context="$html/h:body/h:p">
          <h:p>Hello, you! (in XQuery)</h:p>
       </x:expect>
    </x:scenario>
 
-   <x:scenario label="simple-004">
+   <!-- TODO: How to test that this is the function that is actually run? -->
+   <x:scenario label="simple-006">
       <x:call function="http:send-request">
          <x:param>
-            <http:request href="{ $uri }/xproc?who=yo" method="get"/>
+            <http:request href="{ $uri }/xquery-fun?who=you" method="get"/>
+         </x:param>
+      </x:call>
+      <x:like label="assertions"/>
+      <x:variable name="html" select="$x:result[2]/h:html"/>
+      <x:expect label="head title" context="$html/h:head/h:title">
+         <h:title>Hello, you!</h:title>
+      </x:expect>
+      <x:expect label="body para xquery" context="$html/h:body/h:p">
+         <h:p>Hello, you! (in XQuery)</h:p>
+      </x:expect>
+   </x:scenario>
+
+   <x:scenario label="simple-007">
+      <x:call function="http:send-request">
+         <x:param>
+            <http:request href="{ $uri }/pipeline?who=yo" method="get"/>
          </x:param>
       </x:call>
       <x:like label="assertions"/>
@@ -97,7 +153,7 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, yo!</h:title>
       </x:expect>
-      <x:expect label="body title" context="$html/h:body/h:p">
+      <x:expect label="body para xproc" context="$html/h:body/h:p">
          <h:p>Hello, yo! (in XProc)</h:p>
       </x:expect>
    </x:scenario>
