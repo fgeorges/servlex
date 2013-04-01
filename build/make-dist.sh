@@ -42,6 +42,7 @@ fi
 # clean up
 rm -rf ${DIR}
 rm -f ${DIR}.zip
+rm -f ${DIR}-installer.jar
 
 # the release dir
 mkdir ${DIR}
