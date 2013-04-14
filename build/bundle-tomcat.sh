@@ -83,4 +83,4 @@ perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
     -pi izpack-tomcat.xml
 
 # create the installer
-"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-intaller.jar"
+"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-installer.jar"
