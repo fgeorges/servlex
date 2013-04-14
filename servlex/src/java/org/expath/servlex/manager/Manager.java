@@ -46,6 +46,8 @@ public class Manager
         View view = new View(resp.getWriter());
         view.open("home", "Manager");
         view.println("<p>Choose one of the pages in the menu above.</p>");
+        view.println("<p>You can find documentation on the");
+        view.println("   <a href='http://servlex.net/'>Servlex website</a>.</p>");
         view.close();
     } 
 

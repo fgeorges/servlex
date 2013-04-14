@@ -73,6 +73,8 @@ public class List
             view.println("<p>No webapp has been installed yet.</p>");
         }
         else {
+            view.println("<p>Click on the webapp name to access it (its homepage).");
+            view.println(" Click on the (x) to delete it.</p>");
             view.println("<ul>");
             for ( String app : names ) {
                 view.startln();
