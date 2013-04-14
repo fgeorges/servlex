@@ -2,12 +2,12 @@
 <installation version="1.0">
    <info>
       <appname>Servlex</appname>
-      <appversion>0.8.0dev</appversion>
+      <appversion>0.9.0dev</appversion>
       <appsubpath>servlex</appsubpath>
       <authors>
-         <author email="fgeorges@expath.org" name="Florent Georges"/>
+         <author email="fgeorges@servlex.net" name="Florent Georges"/>
       </authors>
-      <url>https://github.com/fgeorges/servlex</url>
+      <url>http://servlex.net/</url>
       <uninstaller name="uninstaller.jar" write="yes"/>
       <requiresjdk>no</requiresjdk>
       <writeinstallationinformation>no</writeinstallationinformation>
@@ -35,22 +35,24 @@
    </panels>
    <packs>
       <pack name="Servlex" preselected="yes" required="yes">
-         <description>The Servlex server, pre-packaged, including Apache Tomcat.</description>
-         <file src="README-SERVLEX-TOMCAT"              targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/LICENSE"       targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/NOTICE"        targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/RELEASE-NOTES" targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/RUNNING.txt"   targetdir="$INSTALL_PATH"/>
+         <description>The Servlex server, pre-packaged, including Apache Tomcat 7.0.37.</description>
+         <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.0dev/hello-world/"             targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.0dev/hello-world-0.9.0dev.xaw" targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/LICENSE"        targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/NOTICE"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
          <!-- TODO: Add the execution bit to the files in bin/. -->
-         <file src="apache-tomcat-7.0.37/bin/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/conf/"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/lib/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/logs/"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/profiling/"    targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/repo/"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/temp/"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/webapps/"      targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/work/"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/bin/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/conf/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/lib/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/logs/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/profiling/"     targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/repo/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/temp/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/webapps/"       targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.37/work/"          targetdir="$INSTALL_PATH"/>
          <parsable targetfile="$INSTALL_PATH/conf/catalina.properties"/>
       </pack>
    </packs>
