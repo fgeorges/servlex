@@ -123,7 +123,7 @@ public class View
             }
             String product = props.getPrivate("web:product-html");
             String vendor  = props.getPrivate("web:vendor-html");
-            return product + ", by " + vendor;
+            return product + "<br/>By " + vendor;
         }
         catch ( TechnicalException ex ) {
             throw new ServletException("Error getting the system property web:vendor", ex);
