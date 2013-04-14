@@ -64,9 +64,7 @@ public class List
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("list", "Installed webapps");
+        View view = new View(resp, "list", "Installed webapps");
         // display the names in alphabetical order
         SortedSet<String> names = new TreeSet<String>(myConfig.getApplicationNames());
         if ( names.isEmpty() ) {

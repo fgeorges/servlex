@@ -9,8 +9,10 @@
 
 package org.expath.servlex.manager;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.tools.Properties;
@@ -23,28 +25,11 @@ import org.expath.servlex.tools.Properties;
  */
 public class View
 {
-    public View(PrintWriter out)
+    public View(HttpServletResponse resp, String id, String title)
+            throws IOException
     {
-        myOut = out;
-    }
-
-    public void println(String line)
-    {
-        myOut.println("                  " + line);
-    }
-
-    public void print(String content)
-    {
-        myOut.println(content);
-    }
-
-    public void startln()
-    {
-        myOut.println("                  ");
-    }
-
-    public void open(String id, String title)
-    {
+        myOut = resp.getWriter();
+        resp.setContentType("text/html;charset=UTF-8");
         myOut.println("<html>");
         myOut.println("   <head>");
         myOut.println("      <title>Manager</title>");
@@ -74,6 +59,21 @@ public class View
         myOut.print(title);
         myOut.println("</strong></h3>");
         myOut.println("               <div class='contentarea'>");
+    }
+
+    public void println(String line)
+    {
+        myOut.println("                  " + line);
+    }
+
+    public void print(String content)
+    {
+        myOut.println(content);
+    }
+
+    public void startln()
+    {
+        myOut.println("                  ");
     }
 
     private void printMenuEntry(String id, String href, String title, String label)

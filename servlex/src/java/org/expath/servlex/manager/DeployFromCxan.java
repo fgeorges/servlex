@@ -84,9 +84,7 @@ public class DeployFromCxan
             throws IOException
                  , ServletException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("deploy", "Deploy");
+        View view = new View(resp, "deploy", "Deploy");
         view.print("<p>");
         try {
             if ( ! myConfig.canInstall() ) {

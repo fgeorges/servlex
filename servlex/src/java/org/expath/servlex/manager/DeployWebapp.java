@@ -86,9 +86,7 @@ public class DeployWebapp
             throws IOException
                  , ServletException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("deploy", "Deploy");
+        View view = new View(resp, "deploy", "Deploy");
         if ( myConfig.canInstall() ) {
             view.println("<p>Deploy a webapp from a local XAW file:</p>");
             view.println("<form action='deploy' method='post' enctype='multipart/form-data'>");
@@ -128,9 +126,7 @@ public class DeployWebapp
             throws IOException
                  , ServletException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("deploy", "Deploy");
+        View view = new View(resp, "deploy", "Deploy");
         view.print("<p>");
         try {
             if ( ! myConfig.canInstall() ) {

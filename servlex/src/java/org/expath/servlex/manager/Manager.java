@@ -42,9 +42,7 @@ public class Manager
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("home", "Manager");
+        View view = new View(resp, "home", "Manager");
         view.println("<p>Choose one of the pages in the menu above.</p>");
         view.println("<p>You can find documentation on the");
         view.println("   <a href='http://servlex.net/'>Servlex website</a>.</p>");

@@ -71,9 +71,7 @@ public class RemoveWebapp
             throws ServletException
                  , IOException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("remove", "Remove webapp");
+        View view = new View(resp, "remove", "Remove webapp");
         view.print("<p>");
         try {
             String name = req.getParameter("webapp");

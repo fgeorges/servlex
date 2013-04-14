@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexException;
 import org.expath.servlex.parser.ParseException;
 
 /**
@@ -53,11 +52,10 @@ public class Reset
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException
+            throws ServletException
+                 , IOException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("reset", "Reset cache");
+        View view = new View(resp, "reset", "Reset cache");
         view.println("<form action='reset' method='post'>");
         view.println("   Clear the application cache:");
         view.println("   <input type='submit' value='Reset'>");
@@ -70,11 +68,10 @@ public class Reset
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException
+            throws ServletException
+                 , IOException
     {
-        resp.setContentType("text/html;charset=UTF-8");
-        View view = new View(resp.getWriter());
-        view.open("reset", "Reset cache");
+        View view = new View(resp, "reset", "Reset cache");
         try {
             ServerConfig.reload(ourServletConfig);
             view.println("<p>The application cache has been reloaded.</p>");
