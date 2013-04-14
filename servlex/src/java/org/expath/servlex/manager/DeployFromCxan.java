@@ -84,52 +84,55 @@ public class DeployFromCxan
             throws IOException
                  , ServletException
     {
-        if ( ! myConfig.canInstall() ) {
-            resp.sendError(501, "Install not supported, storage is read-only");
-            return;
-        }
-
-        String cxanid = getNonEmptyParam(req, "id");
-        String name;
-        try {
-            // name will be null if the package is not a webapp
-            name = doInstall(req, cxanid);
-        }
-        catch ( ServlexException ex ) {
-            ex.sendError(resp);
-            return;
-        }
-
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
         view.open("deploy", "Deploy");
         view.print("<p>");
-        if ( "*not*found*on*cxan*".equals(name) ) {
-            view.print("The package with the CXAN ID '");
-            view.print(cxanid);
-            view.print("' does not exist.");
-        }
-        else {
-            if ( name == null ) {
-                view.print("The package");
+        try {
+            if ( ! myConfig.canInstall() ) {
+                error(501, "Install not supported, storage is read-only");
+            }
+            String cxanid = getNonEmptyParam(req, "id");
+            String name   = getNonEmptyParam(req, "name");
+            // name will be null if the package is not a webapp
+            String abbrev = doInstall(req, cxanid, name);
+            if ( NOT_FOUND == abbrev ) {
+                view.print("The package with the");
+                if ( cxanid != null ) {
+                    view.print(" CXAN ID '" + cxanid);
+                }
+                else {
+                    view.print(" name '" + name);
+                }
+                view.print("' does not exist.");
             }
             else {
-                view.print("<a href='../");
-                view.print(name);
-                view.print("/'>");
-                view.print(name);
-                view.print("</a>");
+                if ( abbrev == null ) {
+                    view.print("The package");
+                }
+                else {
+                    view.print("<a href='../");
+                    view.print(abbrev);
+                    view.print("/'>");
+                    view.print(abbrev);
+                    view.print("</a>");
+                }
+                view.print(" has been successfully installed.");
             }
-            view.print(" has been successfully installed.");
         }
-        view.print("</p>\n");
-        view.close();
+        catch ( ServlexException ex ) {
+            view.print("<b>Error</b>: " + ex.getMessage());
+            ex.setStatus(resp);
+        }
+        finally {
+            view.print("</p>\n");
+            view.close();
+        }
     }
 
-    private String doInstall(HttpServletRequest req, String id)
+    private String doInstall(HttpServletRequest req, String id, String name)
             throws ServlexException
     {
-        String name    = getNonEmptyParam(req, "name");
         String version = getNonEmptyParam(req, "version");
         String server  = getNonEmptyParam(req, "server");
 
@@ -165,7 +168,7 @@ public class DeployFromCxan
         }
         catch ( PackageException ex ) {
             if ( ex.getCause() != null && ex.getCause() instanceof FileNotFoundException ) {
-                return "*not*found*on*cxan*";
+                return NOT_FOUND;
             }
             else {
                 error(500, "Error installing the webapp", ex);
@@ -209,6 +212,8 @@ public class DeployFromCxan
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(DeployFromCxan.class);
+    /** Special marker... */
+    private static final String NOT_FOUND = "*not*found*on*cxan*";
 
     /** The server configuration. */
     private ServerConfig myConfig;

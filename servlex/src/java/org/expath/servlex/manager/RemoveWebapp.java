@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.parser.ParseException;
 
 /**
@@ -70,25 +71,34 @@ public class RemoveWebapp
             throws ServletException
                  , IOException
     {
-        String name = req.getParameter("webapp");
-        if ( name == null ) {
-            throw new ServletException("Parameter 'webapp' mandatory");
-        }
-        try {
-            myConfig.remove(name);
-        }
-        catch ( PackageException ex ) {
-            throw new ServletException("Error removing the webapp", ex);
-        }
-        catch ( ParseException ex ) {
-            throw new ServletException("Error removing the webapp", ex);
-        }
-
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
         view.open("remove", "Remove webapp");
-        view.println("<p>Webapp removed: " + name + ".</p>");
-        view.close();
+        view.print("<p>");
+        try {
+            String name = req.getParameter("webapp");
+            if ( name == null ) {
+                throw new ServlexException(400, "Parameter 'webapp' mandatory");
+            }
+            myConfig.remove(name);
+            view.println("Webapp removed: " + name + ".");
+        }
+        catch ( PackageException ex ) {
+            view.print("<b>Error</b> removing the webapp: " + ex.getMessage());
+            resp.setStatus(500);
+        }
+        catch ( ParseException ex ) {
+            view.print("<b>Error</b> removing the webapp: " + ex.getMessage());
+            resp.setStatus(500);
+        }
+        catch ( ServlexException ex ) {
+            view.print("<b>Error</b>: " + ex.getMessage());
+            ex.setStatus(resp);
+        }
+        finally {
+            view.print("</p>\n");
+            view.close();
+        }
     } 
 
     /** 
@@ -99,7 +109,8 @@ public class RemoveWebapp
             throws ServletException
                  , IOException
     {
-        throw new ServletException("POST is not supported.");
+        resp.addHeader("Allow", "GET");
+        resp.sendError(405, "Method Not Allowed");
     }
 
     /** The logger. */

@@ -73,6 +73,17 @@ public class ServlexException
         resp.sendError(myCode, getMessage());
     }
 
+    public void setStatus(HttpServletResponse resp)
+            throws IOException
+    {
+        if ( myHeaders != null ) {
+            for ( HeaderPair h : myHeaders ) {
+                resp.addHeader(h.name, h.value);
+            }
+        }
+        resp.setStatus(myCode);
+    }
+
     private int myCode;
     private List<HeaderPair> myHeaders = null;
 

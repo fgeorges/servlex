@@ -128,37 +128,36 @@ public class DeployWebapp
             throws IOException
                  , ServletException
     {
-        if ( ! myConfig.canInstall() ) {
-            resp.sendError(501, "Install not supported, storage is read-only");
-            return;
-        }
-
-        String name;
-        try {
-            // name will be null if the package is not a webapp
-            name = doInstall(req);
-        }
-        catch ( ServlexException ex ) {
-            ex.sendError(resp);
-            return;
-        }
-
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
         view.open("deploy", "Deploy");
         view.print("<p>");
-        if ( name == null ) {
-            view.print("The package");
+        try {
+            if ( ! myConfig.canInstall() ) {
+                error(501, "Install not supported, storage is read-only");
+            }
+            // name will be null if the package is not a webapp
+            String name = doInstall(req);
+            if ( name == null ) {
+                view.print("The package");
+            }
+            else {
+                view.print("<a href='../");
+                view.print(name);
+                view.print("/'>");
+                view.print(name);
+                view.print("</a>");
+            }
+            view.print(" has been successfully installed.");
         }
-        else {
-            view.print("<a href='../");
-            view.print(name);
-            view.print("/'>");
-            view.print(name);
-            view.print("</a>");
+        catch ( ServlexException ex ) {
+            view.print("<b>Error</b>: " + ex.getMessage());
+            ex.setStatus(resp);
         }
-        view.print(" has been successfully installed.</p>\n");
-        view.close();
+        finally {
+            view.print("</p>\n");
+            view.close();
+        }
     }
 
     /**

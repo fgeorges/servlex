@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.parser.ParseException;
 
 /**
@@ -34,7 +35,7 @@ public class Reset
     @Override
     public String getServletInfo()
     {
-        return "TODO: ...";
+        return "Reset the cached data.";
     }
 
     /**
@@ -71,20 +72,24 @@ public class Reset
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException
     {
-        try {
-            ServerConfig.reload(ourServletConfig);
-        }
-        catch ( ParseException ex ) {
-            throw new ServletException("Error reloading the config.", ex);
-        }
-        catch ( PackageException ex ) {
-            throw new ServletException("Error reloading the config.", ex);
-        }
         resp.setContentType("text/html;charset=UTF-8");
         View view = new View(resp.getWriter());
         view.open("reset", "Reset cache");
-        view.println("<p>The application cache has been reloaded.</p>");
-        view.close();
+        try {
+            ServerConfig.reload(ourServletConfig);
+            view.println("<p>The application cache has been reloaded.</p>");
+        }
+        catch ( ParseException ex ) {
+            view.print("<b>Error</b> reloading the config: " + ex.getMessage());
+            resp.setStatus(500);
+        }
+        catch ( PackageException ex ) {
+            view.print("<b>Error</b> reloading the config: " + ex.getMessage());
+            resp.setStatus(500);
+        }
+        finally {
+            view.close();
+        }
     }
 
     /** The config of this servlet. */
