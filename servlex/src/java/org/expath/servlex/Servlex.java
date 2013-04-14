@@ -142,17 +142,17 @@ public class Servlex
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
                 props.setPrivate("web:product", product);
                 String product_html
-                        = "<a href='https://github.com/fgeorges/servlex'>Servlex</a> version "
+                        = "<a href='https://servlex.net/'>Servlex</a> version "
                         + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
                 props.setPrivate("web:product-html", product_html);
-                String vendor = "Florent Georges, H2O Consulting, for EXPath";
-                props.setPrivate("web:product", vendor);
+                String vendor = "Florent Georges, from H2O Consulting, for EXPath";
+                props.setPrivate("web:vendor", vendor);
                 String vendor_html
                         = "<a href='http://fgeorges.org/'>Florent Georges</a>,"
-                        + " <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
+                        + " from <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
                         + " for <a href='http://expath.org/'>EXPath</a>";
-                props.setPrivate("web:product", vendor_html);
+                props.setPrivate("web:vendor-html", vendor_html);
             }
             catch ( TechnicalException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
