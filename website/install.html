@@ -1,0 +1,120 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:web="http://expath.org/ns/webapp">
+   <head>
+      <title>Servlex</title>
+      <link rel="stylesheet" type="text/css" href="style/servlex.css"></link>
+      <link rel="shortcut icon" type="image/png" href="images/icon.png"></link>
+   </head>
+   <body>
+      <div id="upbg"></div>
+      <div id="outer">
+         <div id="header">
+            <div id="headercontent">
+               <h1>Servlex</h1>
+               <h2>(: <i>Web Applications and REST Services Framework for XQuery, XProc and XSLT.</i> :)
+               </h2>
+            </div>
+         </div>
+         <div id="menu">
+            <ul>
+               <li><a href="." title="Servlex Home">Home</a></li>
+               <li><a href="install" title="Installation Guide" class="active">Install</a></li>
+               <li><a href="config" title="Configuration Options">Config</a></li>
+               <li><a href="news" title="Servlex News">News</a></li>
+            </ul>
+         </div>
+         <div id="menubottom"></div>
+         <div id="content">
+            <div class="normalcontent">
+               <h3><strong>Installation Guide</strong></h3>
+               <div class="contentarea">
+                  <p>
+                     Servlex can be installed either using a graphical installer, or by deploying
+                     the standalone WAR file in the servlet container of your choice.  The former
+                     approach is indeed the easiest one, whilst the latter is the more flexible.
+                  </p>
+                  <h4>Installer</h4>
+                  <p>
+                     This method requires you to download a file, execute it, choose the directory
+                     where to install Servlex, and that is pretty much it! It comes with Tomcat
+                     pre-bundeled, so you do not have to worry about scarry details.  The only
+                     pre-requisite is to have Java installed, with JAVA_HOME properly set.  Please
+                     follow <a
+                     href-="http://www.oracle.com/technetwork/java/javase/downloads/index.html">those
+                     instructions</a> if you do not have Java yet (choose the latest JDK for your
+                     platform).
+                  </p>
+                  <p>
+                     Download the latest installer: <a
+                     href="file/servlex-0.8.0-installer.jar">servlex-0.8.0-installer.jar</a>, and
+                     execute it.  You can simply double-clicking on it, or from the command-line
+                     just execute: <code>java -jar servlex-x.y.z-installer.jar</code>.  Follow the
+                     instructions, that's it!  If you have a graphical interface (like on most
+                     desktops and laptops), it will use friendly dialog boxes, and if you do not
+                     (like on most distant servers) it will use a textual interface.
+                  </p>
+                  <p style="text-align: center">
+                     <img src="images/izpack-screenshot.png" style="border: 0"/>
+                  </p>
+                  <p>
+                     You might have a look at the available <a href="config">configuration
+                     options</a> before starting Servlex.  To start Servlex, just execute
+                     <code>bin/startup.sh</code> (resp. <code>bin/startup.bat</code> on Windows)
+                     and go to <a href="http://localhost:19757/">http://localhost:19757/</a>.
+                  </p>
+                  <h4>WAR file</h4>
+                  <p>
+                     If you want to install Servlex into the servlet container of your choice, use
+                     the <a href="file/servlex-0.8.0.zip">servlex-0.8.0.zip</a>.  It contains a
+                     suitable WAR file and installation instructions.  Once installed in your
+                     servlet container, you might want to have a look at the available <a
+                     href="config">configuration options</a> as well.
+                  </p>
+                  <h4>Try it</h4>
+                  <p>
+                     Once installed, you can access the Servlex Admin Console at <a
+                     href="http://localhost:19757/manager/home">http://localhost:19757/manager/home</a>.
+                     The Console let you manage the webapps in a Servlex instance, by listing them,
+                     removing them, deploying a webapp from a XAW file, or directly from CXAN.
+                  </p>
+                  <p style="text-align: center">
+                     <img src="images/console-screenshot.png" style="border: 0"/>
+                  </p>
+                  <p>
+                     If you are eager to test Servlex, you can deploy the sample web application
+                     available in the installation dir, as <code>hello-world-0.8-0.xaw</code>.  Go
+                     to the Console, to the "<em>Deploy</em>" tab, fill in the form by choosing the
+                     file and press <code>deploy</code>.  Go to <a
+                     href="http://localhost:19757/hello-world/">http://localhost:19757/hello-world/</a>
+                     to access the example once installed.  The sources are available in the dir
+                     <code>hello-world/</code> in the installation dir.
+                  </p>
+                  <p>
+                     This sample application is just a few forms, each one-field, sending a string
+                     to either an XSLT function, an XQuery function or an XProc step, which in turn
+                     responds with a page based on this parameter.  You can use the <a
+                     href="http://h2oconsulting.be/tools/dump">dump tool</a> provided by <a
+                     href="http://h2oconsulting.be/">H2O Consulting</a> to display the XML
+                     representation of the HTTP request which is sent to the XSLT, XQuery and/or
+                     XProc components in a web application.
+                  </p>
+               </div>
+            </div>
+         </div>
+         <!--div id="footer">
+            <div class="left"><a href="http://validator.w3.org/check?uri=referer"><img src="images/valid-xhtml11.gif" alt="Valid XHTML 1.1" style="border: 0;"></img></a><a href="http://jigsaw.w3.org/css-validator/check/referer"><img src="images/valid-css.gif" alt="Valid CSS!" style="border: 0;"></img></a></div>
+            <div class="right">Servlex website version 0.1.0 (revision #888ee7a)<br/>Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>Powered by <a href="http://expath.org/">EXPath</a> and <a href="http://code.google.com/p/servlex/">Servlex</a></div>
+         </div-->
+      </div><script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+         </script>
+         <!-- TODO: Create a dedicated Google Analytics account fpr Servlex. -->
+         <script type="text/javascript">
+            try {
+               var pageTracker = _gat._getTracker("UA-5463082-7");
+               pageTracker._trackPageview();
+            }
+            catch(err) {
+            }
+         </script></body>
+</html>

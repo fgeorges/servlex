@@ -1,0 +1,21 @@
+Icon
+====
+
+From the original EXPath's logo.png to Servlex's icon.png:
+
+1/ Change the color in Gimp:
+    Colors > Hue Saturation
+    Hue: -16
+    Lightness: -8
+    Saturation: 0
+    (orange 31 / 70 / 100)
+    (purple -69 / 18 / -60)
+
+2/ Resize with ImageMagick:
+    convert recolorized-logo.png -resize 128x128 icon.png
+
+Menu active background
+======================
+
+Same as Icon, but first have to set the color layers to RGB in Gimp,
+in Image > Moce > RGB.
