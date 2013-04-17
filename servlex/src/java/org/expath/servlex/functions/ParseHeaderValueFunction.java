@@ -21,6 +21,7 @@ import net.sf.saxon.type.ItemType;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.value.SequenceType;
 import org.expath.servlex.ServlexConstants;
+import org.expath.servlex.processors.Processors;
 
 /**
  * TODO: Doc...
@@ -46,9 +47,10 @@ import org.expath.servlex.ServlexConstants;
 public class ParseHeaderValueFunction
         extends ExtensionFunctionDefinition
 {
-    public ParseHeaderValueFunction(Processor proc)
+    public ParseHeaderValueFunction(Processors procs, Processor saxon)
     {
-        mySaxon = proc;
+        myProcs = procs;
+        mySaxon = saxon;
     }
 
     @Override
@@ -88,11 +90,12 @@ public class ParseHeaderValueFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new ParseHeaderValueCall(mySaxon);
+        return new ParseHeaderValueCall(myProcs);
     }
 
     private static final String LOCAL_NAME = "parse-header-value";
     private static final String ELEMENT_NAME = "header";
+    private Processors myProcs;
     private Processor mySaxon;
 }
 

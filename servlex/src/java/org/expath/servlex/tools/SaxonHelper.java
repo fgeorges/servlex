@@ -25,7 +25,8 @@ import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.WebappFunctions;
+import org.expath.servlex.processors.saxon.WebappFunctions;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -36,13 +37,13 @@ import org.expath.servlex.runtime.ComponentError;
  */
 public class SaxonHelper
 {
-    public static Processor makeSaxon(SaxonRepository repo)
+    public static Processor makeSaxon(SaxonRepository repo, Processors procs)
             throws PackageException
     {
         Processor saxon = new Processor(true);
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
-        WebappFunctions.setup(saxon);
+        WebappFunctions.setup(procs, saxon);
         return saxon;
     }
 

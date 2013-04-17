@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       TreeBuilderHelper.java                                      */
+/*  File:       SaxonTreeBuilder.java                                       */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-26                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Builder;
@@ -18,17 +18,20 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.Untyped;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.TreeBuilder;
 
 /**
- * Simple helper to ease the use of Saxon's Builder API.
+ * Tree builder implementation for Saxon.
  *
  * @author Florent Georges
  * @date   2010-11-26
  */
-public class TreeBuilderHelper
+class SaxonTreeBuilder
+        implements TreeBuilder
 {
-    public TreeBuilderHelper(Processor proc, String ns_uri, String ns_prefix)
-            throws XPathException
+    public SaxonTreeBuilder(Processor proc, String ns_uri, String ns_prefix)
+            throws TechnicalException
     {
         Configuration conf = proc.getUnderlyingConfiguration();
         myNsUri = ns_uri;
@@ -36,45 +39,75 @@ public class TreeBuilderHelper
         myDocBuilder = proc.newDocumentBuilder();
         myBuilder = myDocBuilder.getTreeModel().makeBuilder(conf.makePipelineConfiguration());
         myBuilder.open();
-        myBuilder.startDocument(0);
+        try {
+            myBuilder.startDocument(0);
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error starting document", ex);
+        }
     }
 
     public void startElem(String local)
-            throws XPathException
+            throws TechnicalException
     {
         NodeName name = new FingerprintedQName(myNsPrefix, myNsUri, local);
-        myBuilder.startElement(name, Untyped.getInstance(), 0, 0);
+        try {
+            myBuilder.startElement(name, Untyped.getInstance(), 0, 0);
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error starting element '" + local + "'", ex);
+        }
     }
 
     public void attribute(String local, String value)
-            throws XPathException
+            throws TechnicalException
     {
         if ( value != null ) {
             NodeName name = new NoNamespaceName(local);
-            myBuilder.attribute(name, BuiltInAtomicType.UNTYPED_ATOMIC, value, 0, 0);
+            try {
+                myBuilder.attribute(name, BuiltInAtomicType.UNTYPED_ATOMIC, value, 0, 0);
+            }
+            catch ( XPathException ex ) {
+                throw new TechnicalException("Error building attribute '" + local + "'", ex);
+            }
         }
     }
 
     public void startContent()
-            throws XPathException
+            throws TechnicalException
     {
-        myBuilder.startContent();
+        try {
+            myBuilder.startContent();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error starting content", ex);
+        }
     }
 
     public void characters(String value)
-            throws XPathException
+            throws TechnicalException
     {
-        myBuilder.characters(value, 0, 0);
+        try {
+            myBuilder.characters(value, 0, 0);
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error building characters", ex);
+        }
     }
 
     public void endElem()
-            throws XPathException
+            throws TechnicalException
     {
-        myBuilder.endElement();
+        try {
+            myBuilder.endElement();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error ending element", ex);
+        }
     }
 
     public void textElem(String local, String value)
-            throws XPathException
+            throws TechnicalException
     {
         startElem(local);
         startContent();
@@ -83,10 +116,15 @@ public class TreeBuilderHelper
     }
 
     public XdmNode getRoot()
-            throws XPathException
+            throws TechnicalException
     {
-        myBuilder.endDocument();
-        myBuilder.close();
+        try {
+            myBuilder.endDocument();
+            myBuilder.close();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error ending document", ex);
+        }
         return myDocBuilder.wrap(myBuilder.getCurrentRoot());
     }
 

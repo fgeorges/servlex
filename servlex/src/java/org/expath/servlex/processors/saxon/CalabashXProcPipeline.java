@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       XProcPipeline.java                                          */
+/*  File:       CalabashXProcPipeline.java                                  */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-09-05                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.components;
+package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
@@ -28,10 +28,10 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
-import org.expath.servlex.processors.CalabashPipeline;
-import org.expath.servlex.processors.CalabashProcessor;
+import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.CalabashHelper;
@@ -63,11 +63,12 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-public class XProcPipeline
+class CalabashXProcPipeline
         implements Component
 {
-    public XProcPipeline(String pipe)
+    public CalabashXProcPipeline(CalabashXProc calabash, String pipe)
     {
+        myCalabash = calabash;
         myPipe = pipe;
     }
 
@@ -113,8 +114,7 @@ public class XProcPipeline
                  , ComponentError
                  , ServlexException
     {
-        CalabashProcessor calabash = config.getCalabash();
-        CalabashPipeline compiled = calabash.compile(myPipe);
+        CalabashPipeline compiled = myCalabash.compile(myPipe);
         return compiled.prepare(auditor);
     }
 
@@ -138,17 +138,17 @@ public class XProcPipeline
                 LOG.debug("Existing output port: " + o);
             }
             LOG.debug("The pipeline: " + pipeline);
-            LOG.debug("The Calabash processor: " + config.getCalabash());
-            LOG.debug("The Calabash config: " + config.getSaxon().getUnderlyingConfiguration());
-            LOG.debug("The URI resolver: " + config.getSaxon().getUnderlyingConfiguration().getURIResolver());
-            LOG.debug("The source resolver: " + config.getSaxon().getUnderlyingConfiguration().getSourceResolver());
+            // LOG.debug("The Calabash processor: " + myCalabash);
+            // LOG.debug("The Calabash config: " + config.getSaxon().getUnderlyingConfiguration());
+            // LOG.debug("The URI resolver: " + config.getSaxon().getUnderlyingConfiguration().getURIResolver());
+            // LOG.debug("The source resolver: " + config.getSaxon().getUnderlyingConfiguration().getSourceResolver());
         }
         // check before running
-        if ( ! pipeline.getOutputs().contains(OUTPUT_PORT_NAME) ) {
-            throw new ServlexException(501, "The output port '" + OUTPUT_PORT_NAME + "' is mandatory on an XProc pipeline.");
+        if ( ! pipeline.getOutputs().contains(XProcProcessor.OUTPUT_PORT_NAME) ) {
+            throw new ServlexException(501, "The output port '" + XProcProcessor.OUTPUT_PORT_NAME + "' is mandatory on an XProc pipeline.");
         }
         pipeline.run();
-        ReadablePipe response_port = pipeline.readFrom(OUTPUT_PORT_NAME);
+        ReadablePipe response_port = pipeline.readFrom(XProcProcessor.OUTPUT_PORT_NAME);
         XdmValue result = decodeResponse(response_port);
         return new XdmConnector(result);
     }
@@ -177,23 +177,23 @@ public class XProcPipeline
         // and the following ones are the bodies
         int count = port.documentCount();
         if ( count == 0 ) {
-            LOG.debug("The pipeline returned no document on '" + OUTPUT_PORT_NAME + "'.");
+            LOG.debug("The pipeline returned no document on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
             // TODO: If there is no document on the port, we return an empty
             // sequence.  We should probably throw an error instead...
             return XdmEmptySequence.getInstance();
         }
         else if ( count > 1 ) {
-            LOG.debug("The pipeline returned " + count + " documents on '" + OUTPUT_PORT_NAME + "'.");
+            LOG.debug("The pipeline returned " + count + " documents on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
             while ( port.moreDocuments() ) {
                 XdmNode doc = port.read();
                 addToList(result, doc);
             }
         }
         else {
-            LOG.debug("The pipeline returned 1 document on '" + OUTPUT_PORT_NAME + "'.");
+            LOG.debug("The pipeline returned 1 document on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
             XdmNode response = port.read();
             if ( LOG.isDebugEnabled() ) {
-                LOG.debug("Content of the outpot port '" + OUTPUT_PORT_NAME + "': " + response);
+                LOG.debug("Content of the outpot port '" + XProcProcessor.OUTPUT_PORT_NAME + "': " + response);
             }
             if ( response == null ) {
                 // TODO: If there is no web:response, we return an empty sequence.
@@ -289,19 +289,13 @@ public class XProcPipeline
         return null;
     }
 
-    /** The name of the input port. */
-    public static final String INPUT_PORT_NAME  = "source";
-    /** The name of the error port, for error handlers. */
-    public static final String ERROR_PORT_NAME  = "user-data";
-    /** The name of the output port. */
-    public static final String OUTPUT_PORT_NAME = "result";
-
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(XProcPipeline.class);
+    private static final Logger LOG = Logger.getLogger(CalabashXProcPipeline.class);
     /** QName for 'web:response'. */
     private static final QName WRAPPER_NAME
             = new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "wrapper");
 
+    private CalabashXProc myCalabash;
     private String myPipe;
 }
 

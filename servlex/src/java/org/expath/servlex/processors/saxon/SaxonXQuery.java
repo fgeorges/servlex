@@ -1,34 +1,49 @@
 /****************************************************************************/
-/*  File:       ParseException.java                                         */
+/*  File:       SaxonXQuery.java                                            */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-02-09                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.processors.saxon;
 
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.s9api.Processor;
+import org.expath.pkg.repo.Repository;
+import org.expath.servlex.components.Component;
+import org.expath.servlex.processors.XQueryProcessor;
 
 /**
- * Exception for webapp descriptor parsing.
+ * The Saxon implementation of the XSLT processor.
  *
  * @author Florent Georges
- * @date   2010-02-09
+ * @date   2013-04-15
  */
-public class ParseException
-        extends TechnicalException
+class SaxonXQuery
+        implements XQueryProcessor
 {
-    public ParseException(String msg)
+    // FIXME: Repo shoud not be needed here...
+    public SaxonXQuery(Processor saxon, Repository repo)
     {
-        super(msg);
+        mySaxon = saxon;
+        myRepo = repo;
     }
 
-    public ParseException(String msg, Throwable cause)
+    public Component makeQuery(String uri)
     {
-        super(msg, cause);
+        return new SaxonXQueryModule(mySaxon, myRepo, uri);
     }
+
+    public Component makeFunction(String ns, String localname)
+    {
+        return new SaxonXQueryFunction(mySaxon, ns, localname);
+    }
+
+    /** FIXME: Should not be needed here. */
+    private Repository myRepo;
+    /** The Saxon instance. */
+    private Processor mySaxon;
 }
 
 

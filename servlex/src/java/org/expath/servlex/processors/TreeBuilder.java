@@ -1,34 +1,46 @@
 /****************************************************************************/
-/*  File:       ParseException.java                                         */
+/*  File:       TreeBuilder.java                                            */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-02-09                                                  */
+/*  Date:       2013-04-16                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.processors;
 
+import net.sf.saxon.s9api.XdmNode;
 import org.expath.servlex.TechnicalException;
 
 /**
- * Exception for webapp descriptor parsing.
+ * A generic interface to build an XML tree, independent on any processor.
  *
  * @author Florent Georges
- * @date   2010-02-09
+ * @date   2013-04-16
  */
-public class ParseException
-        extends TechnicalException
+public interface TreeBuilder
 {
-    public ParseException(String msg)
-    {
-        super(msg);
-    }
+    public void startElem(String local)
+            throws TechnicalException;
 
-    public ParseException(String msg, Throwable cause)
-    {
-        super(msg, cause);
-    }
+    public void attribute(String local, String value)
+            throws TechnicalException;
+
+    public void startContent()
+            throws TechnicalException;
+
+    public void characters(String value)
+            throws TechnicalException;
+
+    public void endElem()
+            throws TechnicalException;
+
+    public void textElem(String local, String value)
+            throws TechnicalException;
+
+    // TODO: FIXME: XdmNode is Saxon-specific, this has NOTHING to do here...!
+    public XdmNode getRoot()
+            throws TechnicalException;
 }
 
 

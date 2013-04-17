@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       CalabashProcessor.java                                      */
+/*  File:       Processors.java                                             */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-02-12                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,53 +9,36 @@
 
 package org.expath.servlex.processors;
 
+import javax.xml.transform.Source;
 import net.sf.saxon.s9api.XdmNode;
-import org.expath.pkg.repo.PackageException;
-import org.expath.servlex.ServerConfig;
-import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.TechnicalException;
 
 /**
- * Abstract an XProc processor.
+ * Abstract the provider of XSLT, XQuery and XProc processors.
  *
  * @author Florent Georges
- * @date   2013-02-12
+ * @date   2013-04-15
  */
-public class CalabashProcessor
+public interface Processors
 {
-    /**
-     * Construct a new Calabash processor, from its underlying Saxon processor and repository.
-     * 
-     * It uses the value of the property {@code ServerConfig.PROFILE_DIR_PROPERTY},
-     * if it exists, to enable Calabash profiling data generation, the value of
-     * the property being a directory where to put the corresponding files.  If
-     * the directory does not exist, profiling is disabled and a message is logged
-     * (but this is not an error).  If the property does not exist, profiling is
-     * not enabled.
-     */
-    public CalabashProcessor(ServerConfig config)
-            throws PackageException
-    {
-        myConfig = config;
-    }
+    public XSLTProcessor getXSLT()
+            throws TechnicalException;
 
-    /**
-     * Compile a pipeline from a URI.
-     */
-    public CalabashPipeline compile(String pipe)
-    {
-        return new CalabashPipeline(this, pipe, myConfig);
-    }
+    public XQueryProcessor getXQuery()
+            throws TechnicalException;
 
-    /**
-     * Compile a pipeline from an in-memory XML tree.
-     */
-    public CalabashPipeline compile(XdmNode pipe)
-    {
-        return new CalabashPipeline(this, pipe, myConfig);
-    }
+    public XProcProcessor getXProc()
+            throws TechnicalException;
 
-    /** The configuration object. */
-    private ServerConfig myConfig;
+    public Serializer makeSerializer()
+            throws TechnicalException;
+
+    public TreeBuilder makeTreeBuilder(String uri, String prefix)
+            throws TechnicalException;
+
+    // TODO: FIXME: XdmNode is Saxon-specific, this has NOTHING to do here...!
+    public XdmNode buildDocument(Source src)
+            throws TechnicalException;
 }
 
 

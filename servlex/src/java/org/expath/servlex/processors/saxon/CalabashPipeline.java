@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.core.XProcProcessor;
@@ -37,14 +37,14 @@ import org.expath.servlex.tools.SaxonHelper;
  */
 public class CalabashPipeline
 {
-    public CalabashPipeline(CalabashProcessor calabash, String pipe, ServerConfig config)
+    public CalabashPipeline(CalabashXProc calabash, String pipe, ServerConfig config)
     {
         myCalabash = calabash;
         myPipe = pipe;
         myConfig = config;
     }
 
-    public CalabashPipeline(CalabashProcessor calabash, XdmNode pipe, ServerConfig config)
+    public CalabashPipeline(CalabashXProc calabash, XdmNode pipe, ServerConfig config)
     {
         myCalabash = calabash;
         myPipeNode = pipe;
@@ -106,10 +106,10 @@ public class CalabashPipeline
                  , ServlexException
                  , TechnicalException
     {
-        Processor saxon = myConfig.getSaxon();
+        Processor saxon = myCalabash.getSaxon();
         XProcConfiguration xconf = new XProcConfiguration(saxon);
         XProcProcessor proc = new XProcProcessor(xconf);
-        SaxonRepository repo = myConfig.getRepository();
+        SaxonRepository repo = myCalabash.getRepository();
         PkgConfigurer configurer = new PkgConfigurer(repo.getUnderlyingRepo());
         proc.setConfigurer(configurer);
         XProcRuntime runtime = new XProcRuntime(proc);
@@ -133,7 +133,7 @@ public class CalabashPipeline
     /** The pipeline XML representation in memory. Mutually exclusive with myPipe. */
     private XdmNode myPipeNode;
     /** The Calabash processor. */
-    private CalabashProcessor myCalabash;
+    private CalabashXProc myCalabash;
     /** The configuration object. */
     private ServerConfig myConfig;
 }

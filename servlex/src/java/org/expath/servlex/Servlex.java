@@ -28,7 +28,6 @@ import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
-import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Properties;
@@ -157,9 +156,6 @@ public class Servlex
             catch ( TechnicalException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
             }
-            catch ( ParseException ex ) {
-                throw new TechnicalException("Unexpected exception", ex);
-            }
             catch ( PackageException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
             }
@@ -199,7 +195,7 @@ public class Servlex
         try {
             myConfig = ServerConfig.getInstance(config);
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             String msg = "Error in the servlet initialization...";
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);

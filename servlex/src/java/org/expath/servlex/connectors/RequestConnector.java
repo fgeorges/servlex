@@ -27,8 +27,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryEvaluator;
@@ -50,12 +48,13 @@ import org.expath.servlex.model.Servlet;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.components.XProcPipeline;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.TreeBuilder;
+import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.tools.CalabashHelper;
 import org.expath.servlex.tools.ContentType;
 import org.expath.servlex.tools.SaxonHelper;
 import org.expath.servlex.tools.TraceInputStream;
-import org.expath.servlex.tools.TreeBuilderHelper;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -98,7 +97,8 @@ public class RequestConnector
         if ( myInput == null ) {
             try {
                 // where to put the web:request element
-                TreeBuilderHelper builder = new TreeBuilderHelper(config.getSaxon(), NS_URI, NS_PREFIX);
+                Processors procs = config.getProcessors();
+                TreeBuilder builder = procs.makeTreeBuilder(NS_URI, NS_PREFIX);
                 // parse the request (to web:request + sequence of bodies)
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
@@ -158,7 +158,7 @@ public class RequestConnector
             throws ServlexException
     {
         ensureParsing(config);
-        final String port = XProcPipeline.INPUT_PORT_NAME;
+        final String port = XProcProcessor.INPUT_PORT_NAME;
         CalabashHelper.writeTo(pipe, port, myInput, config);
     }
 
@@ -209,7 +209,7 @@ public class RequestConnector
      * and the bodies, which will end up as the $input sequence of most of the
      * components)
      */
-    private XdmNode parseRequest(ServerConfig config, TreeBuilderHelper b, List<XdmItem> input)
+    private XdmNode parseRequest(ServerConfig config, TreeBuilder b, List<XdmItem> input)
             throws XPathException
                  , ServlexException
                  , TechnicalException
@@ -301,8 +301,8 @@ public class RequestConnector
     /**
      * Make the element web:path within the web:request, and put it in {@code b}.
      */
-    private void makeElementPath(TreeBuilderHelper b)
-            throws XPathException
+    private void makeElementPath(TreeBuilder b)
+            throws TechnicalException
     {
         b.startElem("path");
         b.startContent();
@@ -337,8 +337,8 @@ public class RequestConnector
     /**
      * Make the elements web:param within the web:request, and put them in {@code b}.
      */
-    private void makeElementsParam(TreeBuilderHelper b)
-            throws XPathException
+    private void makeElementsParam(TreeBuilder b)
+            throws TechnicalException
     {
         for ( Enumeration<String> e = myRequest.getParameterNames(); e.hasMoreElements(); /* */ ) {
             String name = e.nextElement();
@@ -357,8 +357,8 @@ public class RequestConnector
     /**
      * Make the elements web:header within the web:request, and put them in {@code b}.
      */
-    private void makeElementsHeader(TreeBuilderHelper b)
-            throws XPathException
+    private void makeElementsHeader(TreeBuilder b)
+            throws TechnicalException
     {
         for ( Enumeration<String> e = myRequest.getHeaderNames(); e.hasMoreElements(); /* */ ) {
             String name = e.nextElement();
@@ -383,7 +383,7 @@ public class RequestConnector
      *
      * TODO: Must add more info on web:multipart and web:body elements.
      */
-    private void makeBodies(ServerConfig config, TreeBuilderHelper builder, List<XdmItem> input)
+    private void makeBodies(ServerConfig config, TreeBuilder builder, List<XdmItem> input)
             throws ServlexException
                  , XPathException
                  , TechnicalException
@@ -435,7 +435,7 @@ public class RequestConnector
     /**
      * Do the job for one parser event, in case of a multipart.
      */
-    private void handleParserState(MimeTokenStream parser, TreeBuilderHelper builder, List<XdmItem> items, int position, ServerConfig config)
+    private void handleParserState(MimeTokenStream parser, TreeBuilder builder, List<XdmItem> items, int position, ServerConfig config)
             throws ServlexException
                  , XPathException
                  , MimeException
@@ -529,9 +529,9 @@ public class RequestConnector
      *
      * TODO: Ensure we use the correct encoding when reading parts...
      */
-    private XdmItem parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilderHelper builder)
+    private XdmItem parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilder builder)
             throws ServlexException
-                 , XPathException
+                 , TechnicalException
     {
         try {
             // TODO: Add more information on the web:body element (@content-type,
@@ -580,7 +580,7 @@ public class RequestConnector
      * Parse content as XML (tidied up from HTML if {@code html} is true).
      */
     private XdmNode parseBodyXml(ServerConfig config, InputStream input, boolean html)
-            throws SaxonApiException
+            throws TechnicalException
                  , SAXException
     {
         String sys_id = "TODO-find-a-useful-systemId";
@@ -596,9 +596,7 @@ public class RequestConnector
         else {
             src = new StreamSource(input, sys_id);
         }
-        Processor saxon = config.getSaxon();
-        DocumentBuilder builder = saxon.newDocumentBuilder();
-        XdmNode doc = builder.build(src);
+        XdmNode doc = config.getProcessors().buildDocument(src);
         if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
             LOG.trace("Content parsed as document node: " + doc);
         }

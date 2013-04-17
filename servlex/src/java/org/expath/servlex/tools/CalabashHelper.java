@@ -15,11 +15,12 @@ import javax.xml.namespace.QName;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -80,7 +81,7 @@ public class CalabashHelper
                     else {
                         try {
                             String c_ns = "http://www.w3.org/ns/xproc-step";
-                            TreeBuilderHelper b = new TreeBuilderHelper(config.getSaxon(), c_ns, "c");
+                            TreeBuilder b = config.getProcessors().makeTreeBuilder(c_ns, "c");
                             b.startElem("data");
                             b.attribute("encoding", "base64");
                             b.startContent();
@@ -88,7 +89,7 @@ public class CalabashHelper
                             b.endElem();
                             pipe.writeTo(port, b.getRoot());
                         }
-                        catch ( XPathException ex ) {
+                        catch ( TechnicalException ex ) {
                             throw new ServlexException(500, "Internal error", ex);
                         }
                     }

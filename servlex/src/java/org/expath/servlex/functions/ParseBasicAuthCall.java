@@ -13,7 +13,6 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.SingletonIterator;
@@ -22,8 +21,9 @@ import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.tools.SaxonHelper;
-import org.expath.servlex.tools.TreeBuilderHelper;
 
 /**
  * See {@link ParseBasicAuthFunction}.
@@ -34,9 +34,9 @@ import org.expath.servlex.tools.TreeBuilderHelper;
 public class ParseBasicAuthCall
         extends ExtensionFunctionCall
 {
-    public ParseBasicAuthCall(Processor saxon)
+    public ParseBasicAuthCall(Processors procs)
     {
-        mySaxon = saxon;
+        myProcs = procs;
     }
 
     @Override
@@ -76,29 +76,31 @@ public class ParseBasicAuthCall
         }
         String username = decoded.substring(0, colon);
         String password = decoded.substring(colon + 1);
-        // build the resulting element
-        TreeBuilderHelper b = new TreeBuilderHelper(mySaxon, ServlexConstants.WEBAPP_NS, ServlexConstants.WEBAPP_PREFIX);
-        b.startElem("basic-auth");
-        b.attribute("username", username);
-        b.attribute("password", password);
-        b.startContent();
-        b.endElem();
-        // return the basic-auth element, inside the document node
-        XdmNode root = null;
         try {
-            root = SaxonHelper.getDocumentRootElement(b.getRoot());
+            // build the resulting element
+            TreeBuilder b = myProcs.makeTreeBuilder(NS, PREFIX);
+            b.startElem("basic-auth");
+            b.attribute("username", username);
+            b.attribute("password", password);
+            b.startContent();
+            b.endElem();
+            // return the basic-auth element, inside the document node
+            XdmNode root = SaxonHelper.getDocumentRootElement(b.getRoot());
+            return SingletonIterator.makeIterator(root.getUnderlyingNode());
         }
         catch ( TechnicalException ex ) {
-            String msg = "Error accessing the basic-auth element I just built, cannot happen";
+            String msg = "Technical exception occured in Saxon extension function";
             throw new XPathException(msg, ex);
         }
-        return SingletonIterator.makeIterator(root.getUnderlyingNode());
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ParseBasicAuthCall.class);
-    /** The Saxon processor. */
-    private Processor mySaxon;
+    /** Shortcuts. */
+    private static final String NS     = ServlexConstants.WEBAPP_NS;
+    private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
+    /** The processors. */
+    private Processors myProcs;
 }
 
 

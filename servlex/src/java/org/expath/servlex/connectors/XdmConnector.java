@@ -19,12 +19,12 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltTransformer;
-import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.Result;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.tools.TreeBuilderHelper;
+import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.tools.CalabashHelper;
 
 /**
  * Connector to an XDM sequence, represented by the Saxon {@link XdmValue}.
@@ -126,33 +126,7 @@ public class XdmConnector
     public void connectToPipeline(XPipeline pipeline, ServerConfig config)
             throws ServlexException
     {
-        if ( pipeline.getInputs().contains("source") ) {
-            for ( int i = 0; i < mySequence.size(); ++i ) {
-                XdmItem body = mySequence.itemAt(i);
-                // TODO: Is it enough to test whether this is a node?  Shouldn't
-                // I test if it is a document node?  Or at least an element?
-                // And what about the web:request? (the element is registered
-                // in the input sequence, not the document node...)
-                if ( body instanceof XdmNode ) {
-                    pipeline.writeTo("source", (XdmNode) body);
-                }
-                else {
-                    try {
-                        String c_ns = "http://www.w3.org/ns/xproc-step";
-                        TreeBuilderHelper b = new TreeBuilderHelper(config.getSaxon(), c_ns, "c");
-                        b.startElem("data");
-                        b.attribute("encoding", "base64");
-                        b.startContent();
-                        b.characters(body.getStringValue());
-                        b.endElem();
-                        pipeline.writeTo("source", b.getRoot());
-                    }
-                    catch ( XPathException ex ) {
-                        throw new ServlexException(500, "Internal error", ex);
-                    }
-                }
-            }
-        }
+        CalabashHelper.writeTo(pipeline, XProcProcessor.INPUT_PORT_NAME, mySequence, config);
     }
 
     /**
@@ -166,8 +140,8 @@ public class XdmConnector
         // TODO: FIXME: The artificial, old class Result should be removed, and
         // its content moved to this class, which is really the one responsible
         // to write an XDM sequence to the HTTP servlet response object.
-        Result result = new Result(mySequence);
-        result.respond(config.getSaxon(), resp);
+        Result result = new Result(mySequence, config.getProcessors());
+        result.respond(resp);
     }
 
     private XdmValue mySequence;

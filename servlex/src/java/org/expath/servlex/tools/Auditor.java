@@ -18,16 +18,15 @@ import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.DayTimeDurationValue;
-import org.expath.servlex.Serializer;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.processors.Serializer;
 
 /**
  * Log audit information.
@@ -76,15 +75,11 @@ public class Auditor
                 myWriter.append(format(myStart));
                 myWriter.append("\"/>\n");
                 myWriter.flush();
-                Serializer serial = new Serializer();
+                Serializer serial = myConfig.getProcessors().makeSerializer();
                 serial.setMethod("xml");
                 serial.setIndent("yes");
                 serial.setOmitXmlDeclaration("yes");
-                serial.serialize(doc, myConfig.getSaxon(), myOutput);
-            }
-            catch ( SaxonApiException ex ) {
-                String msg = "Internal error, serializing the request to the audit file.";
-                throw new ServlexException(500, msg, ex);
+                serial.serialize(doc, myOutput);
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, getting the request-id.";

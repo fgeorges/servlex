@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       XSLTTemplate.java                                           */
+/*  File:       SaxonXQueryFunction.java                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2009-12-12                                                  */
 /*  Tags:                                                                   */
@@ -7,29 +7,18 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.components;
+package org.expath.servlex.processors.saxon;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XQueryEvaluator;
+import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.log4j.Logger;
-import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.runtime.ComponentError;
@@ -37,17 +26,17 @@ import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
- * ...
+ * A component that is an XQuery function.
  *
  * @author Florent Georges
  * @date   2009-12-12
  */
-public class XSLTTemplate
+class SaxonXQueryFunction
         implements Component
 {
-    public XSLTTemplate(String import_uri, String ns, String localname)
+    public SaxonXQueryFunction(Processor saxon, String ns, String localname)
     {
-        myImportUri = import_uri;
+        mySaxon = saxon;
         myNS = ns;
         myLocal = localname;
     }
@@ -57,61 +46,66 @@ public class XSLTTemplate
         throws ServlexException
              , ComponentError
     {
+        XQueryExecutable exec = getCompiled();
+        XQueryEvaluator eval = exec.load();
+        connector.connectToXQueryFunction(eval, config);
+        XdmValue result;
         try {
-            XsltExecutable exec = getCompiled(config);
-            XsltTransformer trans = exec.load();
-            trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            connector.connectToXSLTComponent(trans, config);
-            XdmDestination dest = new XdmDestination();
-            trans.setDestination(dest);
-            trans.transform();
-            // TODO: As per XSLT, this is always a doc node.  Check that.  But for
-            // now, I take the doc's children as the result sequence...
-            // TODO: BTW, check this is a document node...
-            XdmNode doc = dest.getXdmNode();
-            List<XdmItem> children = new ArrayList<XdmItem>();
-            XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            while ( it.hasNext() ) {
-                children.add(it.next());
-            }
-            return new XdmConnector(new XdmValue(children));
+            result = eval.evaluate();
         }
         catch ( SaxonApiException ex ) {
-            LOG.error("User error in pipeline", ex);
+            LOG.error(formatMsg("User error in XQuery"), ex);
             throw SaxonHelper.makeError(ex);
         }
-        catch ( PackageException ex ) {
-            LOG.error("Internal error", ex);
-            throw new ServlexException(500, "Internal error", ex);
-        }
+        return new XdmConnector(result);
     }
 
-    private synchronized XsltExecutable getCompiled(ServerConfig config)
-            throws PackageException
-                 , SaxonApiException
+    /**
+     * Return a compiled query calling the function.
+     * 
+     * The query takes a global parameter $input, and passes it to the function
+     * call.  The compiled object is cached (it is compiled only once).
+     */
+    private synchronized XQueryExecutable getCompiled()
+            throws ServlexException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = config.getSaxon().newXsltCompiler();
-            String style = makeCallSheet(myImportUri, myNS, myLocal);
-            Source src = new StreamSource(new StringReader(style));
-            src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
-            myCompiled = c.compile(src);
+            LOG.debug(formatMsg("Going to generate query for"));
+            XQueryCompiler c = mySaxon.newXQueryCompiler();
+            try {
+                myCompiled = c.compile(
+                    "import module namespace my = \"" + myNS + "\";\n"
+                    + "declare variable $input external;\n"
+                    + "my:" + myLocal + "($input)\n");
+            }
+            catch ( SaxonApiException ex ) {
+                String msg = formatMsg("Error compiling the generated query for calling");
+                LOG.error(msg, ex);
+                throw new ServlexException(500, msg, ex);
+            }
         }
         return myCompiled;
     }
 
-    private static String makeCallSheet(String import_uri, String ns, String local)
+    /**
+     * Format a message with the function name (using Clark notation).
+     */
+    private String formatMsg(String msg)
     {
-        return XSLTFunction.makeCallSheet(false, import_uri, ns, local);
+        return msg + " function: {" + myNS + "}" + myLocal;
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(XSLTTemplate.class);
+    private static final Logger LOG = Logger.getLogger(SaxonXQueryFunction.class);
 
-    private String myImportUri;
+    /** The Saxon instance. */
+    private Processor mySaxon;
+    /** The namespace URI of the function. */
     private String myNS;
+    /** The local name of the function. */
     private String myLocal;
-    private XsltExecutable myCompiled = null;
+    /** The cached generated query calling the function. */
+    private XQueryExecutable myCompiled = null;
 }
 
 

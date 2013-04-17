@@ -13,12 +13,15 @@ import java.io.File;
 import java.util.Set;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
-import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.model.Wrapper;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.saxon.SaxonCalabash;
 import org.junit.Test;
 //import static org.junit.Assert.*;
 
@@ -39,15 +42,16 @@ public class EXPathWebParserTest
      */
     @Test
     public void testParseDescriptors_ok()
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         File repo_dir = new File(System.getProperty("user.home"), "tmp/servlex/repo");
         Storage storage = new FileSystemStorage(repo_dir);
-        SaxonRepository repo = new SaxonRepository(storage);
+        Repository repo = new Repository(storage);
+        Processors procs = new SaxonCalabash(repo, null);
         // the System Under Test
-        EXPathWebParser sut = new EXPathWebParser(repo);
-        Set<Application> result = sut.parseDescriptors();
+        EXPathWebParser sut = new EXPathWebParser(procs);
+        Set<Application> result = sut.parseDescriptors(repo.listPackages());
         System.err.println("RESULT: " + result);
         for ( Application app : result ) {
             System.err.println("  APP: " + app.getName());

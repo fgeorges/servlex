@@ -1,34 +1,26 @@
 /****************************************************************************/
-/*  File:       ParseException.java                                         */
+/*  File:       XQueryProcessor.java                                        */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-02-09                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.processors;
 
-import org.expath.servlex.TechnicalException;
+import org.expath.servlex.components.Component;
 
 /**
- * Exception for webapp descriptor parsing.
+ * Abstract an XQuery processor.
  *
  * @author Florent Georges
- * @date   2010-02-09
+ * @date   2013-04-15
  */
-public class ParseException
-        extends TechnicalException
+public interface XQueryProcessor
 {
-    public ParseException(String msg)
-    {
-        super(msg);
-    }
-
-    public ParseException(String msg, Throwable cause)
-    {
-        super(msg, cause);
-    }
+    public Component makeQuery(String uri);
+    public Component makeFunction(String ns, String localname);
 }
 
 

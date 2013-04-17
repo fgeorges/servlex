@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.TechnicalException;
 
 /**
  * Servlet used to deploy a XAW file.
@@ -66,7 +66,7 @@ public class DeployWebapp
         try {
             myConfig = ServerConfig.getInstance(config);
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             String msg = "Error in the servlet initialization...";
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);
@@ -198,7 +198,7 @@ public class DeployWebapp
         catch ( PackageException ex ) {
             error(500, "Error installing the webapp", ex);
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             error(500, "Error installing the webapp", ex);
         }
         // cannot happen, because error() always throws an exception

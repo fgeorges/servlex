@@ -1,34 +1,34 @@
 /****************************************************************************/
-/*  File:       ParseException.java                                         */
+/*  File:       XProcProcessor.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-02-09                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.processors;
 
-import org.expath.servlex.TechnicalException;
+import org.expath.servlex.components.Component;
 
 /**
- * Exception for webapp descriptor parsing.
+ * Abstract an XProc processor.
  *
  * @author Florent Georges
- * @date   2010-02-09
+ * @date   2013-04-15
  */
-public class ParseException
-        extends TechnicalException
+public interface XProcProcessor
 {
-    public ParseException(String msg)
-    {
-        super(msg);
-    }
+    public Component makePipeline(String uri);
+    public Component makeStep(String uri, String ns, String local);
 
-    public ParseException(String msg, Throwable cause)
-    {
-        super(msg, cause);
-    }
+    /** The name of the input port. */
+    public static final String INPUT_PORT_NAME  = "source";
+    /** The name of the error port, for error handlers. */
+    public static final String ERROR_PORT_NAME  = "user-data";
+    /** The name of the output port. */
+    public static final String OUTPUT_PORT_NAME = "result";
+
 }
 
 

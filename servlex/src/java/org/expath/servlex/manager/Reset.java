@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.TechnicalException;
 
 /**
  * TODO: ...
@@ -76,7 +76,7 @@ public class Reset
             ServerConfig.reload(ourServletConfig);
             view.println("<p>The application cache has been reloaded.</p>");
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             view.print("<b>Error</b> reloading the config: " + ex.getMessage());
             resp.setStatus(500);
         }

@@ -1,34 +1,48 @@
 /****************************************************************************/
-/*  File:       ParseException.java                                         */
+/*  File:       SaxonXSLT.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-02-09                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.processors.saxon;
 
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.components.Component;
+import org.expath.servlex.processors.XSLTProcessor;
 
 /**
- * Exception for webapp descriptor parsing.
+ * The Saxon implementation of the XSLT processor.
  *
  * @author Florent Georges
- * @date   2010-02-09
+ * @date   2013-04-15
  */
-public class ParseException
-        extends TechnicalException
+class SaxonXSLT
+        implements XSLTProcessor
 {
-    public ParseException(String msg)
+    public SaxonXSLT(Processor saxon)
     {
-        super(msg);
+        mySaxon = saxon;
     }
 
-    public ParseException(String msg, Throwable cause)
+    public Component makeTransform(String uri)
     {
-        super(msg, cause);
+        return new SaxonXSLTTransform(mySaxon, uri);
     }
+
+    public Component makeFunction(String uri, String ns, String localname)
+    {
+        return new SaxonXSLTFunction(mySaxon, uri, ns, localname);
+    }
+
+    public Component makeTemplate(String uri, String ns, String localname)
+    {
+        return new SaxonXSLTTemplate(mySaxon, uri, ns, localname);
+    }
+
+    private Processor mySaxon;
 }
 
 

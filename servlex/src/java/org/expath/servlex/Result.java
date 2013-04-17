@@ -21,15 +21,15 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Serializer;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
@@ -61,9 +61,10 @@ public class Result
      * @param sequence
      * @throws ServletException
      */
-    public Result(XdmValue sequence)
+    public Result(XdmValue sequence, Processors procs)
             throws ServlexException
     {
+        myProcs = procs;
         myStatus = -1;
         myMsg = null;
         myHeaders = new ArrayList<Header>();
@@ -124,7 +125,7 @@ public class Result
      * TODO: ...
      * @param resp
      */
-    public void respond(Processor proc, HttpServletResponse resp)
+    public void respond(HttpServletResponse resp)
             throws ServlexException
                  , IOException
     {
@@ -133,13 +134,13 @@ public class Result
             resp.addHeader(h.name, h.value);
         }
         if ( myMultipart != null ) {
-            respondMultipart(proc, resp);
+            respondMultipart(resp);
         }
         else if ( myBody == null ) {
             // nothing
         }
         else {
-            respondBody(proc, resp);
+            respondBody(resp);
         }
     }
 
@@ -276,7 +277,12 @@ public class Result
     {
         Body b = new Body();
         b.base = node.getBaseURI();
-        b.serializer = new Serializer();
+        try {
+            b.serializer = myProcs.makeSerializer();
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Error instantiating a serializer", ex);
+        }
         XdmSequenceIterator it = node.axisIterator(Axis.ATTRIBUTE);
         while ( it.hasNext() ) {
             XdmNode attr = (XdmNode) it.next();
@@ -341,42 +347,6 @@ public class Result
             else if ( name.equals(VERSION_NAME) ) {
                 b.serializer.setVersion(attr.getStringValue());
             }
-//            else if ( name.equals(SAXON_CHARACTER_REPRESENTATION_NAME) ) {
-//                b.serializer.setSaxonCharacterRepresentation(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_DOUBLE_SPACE_NAME) ) {
-//                b.serializer.setSaxonDoubleSpace(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_IMPLICIT_RESULT_DOCUMENT_NAME) ) {
-//                b.serializer.setSaxonImplicitResultDocument(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_INDENT_SPACES_NAME) ) {
-//                b.serializer.setSaxonIndentSpaces(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_NEXT_IN_CHAIN_NAME) ) {
-//                b.serializer.setSaxonNextInChain(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_NEXT_IN_CHAIN_BASE_URI_NAME) ) {
-//                b.serializer.setSaxonNextInChainBaseUri(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_RECOGNIZE_BINARY_NAME) ) {
-//                b.serializer.setSaxonRecognizeBinary(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_REQUIRE_WELL_FORMED_NAME) ) {
-//                b.serializer.setSaxonRequireWellFormed(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_STYLESHEET_VERSION_NAME) ) {
-//                b.serializer.setSaxonStylesheetVersion(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_SUPPLY_SOURCE_LOCATOR_NAME) ) {
-//                b.serializer.setSaxonSupplySourceLocator(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_SUPPRESS_INDENTATION_NAME) ) {
-//                b.serializer.setSaxonSuppressIndentation(attr.getStringValue());
-//            }
-//            else if ( name.equals(SAXON_WRAP_NAME) ) {
-//                b.serializer.setSaxonWrap(attr.getStringValue());
-//            }
             else if ( "xml".equals(name.getPrefix()) ) {
                 // nothing (ignore standard XML attributes, like xml:base, xml:id...)
             }
@@ -401,7 +371,7 @@ public class Result
     //     -----------------
     // -----------------------------------------------------------------------
 
-    private void respondBody(Processor proc, HttpServletResponse resp)
+    private void respondBody(HttpServletResponse resp)
             throws ServlexException
                  , IOException
     {
@@ -446,14 +416,14 @@ public class Result
                 // TODO: Should actualy web:body be able to have same
                 //   properties as xsl:output and xsl:result-document (aka
                 //   serialization properties) ?
-                myBody.serializer.serialize(myBody.value, proc, resp.getOutputStream());
+                myBody.serializer.serialize(myBody.value, resp.getOutputStream());
             }
         }
         catch ( FileNotFoundException ex ) {
             LOG.error("Page not found - " + myBody.src + " - " + src);
             error(404, "Page not found", ex);
         }
-        catch ( SaxonApiException ex ) {
+        catch ( TechnicalException ex ) {
             error(500, "Internal error", ex);
         }
     }
@@ -479,7 +449,7 @@ public class Result
         return loader.getResourceAsStream(rsrc);
     }
 
-    private void respondMultipart(Processor proc, HttpServletResponse resp)
+    private void respondMultipart(HttpServletResponse resp)
             throws ServlexException
     {
         error(501, "TODO: Multipart response not implemented yet!");
@@ -503,7 +473,6 @@ public class Result
     // TODO: Move into a class "ServlexConstants" or something like that.
     // the webapp namespace URI
     private static final String WEB_NS   = "http://expath.org/ns/webapp";
-//    private static final String SAXON_NS = "http://saxon.sf.net/";
     // element names
     private static final QName RESP_NAME   = new QName(WEB_NS, "response");
     private static final QName HEADER_NAME = new QName(WEB_NS, "header");
@@ -534,21 +503,10 @@ public class Result
     private static final QName UNDECL_PREFIXES_NAME = new QName("undeclare-prefixes");
     private static final QName USE_CHAR_MAPS_NAME = new QName("use-character-maps");
     private static final QName VERSION_NAME = new QName("version");
-//    private static final QName SAXON_CHARACTER_REPRESENTATION_NAME = new QName(SAXON_NS, "saxon:character-representation");
-//    private static final QName SAXON_DOUBLE_SPACE_NAME = new QName(SAXON_NS, "saxon:double-space");
-//    private static final QName SAXON_IMPLICIT_RESULT_DOCUMENT_NAME = new QName(SAXON_NS, "saxon:implicit-result-document");
-//    private static final QName SAXON_INDENT_SPACES_NAME = new QName(SAXON_NS, "saxon:indent-spaces");
-//    private static final QName SAXON_NEXT_IN_CHAIN_NAME = new QName(SAXON_NS, "saxon:next-in-chain");
-//    private static final QName SAXON_NEXT_IN_CHAIN_BASE_URI_NAME = new QName(SAXON_NS, "saxon:next-in-chain-base-uri");
-//    private static final QName SAXON_RECOGNIZE_BINARY_NAME = new QName(SAXON_NS, "saxon:recognize-binary");
-//    private static final QName SAXON_REQUIRE_WELL_FORMED_NAME = new QName(SAXON_NS, "saxon:require-well-formed");
-//    private static final QName SAXON_STYLESHEET_VERSION_NAME = new QName(SAXON_NS, "saxon:stylesheet-version");
-//    private static final QName SAXON_SUPPLY_SOURCE_LOCATOR_NAME = new QName(SAXON_NS, "saxon:supply-source-locator");
-//    private static final QName SAXON_SUPPRESS_INDENTATION_NAME = new QName(SAXON_NS, "saxon:suppress-indentation");
-//    private static final QName SAXON_WRAP_NAME = new QName(SAXON_NS, "saxon:wrap");
 
     private static final Logger LOG = Logger.getLogger(Result.class);
 
+    private Processors myProcs;
     private int myStatus;
     private String myMsg;
     private List<Header> myHeaders;

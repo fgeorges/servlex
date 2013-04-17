@@ -21,19 +21,18 @@ import java.util.Properties;
 import java.util.Set;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import net.sf.saxon.s9api.Processor;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
-import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
-import org.expath.servlex.processors.CalabashProcessor;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.saxon.SaxonCalabash;
 
 
 /**
@@ -63,7 +62,7 @@ public class ServerConfig
      * Initialize the webapp list from the repository got from system properties.
      */
     protected ServerConfig()
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         this(System.getProperty(REPO_DIR_PROPERTY), System.getProperty(REPO_CP_PROPERTY));
@@ -73,7 +72,7 @@ public class ServerConfig
      * Initialize the webapp list from the repository got from either parameter.
      */
     protected ServerConfig(String repo_dir, String repo_classpath)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         this(getStorage(repo_dir, repo_classpath));
@@ -83,28 +82,22 @@ public class ServerConfig
      * Initialize the webapp list from the repository got from the parameter.
      */
     protected ServerConfig(Storage repo_storage)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         LOG.info("ServerConfig with storage: " + repo_storage);
         myStorage = repo_storage;
         // the repository object
         try {
-            myRepo = new SaxonRepository(myStorage);
+            myRepo = new Repository(myStorage);
         }
         catch ( PackageException ex ) {
-            throw new PackageException("Error inityializing the static repository", ex);
+            throw new PackageException("Error inityializing the repository", ex);
         }
-        // the parser
-        EXPathWebParser parser = new EXPathWebParser(myRepo);
-        // the application map
-        myApps = new HashMap<String, Application>();
-        for ( Application app : parser.parseDescriptors() ) {
-            myApps.put(app.getName(), app);
-            LOG.info("Add the application to the store: " + app.getName());
-        }
-        // the Saxon processor
-        mySaxon = SaxonHelper.makeSaxon(myRepo);
+        // the processors
+        // TODO: Must use a kind of registry, but must not instantiate explicitly Saxon
+        // and Calabash from here, it should be injected somehow...
+        myProcessors = new SaxonCalabash(myRepo, this);
         // Calabash profiling
         String prof_prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
         if ( prof_prop != null ) {
@@ -114,8 +107,6 @@ public class ServerConfig
                 myProfileDir = null;
             }
         }
-        // the Calabash processor
-        myCalabash = new CalabashProcessor(this);
         // set version and revision numbers
         setVersion();
         // the trace content property
@@ -135,6 +126,14 @@ public class ServerConfig
         }
         // the default charset property
         myDefaultCharset = System.getProperty(ServerConfig.DEFAULT_CHARSET_PROPERTY);
+        // the parser
+        EXPathWebParser parser = new EXPathWebParser(myProcessors);
+        // the application map
+        myApps = new HashMap<String, Application>();
+        for ( Application app : parser.parseDescriptors(myRepo.listPackages()) ) {
+            myApps.put(app.getName(), app);
+            LOG.info("Add the application to the store: " + app.getName());
+        }
     }
 
     /**
@@ -260,7 +259,7 @@ public class ServerConfig
      * the singleton instance if they want).
      */
     public static synchronized ServerConfig reload(ServletConfig config)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         // Just get rid of the previous one and instantiate a new one.
@@ -276,7 +275,7 @@ public class ServerConfig
      * a more flexible mechanism.
      */
     public static synchronized ServerConfig getInstance(ServletConfig config)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         if ( INSTANCE == null ) {
@@ -309,7 +308,7 @@ public class ServerConfig
      * find a more flexible mechanism.
      */
     public static synchronized ServerConfig getInstance(String repo_dir, String repo_classpath)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         if ( INSTANCE == null ) {
@@ -326,7 +325,7 @@ public class ServerConfig
      * find a more flexible mechanism.
      */
     public static synchronized ServerConfig getInstance(Storage repo_storage)
-            throws ParseException
+            throws TechnicalException
                  , PackageException
     {
         if ( INSTANCE == null ) {
@@ -360,27 +359,11 @@ public class ServerConfig
     }
 
     /**
-     * Return the shared Saxon instance.
+     * Return the processors.
      */
-    public Processor getSaxon()
+    public Processors getProcessors()
     {
-        return mySaxon;
-    }
-
-    /**
-     * Return the shared Calabash configuration.
-     */
-    public CalabashProcessor getCalabash()
-    {
-        return myCalabash;
-    }
-
-    /**
-     * Return the repository.
-     */
-    public SaxonRepository getRepository()
-    {
-        return myRepo;
+        return myProcessors;
     }
 
     /**
@@ -392,8 +375,8 @@ public class ServerConfig
      * TODO: The param 'force' is set to 'true', make it configurable.
      */
     public synchronized String install(File archive)
-            throws PackageException
-                 , ParseException
+            throws TechnicalException
+                 , PackageException
     {
         Package pkg = myRepo.installPackage(archive, true, new LoggingUserInteraction());
         return doInstall(pkg);
@@ -408,17 +391,17 @@ public class ServerConfig
      * TODO: The param 'force' is set to 'true', make it configurable.
      */
     public synchronized String install(URI uri)
-            throws PackageException
-                 , ParseException
+            throws TechnicalException
+                 , PackageException
     {
         Package pkg = myRepo.installPackage(uri, true, new LoggingUserInteraction());
         return doInstall(pkg);
     }
 
     private String doInstall(Package pkg)
-            throws ParseException
+            throws TechnicalException
     {
-        EXPathWebParser parser = new EXPathWebParser(myRepo);
+        EXPathWebParser parser = new EXPathWebParser(myProcessors);
         Application app = parser.loadPackage(pkg);
         if ( app == null ) {
             // not a webapp
@@ -464,13 +447,11 @@ public class ServerConfig
     /** The Servlex implementation revision number. */
     private String myRevision;
     /** The repository for webapps. */
-    private SaxonRepository myRepo;
+    private Repository myRepo;
     /** The storage used by the repository. */
     private Storage myStorage;
-    /** The Saxon instance. */
-    private Processor mySaxon;
-    /** The Calabash instance. */
-    private CalabashProcessor myCalabash;
+    /** The XSLT processor. */
+    private Processors myProcessors;
     /** The application map. */
     private Map<String, Application> myApps;
     /** Include request and response content in the logs? */

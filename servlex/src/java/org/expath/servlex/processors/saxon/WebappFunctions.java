@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex;
+package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.Processor;
 import org.expath.servlex.functions.GetRequestFieldFunction;
@@ -24,6 +24,7 @@ import org.expath.servlex.functions.SetRequestFieldFunction;
 import org.expath.servlex.functions.SetServerFieldFunction;
 import org.expath.servlex.functions.SetSessionFieldFunction;
 import org.expath.servlex.functions.SetWebappFieldFunction;
+import org.expath.servlex.processors.Processors;
 
 /**
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
@@ -46,7 +47,7 @@ public class WebappFunctions
      * statements...  Really?!?  Well, it seems there is no technical way to
      * achieve that with Saxon API...
      */
-    public static void setup(Processor saxon)
+    public static void setup(Processors procs, Processor saxon)
     {
         // the request fields management functions
         saxon.registerExtensionFunction(new GetRequestFieldFunction());
@@ -65,9 +66,9 @@ public class WebappFunctions
         saxon.registerExtensionFunction(new GetServerFieldNamesFunction());
         saxon.registerExtensionFunction(new SetServerFieldFunction());
         // the parse basic authentication function
-        saxon.registerExtensionFunction(new ParseBasicAuthFunction(saxon));
+        saxon.registerExtensionFunction(new ParseBasicAuthFunction(procs, saxon));
         // the parse header function
-        saxon.registerExtensionFunction(new ParseHeaderValueFunction(saxon));
+        saxon.registerExtensionFunction(new ParseHeaderValueFunction(procs, saxon));
     }
 }
 

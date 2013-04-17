@@ -9,7 +9,6 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
@@ -18,7 +17,7 @@ import net.sf.saxon.s9api.*;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.components.XProcPipeline;
+import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.CalabashHelper;
 
@@ -112,11 +111,11 @@ public class ErrorConnector
         pipe.passOption(CODE_NAMESPACE_ATTRIBUTE, new RuntimeValue(ns));
         pipe.passOption(MESSAGE_ATTRIBUTE, new RuntimeValue(msg));
         // connect the web request to the source port
-        final String src_port = XProcPipeline.INPUT_PORT_NAME;
+        final String src_port = XProcProcessor.INPUT_PORT_NAME;
         XdmNode web_request = myRequest.getWebRequest(config);
         CalabashHelper.writeTo(pipe, src_port, web_request, config);
         // connect the user sequence to the user-data port
-        final String err_port = XProcPipeline.ERROR_PORT_NAME;
+        final String err_port = XProcProcessor.ERROR_PORT_NAME;
         XdmValue userdata = myError.getSequence();
         if ( userdata != null ) {
             CalabashHelper.writeTo(pipe, err_port, userdata, config);

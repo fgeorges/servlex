@@ -9,16 +9,10 @@
 
 package org.expath.servlex.functions;
 
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XQueryExecutable;
 import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 import org.apache.http.message.HeaderValueParser;
-import org.expath.servlex.ServlexConstants;
 import org.junit.Test;
 
 /**
@@ -29,22 +23,22 @@ import org.junit.Test;
  */
 public class ParseHeaderValueCallTest
 {
-    @Test
-    public void testCall()
-            throws Exception
-    {
-        Processor proc = new Processor(false);
-        proc.registerExtensionFunction(new ParseHeaderValueFunction(proc));
-        XQueryCompiler compiler = proc.newXQueryCompiler();
-        compiler.declareNamespace("web", ServlexConstants.WEBAPP_NS);
-        String value = "attachment; filename=\"fname.ext\"";
-        XQueryExecutable exec = compiler.compile("web:parse-header-value('" + value + "')");
-        XQueryEvaluator eval = exec.load();
-        Serializer serial = new Serializer();
-        serial.setOutputStream(System.err);
-        eval.setDestination(serial);
-        eval.evaluate();
-    }
+//    @Test
+//    public void testCall()
+//            throws Exception
+//    {
+//        final Processor proc = new Processor(false);
+//        proc.registerExtensionFunction(new ParseHeaderValueFunction(proc));
+//        XQueryCompiler compiler = proc.newXQueryCompiler();
+//        compiler.declareNamespace("web", ServlexConstants.WEBAPP_NS);
+//        String value = "attachment; filename=\"fname.ext\"";
+//        XQueryExecutable exec = compiler.compile("web:parse-header-value('" + value + "')");
+//        XQueryEvaluator eval = exec.load();
+//        Serializer serial = new Serializer();
+//        serial.setOutputStream(System.err);
+//        eval.setDestination(serial);
+//        eval.evaluate();
+//    }
 
     @Test
     public void reproduceTheAlgorithm()

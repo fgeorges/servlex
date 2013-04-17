@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.parser.ParseException;
 
 /**
@@ -51,7 +52,7 @@ public class RemoveWebapp
         try {
             myConfig = ServerConfig.getInstance(config);
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             String msg = "Error in the servlet initialization...";
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);

@@ -1,43 +1,55 @@
 /****************************************************************************/
-/*  File:       XProcStep.java                                              */
+/*  File:       SaxonXSLTTemplate.java                                      */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-09-06                                                  */
+/*  Date:       2009-12-12                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2009 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.components;
+package org.expath.servlex.processors.saxon;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.log4j.Logger;
+import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
-import org.expath.servlex.processors.CalabashPipeline;
-import org.expath.servlex.processors.CalabashProcessor;
+import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
- * TODO: ...
+ * ...
  *
  * @author Florent Georges
- * @date   2010-09-06
+ * @date   2009-12-12
  */
-public class XProcStep
+class SaxonXSLTTemplate
         implements Component
 {
-    public XProcStep(String import_uri, String ns, String localname)
+    public SaxonXSLTTemplate(Processor saxon, String import_uri, String ns, String localname)
     {
+        mySaxon = saxon;
         myImportUri = import_uri;
         myNS = ns;
         myLocal = localname;
@@ -49,66 +61,61 @@ public class XProcStep
              , ComponentError
     {
         try {
-            XPipeline pipeline = getPipeline(config, auditor);
-            return XProcPipeline.evaluatePipeline(config, pipeline, connector);
+            XsltExecutable exec = getCompiled();
+            XsltTransformer trans = exec.load();
+            trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
+            connector.connectToXSLTComponent(trans, config);
+            XdmDestination dest = new XdmDestination();
+            trans.setDestination(dest);
+            trans.transform();
+            // TODO: As per XSLT, this is always a doc node.  Check that.  But for
+            // now, I take the doc's children as the result sequence...
+            // TODO: BTW, check this is a document node...
+            XdmNode doc = dest.getXdmNode();
+            List<XdmItem> children = new ArrayList<XdmItem>();
+            XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
+            while ( it.hasNext() ) {
+                children.add(it.next());
+            }
+            return new XdmConnector(new XdmValue(children));
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
             throw SaxonHelper.makeError(ex);
         }
+        catch ( PackageException ex ) {
+            LOG.error("Internal error", ex);
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
-    /**
-     * TODO: Cache using the new Servlex Calabash API...
-     */
-    private XPipeline getPipeline(ServerConfig config, Auditor auditor)
-            throws SaxonApiException
-                 , ComponentError
-                 , ServlexException
+    private synchronized XsltExecutable getCompiled()
+            throws PackageException
+                 , SaxonApiException
     {
-        XdmNode pipe = makeCallPipe(config);
-        CalabashProcessor calabash = config.getCalabash();
-        CalabashPipeline compiled = calabash.compile(pipe);
-        return compiled.prepare(auditor);
+        if ( myCompiled == null ) {
+            XsltCompiler c = mySaxon.newXsltCompiler();
+            String style = makeCallSheet(myImportUri, myNS, myLocal);
+            Source src = new StreamSource(new StringReader(style));
+            src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
+            myCompiled = c.compile(src);
+        }
+        return myCompiled;
     }
 
-    /**
-     * TODO: Use a tree builder instead of string concatenation!
-     */
-    private XdmNode makeCallPipe(ServerConfig config)
-            throws SaxonApiException
+    private static String makeCallSheet(String import_uri, String ns, String local)
     {
-        StringBuilder b = new StringBuilder();
-        b.append("<p:declare-step xmlns:p='http://www.w3.org/ns/xproc'\n");
-        b.append("                xmlns:my='").append(myNS).append("'\n");
-        b.append("                name='servlex-call-pipe'\n");
-        b.append("                version='1.0'>\n");
-        b.append("   <p:import href='").append(myImportUri).append("'/>\n");
-        b.append("   <p:input port='" + XProcPipeline.INPUT_PORT_NAME +"' sequence='true'/>\n");
-        b.append("   <p:output port='" + XProcPipeline.OUTPUT_PORT_NAME + "' sequence='true'>\n");
-        b.append("      <p:pipe step='implem' port='" + XProcPipeline.OUTPUT_PORT_NAME + "'/>\n");
-        b.append("   </p:output>\n");
-        b.append("   <my:").append(myLocal).append(" name='implem'>\n");
-        b.append("      <p:input port='" + XProcPipeline.INPUT_PORT_NAME + "'>\n");
-        b.append("         <p:pipe step='servlex-call-pipe' port='" + XProcPipeline.INPUT_PORT_NAME + "'/>\n");
-        b.append("      </p:input>\n");
-        b.append("   </my:").append(myLocal).append(">\n");
-        b.append("</p:declare-step>\n");
-        String pipe = b.toString();
-        LOG.debug("The generated pipeline");
-        LOG.debug(pipe);
-        Source src = new StreamSource(new StringReader(pipe));
-        src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
-        DocumentBuilder builder = config.getSaxon().newDocumentBuilder();
-        return builder.build(src);
+        return SaxonXSLTFunction.makeCallSheet(false, import_uri, ns, local);
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(XProcStep.class);
+    private static final Logger LOG = Logger.getLogger(SaxonXSLTTemplate.class);
 
+    private Processor mySaxon;
     private String myImportUri;
     private String myNS;
     private String myLocal;
+    private XsltExecutable myCompiled = null;
 }
 
 

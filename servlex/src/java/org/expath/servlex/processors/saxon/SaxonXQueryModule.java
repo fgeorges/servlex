@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       XQueryFunction.java                                         */
+/*  File:       SaxonXQueryModule.java                                      */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2009-12-12                                                  */
 /*  Tags:                                                                   */
@@ -7,16 +7,23 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.components;
+package org.expath.servlex.processors.saxon;
 
+import java.io.IOException;
+import javax.xml.transform.stream.StreamSource;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
+import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
+import org.expath.pkg.repo.URISpace;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.runtime.ComponentError;
@@ -24,82 +31,122 @@ import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
- * A component that is an XQuery function.
+ * A component that is an XQuery Main Module, AKA "a query".
  *
  * @author Florent Georges
  * @date   2009-12-12
  */
-public class XQueryFunction
+class SaxonXQueryModule
         implements Component
 {
-    public XQueryFunction(String ns, String localname)
+    // FIXME: We should not need to pass the repo, using getModuleURIResolver should be enough!
+    // (see SaxonXSLTTransform...)
+    public SaxonXQueryModule(Processor saxon, Repository repo, String uri)
     {
-        myNS = ns;
-        myLocal = localname;
+        mySaxon = saxon;
+        myRepo = repo;
+        myUri  = uri;
     }
 
     @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
-        throws ServlexException
-             , ComponentError
+            throws ServlexException
+                 , ComponentError
     {
         XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();
-        connector.connectToXQueryFunction(eval, config);
+        connector.connectToQuery(eval, config);
         XdmValue result;
         try {
             result = eval.evaluate();
         }
         catch ( SaxonApiException ex ) {
-            LOG.error(formatMsg("User error in XQuery"), ex);
+            LOG.error("User error in XQuery main module at URI: '" + myUri + "'", ex);
             throw SaxonHelper.makeError(ex);
         }
         return new XdmConnector(result);
     }
 
     /**
-     * Return a compiled query calling the function.
+     * Return the compiled query.
      * 
-     * The query takes a global parameter $input, and passes it to the function
-     * call.  The compiled object is cached (it is compiled only once).
+     * The compiled object is cached (it is compiled only once).
      */
     private synchronized XQueryExecutable getCompiled(ServerConfig config)
             throws ServlexException
     {
         if ( myCompiled == null ) {
-            LOG.debug(formatMsg("Going to generate query for"));
-            XQueryCompiler c = config.getSaxon().newXQueryCompiler();
+            LOG.debug("Going to compile query: " + myUri);
+            StreamSource src = resolve();
+            XQueryCompiler compiler = mySaxon.newXQueryCompiler();
             try {
-                myCompiled = c.compile(
-                    "import module namespace my = \"" + myNS + "\";\n"
-                    + "declare variable $input external;\n"
-                    + "my:" + myLocal + "($input)\n");
+                // TODO: Pass the system ID instead, to compiler.compile()?  If not,
+                // how to give Saxon the system ID?
+                if ( src.getReader() != null ) {
+                    myCompiled = compiler.compile(src.getReader());
+                }
+                else if ( src.getInputStream() != null ) {
+                    myCompiled = compiler.compile(src.getInputStream());
+                }
+                else {
+                    error("Query URI resolve in repo but both reader and stream are null");
+                }
             }
             catch ( SaxonApiException ex ) {
-                String msg = formatMsg("Error compiling the generated query for calling");
-                LOG.error(msg, ex);
-                throw new ServlexException(500, msg, ex);
+                error("Error compiling the query module for URI", ex);
+            }
+            catch ( IOException ex ) {
+                error("Error reading the query module for URI", ex);
             }
         }
         return myCompiled;
     }
 
     /**
-     * Format a message with the function name (using Clark notation).
+     * Resolve the URI in the repository, in the XQuery URI space.
      */
-    private String formatMsg(String msg)
+    private StreamSource resolve()
+            throws ServlexException
     {
-        return msg + " function: {" + myNS + "}" + myLocal;
+        StreamSource src = null;
+        try {
+            src = myRepo.resolve(myUri, URISpace.XQUERY);
+        }
+        catch ( PackageException ex ) {
+            error("Error resolving the query module URI", ex);
+        }
+        if ( src == null ) {
+            error("Query URI does not resolve in repo");
+        }
+        return src;
+    }
+
+    private void error(String msg)
+            throws ServlexException
+    {
+        msg = msg + ": '" + myUri + "'";
+        LOG.error(msg);
+        throw new ServlexException(500, msg);
+    }
+
+    private void error(String msg, Throwable ex)
+            throws ServlexException
+    {
+        msg = msg + ": '" + myUri + "'";
+        LOG.error(msg, ex);
+        throw new ServlexException(500, msg, ex);
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(XQueryFunction.class);
+    private static final Logger LOG = Logger.getLogger(SaxonXQueryModule.class);
 
-    /** The namespace URI of the function. */
-    private String myNS;
-    /** The local name of the function. */
-    private String myLocal;
-    /** The cached generated query calling the function. */
+    /** The Saxon instance. */
+    private Processor mySaxon;
+    /** The package repository where to resolve the query URI. FIXME: Should not be needed here. */
+    private Repository myRepo;
+    /** The query URI. */
+    private String myUri;
+    /** The cached compiled query. */
     private XQueryExecutable myCompiled = null;
 }
 

@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.TechnicalException;
 
 /**
  * List the installed webapps.
@@ -49,7 +49,7 @@ public class List
         try {
             myConfig = ServerConfig.getInstance(config);
         }
-        catch ( ParseException ex ) {
+        catch ( TechnicalException ex ) {
             throw new ServletException("Error in the servlet initialization...", ex);
         }
         catch ( PackageException ex ) {

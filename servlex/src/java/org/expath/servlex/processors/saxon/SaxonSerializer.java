@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       Serializer.java                                             */
+/*  File:       SaxonSerializer.java                                        */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-02-15                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex;
+package org.expath.servlex.processors.saxon;
 
 import java.io.OutputStream;
 import java.util.HashSet;
@@ -17,19 +17,26 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer.Property;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.commons.codec.binary.Base64OutputStream;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Serializer;
 
 /**
- * Handle serialization of XDM items to an output stream.
+ * Implementation of serializer for Saxon.
  *
  * The object is constructed, serialization parameters are accumulated if
- * any, the the XDM items and the output stream are provided for actual
+ * any, then the XDM items and the output stream are provided for actual
  * serialization.
  *
  * @author Florent Georges
  * @date   2010-02-15
  */
-public class Serializer
+class SaxonSerializer
+        implements Serializer
 {
+    public SaxonSerializer(Processor saxon){
+        mySaxon = saxon;
+    }
+
     public String getMediaType() {
         return myMediaType;
     }
@@ -85,45 +92,9 @@ public class Serializer
     public void setVersion(String v) {
         myVersion = v;
     }
-//    public void setSaxonCharacterRepresentation(String v) {
-//        mySaxonCharacterRepresentation = v;
-//    }
-//    public void setSaxonDoubleSpace(String v) {
-//        mySaxonDoubleSpace = v;
-//    }
-//    public void setSaxonImplicitResultDocument(String v) {
-//        mySaxonImplicitResultDocument = v;
-//    }
-//    public void setSaxonIndentSpaces(String v) {
-//        mySaxonIndentSpaces = v;
-//    }
-//    public void setSaxonNextInChain(String v) {
-//        mySaxonNextInChain = v;
-//    }
-//    public void setSaxonNextInChainBaseUri(String v) {
-//        mySaxonNextInChainBaseUri = v;
-//    }
-//    public void setSaxonRecognizeBinary(String v) {
-//        mySaxonRecognizeBinary = v;
-//    }
-//    public void setSaxonRequireWellFormed(String v) {
-//        mySaxonRequireWellFormed = v;
-//    }
-//    public void setSaxonStylesheetVersion(String v) {
-//        mySaxonStylesheetVersion = v;
-//    }
-//    public void setSaxonSupplySourceLocator(String v) {
-//        mySaxonSupplySourceLocator = v;
-//    }
-//    public void setSaxonSuppressIndentation(String v) {
-//        mySaxonSuppressIndentation = v;
-//    }
-//    public void setSaxonWrap(String v) {
-//        mySaxonWrap = v;
-//    }
 
-    public void serialize(XdmValue sequence, Processor proc, OutputStream out)
-            throws SaxonApiException
+    public void serialize(XdmValue sequence, OutputStream out)
+            throws TechnicalException
     {
         String method = methodFromMime(myMediaType);
         // TODO: @method could also contain "base64" or "hex".  Take it into account!
@@ -166,7 +137,12 @@ public class Serializer
 //        setOutputProperty(serial, Property.SAXON_WRAP, mySaxonWrap);
 
         // TODO: Other serialization parameters...
-        proc.writeXdmValue(sequence, serial);
+        try {
+            mySaxon.writeXdmValue(sequence, serial);
+        }
+        catch ( SaxonApiException ex ) {
+            throw new TechnicalException("Error serializing sequence to the output stream", ex);
+        }
     }
 
     /**
@@ -210,6 +186,7 @@ public class Serializer
         }
     }
 
+    private Processor mySaxon;
     // TODO: Directly create a property map, instead of several fields...
     private String myMethod;
     private String myMediaType;

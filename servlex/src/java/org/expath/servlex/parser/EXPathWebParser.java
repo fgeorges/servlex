@@ -23,20 +23,15 @@ import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Packages;
+import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
-import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Servlet;
-import org.expath.servlex.components.XProcPipeline;
-import org.expath.servlex.components.XProcStep;
-import org.expath.servlex.components.XQueryFunction;
-import org.expath.servlex.components.XQueryModule;
-import org.expath.servlex.components.XSLTFunction;
-import org.expath.servlex.components.XSLTTemplate;
-import org.expath.servlex.components.XSLTTransform;
 import org.expath.servlex.model.*;
+import org.expath.servlex.processors.Processors;
 
 /**
  * Facade class for this package, to parse EXPath Webapp descriptors.
@@ -46,10 +41,10 @@ import org.expath.servlex.model.*;
  */
 public class EXPathWebParser
 {
-    public EXPathWebParser(SaxonRepository repo)
+    public EXPathWebParser(Processors processors)
             throws ParseException
     {
-        myRepo = repo;
+        myProcs = processors;
     }
 
     /**
@@ -59,13 +54,14 @@ public class EXPathWebParser
      * of {@link Repository#resolve(String,URISpace)} about that (versionning
      * scheme is not always SemVer -- or could we impose it for webapps?)
      */
-    public Set<Application> parseDescriptors()
+    public Set<Application> parseDescriptors(Collection<Packages> packages)
             throws ParseException
+                 , TechnicalException
     {
         // the result
         Set<Application> apps = new HashSet<Application>();
         // iterate on every sub-directories of the repo (i.e. on each package)
-        for ( Packages pp : myRepo.getUnderlyingRepo().listPackages() ) {
+        for ( Packages pp : packages ) {
             Package pkg = pp.latest();
             try {
                 // the web descriptor location
@@ -96,6 +92,7 @@ public class EXPathWebParser
      */
     public Application loadPackage(Package pkg)
             throws ParseException
+                 , TechnicalException
     {
         try {
             StreamSource descriptor = pkg.getResolver().resolveResource("expath-web.xml");
@@ -116,6 +113,7 @@ public class EXPathWebParser
      */
     private Application parseDescriptorFile(InputStream descriptor, Package pkg)
             throws ParseException
+                 , TechnicalException
     {
         LOG.info("Parse webapp descriptor for app " + pkg.getName());
 
@@ -259,6 +257,7 @@ public class EXPathWebParser
     private ErrorHandler handleError(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("error", true);
         String name = parser.getAttribute("name");
@@ -347,6 +346,7 @@ public class EXPathWebParser
     private Filter handleFilter(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("filter", true);
         String name = parser.getAttribute("name");
@@ -418,6 +418,7 @@ public class EXPathWebParser
     private ParsingServlet handleServlet(StreamParser parser, ParsingContext ctxt)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("servlet", true);
         String name = parser.getAttribute("name");
@@ -508,6 +509,7 @@ public class EXPathWebParser
     private Component handleComponent(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         String elem = parser.getLocalName();
         if ( elem.equals("xquery") ) {
@@ -535,6 +537,7 @@ public class EXPathWebParser
     private Component handleXQuery(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("xquery", true);
         String uri      = parser.getAttribute("uri");
@@ -554,11 +557,11 @@ public class EXPathWebParser
             // create the implem
             String ns    = f.getNamespaceURI();
             String local = f.getLocalPart();
-            result = new XQueryFunction(ns, local);
+            result = myProcs.getXQuery().makeFunction(ns, local);
         }
         else if ( uri != null ) {
             // create the implem
-            result = new XQueryModule(myRepo, uri);
+            result = myProcs.getXQuery().makeQuery(uri);
         }
         else {
             parser.parseError("@function and @uri both null on xquery component");
@@ -580,6 +583,7 @@ public class EXPathWebParser
     private Component handleXSLT(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("xslt", true);
         String uri      = parser.getAttribute("uri");
@@ -601,13 +605,16 @@ public class EXPathWebParser
             // return the implem
             String ns    = c.getNamespaceURI();
             String local = c.getLocalPart();
-            result = function == null
-                    ? new XSLTTemplate(uri, ns, local)
-                    : new XSLTFunction(uri, ns, local);
+            if ( function == null ) {
+                result = myProcs.getXSLT().makeTemplate(uri, ns, local);
+            }
+            else {
+                result = myProcs.getXSLT().makeFunction(uri, ns, local);
+            }
         }
         else if ( uri != null ) {
             // return the implem
-            result = new XSLTTransform(uri);
+            result = myProcs.getXSLT().makeTransform(uri);
         }
         else {
             parser.parseError("@function and @uri both null on xslt component");
@@ -629,6 +636,7 @@ public class EXPathWebParser
     private Component handleXProc(StreamParser parser)
             throws ParseException
                  , XMLStreamException
+                 , TechnicalException
     {
         parser.ensureStartTag("xproc", true);
         String uri  = parser.getAttribute("uri");
@@ -647,11 +655,11 @@ public class EXPathWebParser
             // return the implem
             String ns    = c.getNamespaceURI();
             String local = c.getLocalPart();
-            result = new XProcStep(uri, ns, local);
+            result = myProcs.getXProc().makeStep(uri, ns, local);
         }
         else {
             // return the implem
-            result = new XProcPipeline(uri);
+            result = myProcs.getXProc().makePipeline(uri);
         }
         // go to the end element event
         parser.nextTag();
@@ -665,8 +673,8 @@ public class EXPathWebParser
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
 
-    /** The webapp repository. */
-    private final SaxonRepository myRepo;
+    /** The processors. */
+    private final Processors myProcs;
 }
 
 

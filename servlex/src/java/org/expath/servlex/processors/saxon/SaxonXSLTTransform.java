@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       XSLTFunction.java                                           */
+/*  File:       SaxonXSLTTransform.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2009-12-12                                                  */
 /*  Tags:                                                                   */
@@ -7,15 +7,16 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.components;
+package org.expath.servlex.processors.saxon;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
@@ -28,8 +29,8 @@ import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.runtime.ComponentError;
@@ -42,14 +43,13 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-public class XSLTFunction
+class SaxonXSLTTransform
         implements Component
 {
-    public XSLTFunction(String import_uri, String ns, String localname)
+    public SaxonXSLTTransform(Processor saxon, String stylesheet)
     {
-        myImportUri = import_uri;
-        myNS = ns;
-        myLocal = localname;
+        mySaxon = saxon;
+        myStyle = stylesheet;
     }
 
     @Override
@@ -58,10 +58,9 @@ public class XSLTFunction
              , ComponentError
     {
         try {
-            XsltExecutable exec = getCompiled(config);
+            XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
-            trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            connector.connectToXSLTComponent(trans, config);
+            connector.connectToStylesheet(trans, config);
             XdmDestination dest = new XdmDestination();
             trans.setDestination(dest);
             trans.transform();
@@ -76,83 +75,48 @@ public class XSLTFunction
             }
             return new XdmConnector(new XdmValue(children));
         }
-        catch ( SaxonApiException ex ) {
-            LOG.error("User error in pipeline", ex);
-            throw SaxonHelper.makeError(ex);
-        }
         catch ( PackageException ex ) {
             LOG.error("Internal error", ex);
             throw new ServlexException(500, "Internal error", ex);
         }
+        catch ( SaxonApiException ex ) {
+            LOG.error("User error in pipeline", ex);
+            throw SaxonHelper.makeError(ex);
+        }
+        catch ( TransformerException ex ) {
+            LOG.error("Internal error", ex);
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
-
-    private synchronized XsltExecutable getCompiled(ServerConfig config)
+ 
+    private synchronized XsltExecutable getCompiled()
             throws PackageException
                  , SaxonApiException
+                 , TransformerException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = config.getSaxon().newXsltCompiler();
-            String style = makeCallSheet(true, myImportUri, myNS, myLocal);
-            Source src = new StreamSource(new StringReader(style));
-            src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
+            XsltCompiler c = mySaxon.newXsltCompiler();
+            // saxon's xslt compiler does not use its uri resolver on the param
+            // passed directly to the stream source ctor; the resolver is used
+            // only for xsl:import and xsl:include, so we have to call it first
+            // explicitely
+            URIResolver resolver = c.getURIResolver();
+            Source src = ( resolver == null )
+                    ? null
+                    : resolver.resolve(myStyle, null);
+            if ( src == null ) {
+                src = new StreamSource(myStyle);
+            }
             myCompiled = c.compile(src);
         }
         return myCompiled;
     }
 
-    // TODO: Actually, all the servlet functions and templates within the same
-    // stylesheet (the same import URI) can share the same "calling sheet"
-    // (usefull when the compiled object will be cached, because that will
-    // reduce the number of those) ==> the "calling sheets" should be generated
-    // at the deployment...
-    //
-    // also used by XSLTTemplateEntryPoint (so package-level)
-    static String makeCallSheet(boolean is_function, String import_uri, String ns, String local)
-    {
-        StringBuilder b = new StringBuilder();
-        b.append("<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'\n");
-        b.append("                xmlns:web='" + ServlexConstants.WEBAPP_NS + "'\n");
-        b.append("                xmlns:local='" + ServlexConstants.PRIVATE_NS + "'\n");
-        b.append("                xmlns:my='").append(ns).append("'\n");
-        b.append("                version='2.0'>\n");
-        b.append("   <xsl:import href='").append(import_uri).append("'/>\n");
-        b.append("   <xsl:param name='local:input' as='item()*'/>\n");
-        b.append("   <xsl:template name='local:main'>\n");
-        if ( LOG.isDebugEnabled() ) {
-            b.append("      <xsl:message>\n");
-            b.append("         THE INPUT: <xsl:copy-of select='$local:input'/>\n");
-            b.append("      </xsl:message>\n");
-        }
-        if ( is_function ) {
-            b.append("      <xsl:variable name='res' select='my:").append(local).append("($local:input)'/>\n");
-        }
-        else {
-            b.append("      <xsl:variable name='res' as='item()*'>\n");
-            b.append("         <xsl:call-template name='my:").append(local).append("'>\n");
-            b.append("            <xsl:with-param name='web:input' select='$local:input'/>\n");
-            b.append("         </xsl:call-template>\n");
-            b.append("      </xsl:variable>\n");
-        }
-        if ( LOG.isDebugEnabled() ) {
-            b.append("      <xsl:message>\n");
-            b.append("         THE OUTPUT: <xsl:copy-of select='$res'/>\n");
-            b.append("      </xsl:message>\n");
-        }
-        b.append("      <xsl:sequence select='$res'/>\n");
-        b.append("   </xsl:template>\n");
-        b.append("</xsl:stylesheet>\n");
-        String sheet = b.toString();
-        LOG.debug("The generated stylesheet");
-        LOG.debug(sheet);
-        return sheet;
-    }
-
     /** The logger. */
-    private static final Logger LOG     = Logger.getLogger(XSLTFunction.class);
+    private static final Logger LOG = Logger.getLogger(SaxonXSLTTransform.class);
 
-    private String myImportUri;
-    private String myNS;
-    private String myLocal;
+    private Processor mySaxon;
+    private String myStyle;
     private XsltExecutable myCompiled = null;
 }
 

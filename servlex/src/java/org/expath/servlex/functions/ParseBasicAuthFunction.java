@@ -21,6 +21,7 @@ import net.sf.saxon.type.ItemType;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.value.SequenceType;
 import org.expath.servlex.ServlexConstants;
+import org.expath.servlex.processors.Processors;
 
 /**
  * Parse the value of an Authorization HTTP header with Basic scheme.
@@ -38,9 +39,10 @@ import org.expath.servlex.ServlexConstants;
 public class ParseBasicAuthFunction
         extends ExtensionFunctionDefinition
 {
-    public ParseBasicAuthFunction(Processor proc)
+    public ParseBasicAuthFunction(Processors procs, Processor saxon)
     {
-        mySaxon = proc;
+        myProcs = procs;
+        mySaxon = saxon;
     }
 
     @Override
@@ -80,11 +82,12 @@ public class ParseBasicAuthFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new ParseBasicAuthCall(mySaxon);
+        return new ParseBasicAuthCall(myProcs);
     }
 
     private static final String LOCAL_NAME   = "parse-basic-auth";
     private static final String ELEMENT_NAME = "basic-auth";
+    private Processors myProcs;
     private Processor mySaxon;
 }
 
