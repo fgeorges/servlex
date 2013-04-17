@@ -202,7 +202,7 @@ for suite in "${TESTDIR}"/*.xspec
 do
     echo "Running suite $suite"
     report=`echo "$suite" | sed 's/.xspec$/.html/'`
-    calabash -i "source="$suite"" \
+    calabash -i "source=$suite" \
         "$HARNESS" \
         > $report
 done
