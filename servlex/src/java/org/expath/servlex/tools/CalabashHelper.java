@@ -21,6 +21,7 @@ import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.TreeBuilder;
+import org.expath.servlex.processors.saxon.SaxonDocument;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -59,7 +60,7 @@ public class CalabashHelper
      * directly, an item is written within a c:data element.
      */
     public static void writeTo(XPipeline pipe, String port, XdmValue sequence, ServerConfig config)
-            throws ServlexException
+            throws TechnicalException
     {
         // TODO: Generate an error if not?
         if ( pipe.getInputs().contains(port) ) {
@@ -67,7 +68,7 @@ public class CalabashHelper
             // know how to get the user sequence from an XProcException, see the
             // method makeError() here above).
             if ( sequence == null ) {
-                throw new ServlexException(500, "Not implemented yet, if the input is empty");
+                throw new TechnicalException("Not implemented yet, if the input is empty");
             }
             else {
                 for ( XdmItem body : sequence ) {
@@ -79,19 +80,15 @@ public class CalabashHelper
                         pipe.writeTo(port, (XdmNode) body);
                     }
                     else {
-                        try {
-                            String c_ns = "http://www.w3.org/ns/xproc-step";
-                            TreeBuilder b = config.getProcessors().makeTreeBuilder(c_ns, "c");
-                            b.startElem("data");
-                            b.attribute("encoding", "base64");
-                            b.startContent();
-                            b.characters(body.getStringValue());
-                            b.endElem();
-                            pipe.writeTo(port, b.getRoot());
-                        }
-                        catch ( TechnicalException ex ) {
-                            throw new ServlexException(500, "Internal error", ex);
-                        }
+                        String c_ns = "http://www.w3.org/ns/xproc-step";
+                        TreeBuilder b = config.getProcessors().makeTreeBuilder(c_ns, "c");
+                        b.startElem("data");
+                        b.attribute("encoding", "base64");
+                        b.startContent();
+                        b.characters(body.getStringValue());
+                        b.endElem();
+                        SaxonDocument doc = (SaxonDocument) b.getRoot();
+                        pipe.writeTo(port, doc.getSaxonNode());
                     }
                 }
             }

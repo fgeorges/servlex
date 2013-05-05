@@ -1,50 +1,41 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       ComponentInstance.java                                      */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.components;
 
-import javax.xml.transform.Source;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.runtime.ComponentError;
 
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
+ * One instance of a component (a component is the compiled for, this is the runtime).
  *
  * @author Florent Georges
- * @date   2013-04-15
+ * @date   2013-04-30
  */
-public interface Processors
+public interface ComponentInstance
 {
-    public XSLTProcessor getXSLT()
+    /**
+     * Connect the input sequence.
+     */
+    public void connect(Sequence input)
             throws TechnicalException;
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException;
-
-    public XProcProcessor getXProc()
-            throws TechnicalException;
-
-    public Serializer makeSerializer()
-            throws TechnicalException;
-
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
-
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
+    /**
+     * Connect the error information.
+     * 
+     * @param error The error.
+     * 
+     * @param request The {@code http:request} document.
+     */
+    public void error(ComponentError error, Document request)
             throws TechnicalException;
 }
 

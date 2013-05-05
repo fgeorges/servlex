@@ -13,13 +13,19 @@ import javax.xml.transform.Source;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.value.Base64BinaryValue;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.XProcProcessor;
@@ -78,15 +84,49 @@ public class SaxonCalabash
         return new SaxonTreeBuilder(mySaxon, uri, prefix);
     }
 
-    public XdmNode buildDocument(Source src)
+    public Sequence buildSequence(Iterable<Item> items)
+            throws TechnicalException
+    {
+        return new SaxonSequence(items);
+    }
+
+    public Document buildDocument(Source src)
             throws TechnicalException
     {
         try {
             DocumentBuilder builder = mySaxon.newDocumentBuilder();
-            return builder.build(src);
+            XdmNode doc = builder.build(src);
+            return new SaxonDocument(doc);
         }
         catch ( SaxonApiException ex ) {
             throw new TechnicalException("Error building a document from Source " + src, ex);
+        }
+    }
+
+    public Item buildString(String value)
+            throws TechnicalException
+    {
+        XdmItem item = new XdmAtomicValue(value);
+        return new SaxonItem(item);
+    }
+
+    public Item buildBinary(byte[] value)
+            throws TechnicalException
+    {
+        XdmItem item = TodoBinaryItem.makeBinaryItem(value);
+        return new SaxonItem(item);
+    }
+
+    /**
+     * TODO: Work around, see http://saxon.markmail.org/thread/sufwctvikfphdh2m
+     */
+    private static class TodoBinaryItem
+            extends XdmItem
+    {
+        public static XdmItem makeBinaryItem(byte[] bytes)
+        {
+            net.sf.saxon.om.Item value = new Base64BinaryValue(bytes);
+            return wrapItem(value);
         }
     }
 

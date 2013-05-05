@@ -9,13 +9,11 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.ComponentInstance;
 
 /**
  * Encapsulate a connection between two components.
@@ -26,19 +24,19 @@ import org.expath.servlex.ServlexException;
 public interface Connector
 {
     /** Connect to an XQuery function. */
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
+    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to an XQuery main module. */
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
+    public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to an XSLT component, either a function or a named template. */
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
+    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to an XSLT stylesheet. */
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
+    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to an XProc pipeline. */
-    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
+    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to the final HTTP Servlet response. */
     public void connectToResponse(HttpServletResponse resp, ServerConfig config)

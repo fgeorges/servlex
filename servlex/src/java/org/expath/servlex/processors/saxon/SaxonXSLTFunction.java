@@ -10,8 +10,6 @@
 package org.expath.servlex.processors.saxon;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
@@ -19,10 +17,8 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
@@ -32,8 +28,11 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
@@ -64,7 +63,8 @@ class SaxonXSLTFunction
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
             trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            connector.connectToXSLTComponent(trans, config);
+            ComponentInstance instance = new MyInstance(trans);
+            connector.connectToXSLTComponent(instance, config);
             XdmDestination dest = new XdmDestination();
             trans.setDestination(dest);
             trans.transform();
@@ -72,12 +72,8 @@ class SaxonXSLTFunction
             // now, I take the doc's children as the result sequence...
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
-            List<XdmItem> children = new ArrayList<XdmItem>();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            while ( it.hasNext() ) {
-                children.add(it.next());
-            }
-            return new XdmConnector(new XdmValue(children));
+            return new XdmConnector(new SaxonSequence(it));
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
@@ -158,6 +154,35 @@ class SaxonXSLTFunction
     private String myNS;
     private String myLocal;
     private XsltExecutable myCompiled = null;
+
+    /**
+     * An instance of this component.
+     */
+    private static class MyInstance
+            implements ComponentInstance
+    {
+        public MyInstance(XsltTransformer trans)
+        {
+            myTrans = trans;
+        }
+
+        public void connect(Sequence input)
+        {
+            if ( ! (input instanceof SaxonSequence) ) {
+                throw new IllegalStateException("Not a Saxon sequence: " + input);
+            }
+            SaxonSequence seq = (SaxonSequence) input;
+            myTrans.setParameter(NAME, seq.makeSaxonValue());
+        }
+
+        public void error(ComponentError error, Document request)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        private static QName NAME = new QName(ServlexConstants.PRIVATE_NS, "input");
+        private XsltTransformer myTrans;
+    }
 }
 
 

@@ -1,51 +1,40 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       SaxonItem.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.processors.saxon;
 
-import javax.xml.transform.Source;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.s9api.XdmItem;
+import org.expath.servlex.processors.Item;
 
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
+ * A document for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-15
+ * @date   2013-04-30
  */
-public interface Processors
+public class SaxonItem
+        implements Item
 {
-    public XSLTProcessor getXSLT()
-            throws TechnicalException;
+    public SaxonItem(XdmItem item)
+    {
+        myItem = item;
+    }
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException;
+    // TODO: Should be package visible, but is used in ParseBasicAuthCall
+    // (which should use instead a method on SaxonHelper which should be move
+    // here...)
+    public XdmItem getSaxonItem()
+    {
+        return myItem;
+    }
 
-    public XProcProcessor getXProc()
-            throws TechnicalException;
-
-    public Serializer makeSerializer()
-            throws TechnicalException;
-
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
-
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
-            throws TechnicalException;
+    private XdmItem myItem;
 }
 
 

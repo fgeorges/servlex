@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       Item.java                                                   */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,43 +9,15 @@
 
 package org.expath.servlex.processors;
 
-import javax.xml.transform.Source;
-import org.expath.servlex.TechnicalException;
-
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
+ * Represents an abstract XDM item.
  *
  * @author Florent Georges
- * @date   2013-04-15
+ * @date   2013-04-30
  */
-public interface Processors
+public interface Item
 {
-    public XSLTProcessor getXSLT()
-            throws TechnicalException;
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException;
-
-    public XProcProcessor getXProc()
-            throws TechnicalException;
-
-    public Serializer makeSerializer()
-            throws TechnicalException;
-
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
-
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
-            throws TechnicalException;
 }
 
 

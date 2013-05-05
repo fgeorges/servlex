@@ -26,7 +26,9 @@ import org.expath.servlex.Servlex;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.processors.saxon.SaxonDocument;
 
 /**
  * Log audit information.
@@ -67,7 +69,7 @@ public class Auditor
         if ( myWriter != null ) {
             try {
                 String  id  = Servlex.getRequestMap().getPrivate("web:request-id");
-                XdmNode doc = request.getWebRequest(myConfig);
+                Document doc = request.getWebRequest(myConfig);
                 myWriter.append("<profile request-id=\"");
                 myWriter.append(id);
                 myWriter.append("\">\n");
@@ -79,7 +81,14 @@ public class Auditor
                 serial.setMethod("xml");
                 serial.setIndent("yes");
                 serial.setOmitXmlDeclaration("yes");
-                serial.serialize(doc, myOutput);
+                // TODO: Move this kind of code to SaxonHelper.  Besides, this
+                // class must not be dependent on Saxon... (can be resolved only
+                // with a generic serializer)
+                if ( ! (doc instanceof SaxonDocument) ) {
+                    throw new ServlexException(500, "Not a Saxon document: " + doc);
+                }
+                XdmNode node = ((SaxonDocument) doc).getSaxonNode();
+                serial.serialize(node, myOutput);
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, getting the request-id.";

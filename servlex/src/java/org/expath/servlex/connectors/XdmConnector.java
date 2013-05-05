@@ -9,25 +9,17 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.servlex.Result;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.processors.XProcProcessor;
-import org.expath.servlex.tools.CalabashHelper;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Sequence;
 
 /**
- * Connector to an XDM sequence, represented by the Saxon {@link XdmValue}.
+ * Connector to an XDM sequence.
  *
  * TODO: Define the connection between an XDM sequence and... XQuery function,
  * XSLT component, stylesheet, pipeline...
@@ -44,7 +36,7 @@ import org.expath.servlex.tools.CalabashHelper;
 public class XdmConnector
         implements Connector
 {
-    public XdmConnector(XdmValue sequence)
+    public XdmConnector(Sequence sequence)
     {
         mySequence = sequence;
     }
@@ -53,80 +45,72 @@ public class XdmConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
+    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        final QName param_name = new QName("input");
-        eval.setExternalVariable(param_name, mySequence);
+        try {
+            comp.connect(mySequence);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
     /**
      * TODO: No context node...?
      */
     @Override
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
+    public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        final QName input_name = new QName(ServlexConstants.WEBAPP_NS, "input");
-        eval.setExternalVariable(input_name, mySequence);
+        try {
+            comp.connect(mySequence);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
     /**
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
+    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        final QName param_name = new QName(ServlexConstants.PRIVATE_NS, "input");
-        trans.setParameter(param_name, mySequence);
+        try {
+            comp.connect(mySequence);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
-    /**
-     * Connect the sequence to $web:input and $web:input[1] as the input tree.
-     * 
-     * Connecting the first item in the input sequence will succeed only if it
-     * is a document node or an element node (and if there is exactly one).
-     * 
-     * TODO: That imposes the user to declare the parameter in the stylesheet,
-     * isn't it?  Even if there is only one node in the sequence (this is a
-     * common case: we want to apply a stylesheet and we know we have a single
-     * document, then the intuitive way is just to apply the stylesheet to the
-     * node, no need to declare a parameter...)
-     */
     @Override
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
+    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        if ( mySequence.size() == 0 ) {
-            throw new ServlexException(500, "The input to the stylesheet is empty");
+        try {
+            comp.connect(mySequence);
         }
-        XdmItem item = mySequence.itemAt(0);
-        if ( item.isAtomicValue() ) {
-            String msg = "An atomic value cannot be set as the input to stylesheet: ";
-            throw new ServlexException(500, msg + item);
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
         }
-        XdmNode node = (XdmNode) item;
-        XdmNodeKind kind = node.getNodeKind();
-        if ( kind != XdmNodeKind.DOCUMENT && kind != XdmNodeKind.ELEMENT ) {
-            String msg = "The input to stylesheet is neither a document nor an element node: ";
-            throw new ServlexException(500, msg + kind);
-        }
-        // TODO: Is it possible to set it only if it is declared?  Is this
-        // actually an error if it is not declared?
-        final QName param_name = new QName(ServlexConstants.WEBAPP_NS, "input");
-        trans.setInitialContextNode(node);
-        trans.setParameter(param_name, mySequence);
     }
 
     /**
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
+    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        CalabashHelper.writeTo(pipeline, XProcProcessor.INPUT_PORT_NAME, mySequence, config);
+        try {
+            comp.connect(mySequence);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
     /**
@@ -144,7 +128,7 @@ public class XdmConnector
         result.respond(resp);
     }
 
-    private XdmValue mySequence;
+    private Sequence mySequence;
 }
 
 

@@ -9,7 +9,6 @@
 
 package org.expath.servlex.processors;
 
-import net.sf.saxon.s9api.XdmNode;
 import org.expath.servlex.TechnicalException;
 
 /**
@@ -38,8 +37,7 @@ public interface TreeBuilder
     public void textElem(String local, String value)
             throws TechnicalException;
 
-    // TODO: FIXME: XdmNode is Saxon-specific, this has NOTHING to do here...!
-    public XdmNode getRoot()
+    public Document getRoot()
             throws TechnicalException;
 }
 

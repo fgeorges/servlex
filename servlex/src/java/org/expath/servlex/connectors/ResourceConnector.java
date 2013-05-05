@@ -9,15 +9,13 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.components.ComponentInstance;
 
 /**
  * Connector for a resource, can be connected only to the http servlet response.
@@ -43,35 +41,35 @@ public class ResourceConnector
     }
 
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
+    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XQuery function.");
     }
 
     @Override
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
+    public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XQuery main module.");
     }
 
     @Override
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
+    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to an XSLT function or template.");
     }
 
     @Override
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
+    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to a stylesheet.");
     }
 
     @Override
-    public void connectToPipeline(XPipeline pipeline, ServerConfig config)
+    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new ServlexException(500, "Cannot connect a resource to a pipeline.");

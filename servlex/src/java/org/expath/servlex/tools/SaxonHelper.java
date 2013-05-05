@@ -25,8 +25,10 @@ import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.saxon.WebappFunctions;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.saxon.SaxonDocument;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -53,16 +55,21 @@ public class SaxonHelper
      * Throw an error is the param is null, is not a document node, or if it
      * not exactly one child which is an element node.
      */
-    public static XdmNode getDocumentRootElement(XdmNode doc)
+    public static XdmNode getDocumentRootElement(Document doc)
             throws TechnicalException
     {
         if ( doc == null ) {
             throw new TechnicalException("doc is null");
         }
-        if ( doc.getNodeKind() != XdmNodeKind.DOCUMENT ) {
-            throw new TechnicalException("doc is not a document node: " + doc.getNodeKind());
+        if ( ! (doc instanceof SaxonDocument) ) {
+            throw new TechnicalException("Not a Saxon document: " + doc);
         }
-        XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
+        SaxonDocument sdoc = (SaxonDocument) doc;
+        XdmNode node = sdoc.getSaxonNode();
+        if ( node.getNodeKind() != XdmNodeKind.DOCUMENT ) {
+            throw new TechnicalException("doc is not a document node: " + node.getNodeKind());
+        }
+        XdmSequenceIterator it = node.axisIterator(Axis.CHILD);
         XdmNode root = ignoreWhitespaceTextNodes(it);
         if ( root == null ) {
             throw new TechnicalException("doc has no child (except whitespace-only text nodes)");

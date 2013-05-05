@@ -29,7 +29,10 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.processors.saxon.SaxonDocument;
+import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
@@ -61,9 +64,13 @@ public class Result
      * @param sequence
      * @throws ServletException
      */
-    public Result(XdmValue sequence, Processors procs)
+    public Result(Sequence sequence, Processors procs)
             throws ServlexException
     {
+        if ( ! (sequence instanceof SaxonSequence) ) {
+            throw new ServlexException(500, "Not a Saxon sequence: " + sequence);
+        }
+        XdmValue value = ((SaxonSequence) sequence).makeSaxonValue();
         myProcs = procs;
         myStatus = -1;
         myMsg = null;
@@ -71,11 +78,11 @@ public class Result
         // 1.) the web:response element
         // TODO: Make something more elaborate than that (like ignoring text
         // nodes if any, if they are withspace only, etc.)
-        LOG.debug("Result: sequence size: " + sequence.size());
-        if ( sequence.size() < 1 ) {
+        LOG.debug("Result: sequence size: " + value.size());
+        if ( value.size() < 1 ) {
             error(500, "Empty sequence");
         }
-        XdmItem item = sequence.itemAt(0);
+        XdmItem item = value.itemAt(0);
         if ( LOG.isDebugEnabled() ) {
             LOG.debug("Result: sequence[1]: " + item);
         }
@@ -87,7 +94,7 @@ public class Result
         // if a document, get its child instead
         if ( resp.getNodeKind() == XdmNodeKind.DOCUMENT ) {
             try {
-                resp = SaxonHelper.getDocumentRootElement(resp);
+                resp = SaxonHelper.getDocumentRootElement(new SaxonDocument(resp));
             }
             catch ( TechnicalException ex ) {
                 error(500, "first item is a document not with exactly one element child", ex);
@@ -103,10 +110,10 @@ public class Result
         }
         // 2.) the response bodies
         XdmNode[] bodies = null;
-        if ( sequence.size() > 1 ) {
-            bodies = new XdmNode[sequence.size() - 1];
-            for ( int i = 1; i < sequence.size(); ++i ) {
-                XdmItem body = sequence.itemAt(i);
+        if ( value.size() > 1 ) {
+            bodies = new XdmNode[value.size() - 1];
+            for ( int i = 1; i < value.size(); ++i ) {
+                XdmItem body = value.itemAt(i);
                 if ( LOG.isDebugEnabled() ) {
                     LOG.debug("Result: sequence[" + (i+1) + "]: " + body);
                 }

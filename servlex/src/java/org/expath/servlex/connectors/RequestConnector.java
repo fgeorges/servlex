@@ -9,7 +9,6 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,17 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltTransformer;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.Base64BinaryValue;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.field.AbstractField;
 import org.apache.james.mime4j.parser.Field;
@@ -45,15 +33,15 @@ import org.apache.log4j.Logger;
 import org.ccil.cowan.tagsoup.Parser;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.model.Servlet;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
-import org.expath.servlex.processors.XProcProcessor;
-import org.expath.servlex.tools.CalabashHelper;
 import org.expath.servlex.tools.ContentType;
-import org.expath.servlex.tools.SaxonHelper;
 import org.expath.servlex.tools.TraceInputStream;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -84,7 +72,10 @@ public class RequestConnector
         myServlet = servlet;
     }
 
-    public XdmNode getWebRequest(ServerConfig config)
+    // TODO: I should be able to remove the vairable myWebRequest (just put it
+    // as first item in the sequence, no need to keep a pointer to it, but it
+    // is used here...)
+    public Document getWebRequest(ServerConfig config)
             throws ServlexException
     {
         ensureParsing(config);
@@ -102,12 +93,9 @@ public class RequestConnector
                 // parse the request (to web:request + sequence of bodies)
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
-                List<XdmItem> input = new ArrayList<XdmItem>();
+                List<Item> input = new ArrayList<Item>();
                 myWebRequest = parseRequest(config, builder, input);
-                myInput = new XdmValue(input);
-            }
-            catch ( XPathException ex ) {
-                error(500, "Internal error", ex);
+                myInput = config.getProcessors().buildSequence(input);
             }
             catch ( TechnicalException ex ) {
                 error(500, "Internal error", ex);
@@ -116,50 +104,67 @@ public class RequestConnector
     }
 
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
+    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         ensureParsing(config);
-        eval.setExternalVariable(new QName("input"), myInput);
+        try {
+            comp.connect(myInput);
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Internal error", ex);
+        }
     }
 
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
+    public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         ensureParsing(config);
-        final QName input_name = new QName(ServlexConstants.WEBAPP_NS, "input");
-        eval.setContextItem(myWebRequest);
-        eval.setExternalVariable(input_name, myInput);
-    }
-
-    @Override
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
-            throws ServlexException
-    {
-        ensureParsing(config);
-        final QName input_name = new QName(ServlexConstants.PRIVATE_NS, "input");
-        trans.setParameter(input_name, myInput);
-    }
-
-    @Override
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
-            throws ServlexException
-    {
-        ensureParsing(config);
-        // TODO: Is it possible to set it only if it is declared?  Is this
-        // actually an error if it is not declared?
-        final QName bod_name = new QName(ServlexConstants.WEBAPP_NS, "input");
-        trans.setInitialContextNode(myWebRequest);
-        trans.setParameter(bod_name, myInput);
+        try {
+            comp.connect(myInput);
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Internal error", ex);
+        }
     }
 
     @Override
-    public void connectToPipeline(XPipeline pipe, ServerConfig config)
+    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         ensureParsing(config);
-        final String port = XProcProcessor.INPUT_PORT_NAME;
-        CalabashHelper.writeTo(pipe, port, myInput, config);
+        try {
+            comp.connect(myInput);
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Internal error", ex);
+        }
+    }
+
+    @Override
+    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
+            throws ServlexException
+    {
+        ensureParsing(config);
+        try {
+            comp.connect(myInput);
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Internal error", ex);
+        }
+    }
+
+    @Override
+    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
+            throws ServlexException
+    {
+        ensureParsing(config);
+        try {
+            comp.connect(myInput);
+        }
+        catch ( TechnicalException ex ) {
+            error(500, "Internal error", ex);
+        }
     }
 
     /**
@@ -209,9 +214,8 @@ public class RequestConnector
      * and the bodies, which will end up as the $input sequence of most of the
      * components)
      */
-    private XdmNode parseRequest(ServerConfig config, TreeBuilder b, List<XdmItem> input)
-            throws XPathException
-                 , ServlexException
+    private Document parseRequest(ServerConfig config, TreeBuilder b, List<Item> input)
+            throws ServlexException
                  , TechnicalException
     {
         // some values
@@ -259,8 +263,8 @@ public class RequestConnector
         // end the request element
         b.endElem();
         // return the request document node
-        XdmNode doc = b.getRoot();
-        XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
+        Document doc = b.getRoot();
+        Item elem = doc.getRootElement();
         input.set(0, elem);
         return doc;
     }
@@ -383,9 +387,8 @@ public class RequestConnector
      *
      * TODO: Must add more info on web:multipart and web:body elements.
      */
-    private void makeBodies(ServerConfig config, TreeBuilder builder, List<XdmItem> input)
+    private void makeBodies(ServerConfig config, TreeBuilder builder, List<Item> input)
             throws ServlexException
-                 , XPathException
                  , TechnicalException
     {
         // the content type
@@ -420,7 +423,7 @@ public class RequestConnector
                 builder.endElem();
             }
             else {
-                XdmItem parsed = parseBody(config, in, ctype, 1, builder);
+                Item parsed = parseBody(config, in, ctype, 1, builder);
                 input.add(parsed);
             }
         }
@@ -435,9 +438,8 @@ public class RequestConnector
     /**
      * Do the job for one parser event, in case of a multipart.
      */
-    private void handleParserState(MimeTokenStream parser, TreeBuilder builder, List<XdmItem> items, int position, ServerConfig config)
+    private void handleParserState(MimeTokenStream parser, TreeBuilder builder, List<Item> items, int position, ServerConfig config)
             throws ServlexException
-                 , XPathException
                  , MimeException
                  , TechnicalException
     {
@@ -487,7 +489,7 @@ public class RequestConnector
                 // (that is, always except for binary content).  That needs some
                 // refactoring wrt how input are passed to parseBody().
                 InputStream in = parser.getInputStream();
-                XdmItem part = parseBody(config, in, ctype, position, builder);
+                Item part = parseBody(config, in, ctype, position, builder);
                 items.add(part);
                 break;
             }
@@ -529,7 +531,7 @@ public class RequestConnector
      *
      * TODO: Ensure we use the correct encoding when reading parts...
      */
-    private XdmItem parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilder builder)
+    private Item parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilder builder)
             throws ServlexException
                  , TechnicalException
     {
@@ -559,12 +561,9 @@ public class RequestConnector
                     return parseBodyText(config, input, charset);
                 }
                 case BINARY: {
-                    return parseBodyBinary(input);
+                    return parseBodyBinary(config, input);
                 }
             }
-        }
-        catch ( SaxonApiException ex ) {
-            error(500, "Internal error", ex);
         }
         catch ( SAXException ex ) {
             error(500, "Internal error", ex);
@@ -579,7 +578,7 @@ public class RequestConnector
     /**
      * Parse content as XML (tidied up from HTML if {@code html} is true).
      */
-    private XdmNode parseBodyXml(ServerConfig config, InputStream input, boolean html)
+    private Document parseBodyXml(ServerConfig config, InputStream input, boolean html)
             throws TechnicalException
                  , SAXException
     {
@@ -596,7 +595,7 @@ public class RequestConnector
         else {
             src = new StreamSource(input, sys_id);
         }
-        XdmNode doc = config.getProcessors().buildDocument(src);
+        Document doc = config.getProcessors().buildDocument(src);
         if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
             LOG.trace("Content parsed as document node: " + doc);
         }
@@ -606,8 +605,9 @@ public class RequestConnector
     /**
      * Parse content as text.
      */
-    private XdmAtomicValue parseBodyText(ServerConfig config, InputStream input, String charset)
+    private Item parseBodyText(ServerConfig config, InputStream input, String charset)
             throws IOException
+                 , TechnicalException
     {
         // BufferedReader handles the ends of line (all \n, \r, and \r\n are
         // treated as end-of-line)
@@ -623,15 +623,15 @@ public class RequestConnector
         if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
             LOG.trace("Content parsed as text: " + str);
         }
-        return new XdmAtomicValue(str);
+        return config.getProcessors().buildString(str);
     }
 
     /**
      * Parse content as binary.
      */
-    private XdmItem parseBodyBinary(InputStream input)
+    private Item parseBodyBinary(ServerConfig config, InputStream input)
             throws IOException
-                 , SaxonApiException
+                 , TechnicalException
     {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[4096];
@@ -640,20 +640,7 @@ public class RequestConnector
             out.write(buf, 0, read);
         }
         byte[] bytes = out.toByteArray();
-        return TodoBinaryItem.makeBinaryItem(bytes);
-    }
-
-    /**
-     * TODO: Work around, see http://saxon.markmail.org/thread/sufwctvikfphdh2m
-     */
-    private static class TodoBinaryItem
-            extends XdmItem
-    {
-        public static XdmItem makeBinaryItem(byte[] bytes)
-        {
-            Item value = new Base64BinaryValue(bytes);
-            return wrapItem(value);
-        }
+        return config.getProcessors().buildBinary(bytes);
     }
 
     // TODO: Error management!
@@ -689,9 +676,9 @@ public class RequestConnector
     /** The regex matcher to get the groups out of the URI. */
     private Matcher myMatcher = null;
     /** The all input sequence, that is, the request element followed by bodies. */
-    private XdmValue myInput = null;
+    private Sequence myInput = null;
     /** The web:request document node, null at beginning, placed here when parsed. */
-    private XdmNode myWebRequest = null;
+    private Document myWebRequest = null;
 }
 
 

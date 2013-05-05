@@ -10,6 +10,7 @@
 package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
@@ -19,8 +20,11 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.SaxonHelper;
@@ -48,7 +52,8 @@ class SaxonXQueryFunction
     {
         XQueryExecutable exec = getCompiled();
         XQueryEvaluator eval = exec.load();
-        connector.connectToXQueryFunction(eval, config);
+        ComponentInstance instance = new MyInstance(eval);
+        connector.connectToXQueryFunction(instance, config);
         XdmValue result;
         try {
             result = eval.evaluate();
@@ -57,7 +62,7 @@ class SaxonXQueryFunction
             LOG.error(formatMsg("User error in XQuery"), ex);
             throw SaxonHelper.makeError(ex);
         }
-        return new XdmConnector(result);
+        return new XdmConnector(new SaxonSequence(result));
     }
 
     /**
@@ -106,6 +111,35 @@ class SaxonXQueryFunction
     private String myLocal;
     /** The cached generated query calling the function. */
     private XQueryExecutable myCompiled = null;
+
+    /**
+     * An instance of this component.
+     */
+    private static class MyInstance
+            implements ComponentInstance
+    {
+        public MyInstance(XQueryEvaluator eval)
+        {
+            myEval = eval;
+        }
+
+        public void connect(Sequence input)
+        {
+            if ( ! (input instanceof SaxonSequence) ) {
+                throw new IllegalStateException("Not a Saxon sequence: " + input);
+            }
+            SaxonSequence seq = (SaxonSequence) input;
+            myEval.setExternalVariable(NAME, seq.makeSaxonValue());
+        }
+
+        public void error(ComponentError error, Document request)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        private static QName NAME = new QName("input");
+        private XQueryEvaluator myEval;
+    }
 }
 
 

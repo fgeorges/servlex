@@ -9,17 +9,16 @@
 
 package org.expath.servlex.connectors;
 
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import net.sf.saxon.s9api.*;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.runtime.ComponentError;
-import org.expath.servlex.tools.CalabashHelper;
 
 /**
  * Connect an XPath error to component implementations.
@@ -55,24 +54,14 @@ public class ErrorConnector
      * access through the API of XPipeline, passed to the connectors.
      */
     @Override
-    public void connectToXQueryFunction(XQueryEvaluator eval, ServerConfig config)
+    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public void connectToQuery(XQueryEvaluator eval, ServerConfig config)
-            throws ServlexException
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * TODO: Mapping to define, then implement.
-     */
-    @Override
-    public void connectToXSLTComponent(XsltTransformer trans, ServerConfig config)
+    public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -82,7 +71,7 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToStylesheet(XsltTransformer trans, ServerConfig config)
+    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -92,33 +81,25 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToPipeline(XPipeline pipe, ServerConfig config)
+    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        // the code-name
-        String prefix = myError.getName().getPrefix();
-        String local  = myError.getName().getLocalPart();
-        String name = local;
-        if ( prefix != null && ! prefix.equals("") ) {
-            name = prefix + ":" + local;
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * TODO: Mapping to define, then implement.
+     */
+    @Override
+    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
+            throws ServlexException
+    {
+        try {
+            Document request = myRequest.getWebRequest(config);
+            comp.error(myError, request);
         }
-        // the code-namespace
-        String ns     = myError.getName().getNamespaceURI();
-        // the message
-        String msg    = myError.getMsg();
-        // set them as options
-        pipe.passOption(CODE_NAME_ATTRIBUTE, new RuntimeValue(name));
-        pipe.passOption(CODE_NAMESPACE_ATTRIBUTE, new RuntimeValue(ns));
-        pipe.passOption(MESSAGE_ATTRIBUTE, new RuntimeValue(msg));
-        // connect the web request to the source port
-        final String src_port = XProcProcessor.INPUT_PORT_NAME;
-        XdmNode web_request = myRequest.getWebRequest(config);
-        CalabashHelper.writeTo(pipe, src_port, web_request, config);
-        // connect the user sequence to the user-data port
-        final String err_port = XProcProcessor.ERROR_PORT_NAME;
-        XdmValue userdata = myError.getSequence();
-        if ( userdata != null ) {
-            CalabashHelper.writeTo(pipe, err_port, userdata, config);
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
         }
     }
 

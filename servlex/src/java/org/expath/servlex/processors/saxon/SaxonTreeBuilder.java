@@ -19,6 +19,7 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.Untyped;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.TreeBuilder;
 
 /**
@@ -115,7 +116,7 @@ class SaxonTreeBuilder
         endElem();
     }
 
-    public XdmNode getRoot()
+    public Document getRoot()
             throws TechnicalException
     {
         try {
@@ -125,7 +126,9 @@ class SaxonTreeBuilder
         catch ( XPathException ex ) {
             throw new TechnicalException("Error ending document", ex);
         }
-        return myDocBuilder.wrap(myBuilder.getCurrentRoot());
+        NodeInfo node = myBuilder.getCurrentRoot();
+        XdmNode doc = myDocBuilder.wrap(node);
+        return new SaxonDocument(doc);
     }
 
     private String myNsUri;

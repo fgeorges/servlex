@@ -21,6 +21,7 @@ import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.tools.SaxonHelper;
@@ -85,7 +86,8 @@ public class ParseBasicAuthCall
             b.startContent();
             b.endElem();
             // return the basic-auth element, inside the document node
-            XdmNode root = SaxonHelper.getDocumentRootElement(b.getRoot());
+            Document doc = b.getRoot();
+            XdmNode root = SaxonHelper.getDocumentRootElement(doc);
             return SingletonIterator.makeIterator(root.getUnderlyingNode());
         }
         catch ( TechnicalException ex ) {

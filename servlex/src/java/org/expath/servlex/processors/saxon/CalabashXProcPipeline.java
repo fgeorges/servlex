@@ -11,6 +11,7 @@ package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,16 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
+import static org.expath.servlex.connectors.ErrorConnector.CODE_NAMESPACE_ATTRIBUTE;
+import static org.expath.servlex.connectors.ErrorConnector.CODE_NAME_ATTRIBUTE;
+import static org.expath.servlex.connectors.ErrorConnector.MESSAGE_ATTRIBUTE;
 import org.expath.servlex.connectors.XdmConnector;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
@@ -131,7 +139,8 @@ class CalabashXProcPipeline
             throws SaxonApiException
                  , ServlexException
     {
-        connector.connectToPipeline(pipeline, config);
+        ComponentInstance instance = new MyInstance(pipeline, config);
+        connector.connectToPipeline(instance, config);
         if ( LOG.isDebugEnabled() ) {
             LOG.debug("Existing output ports: " + pipeline.getOutputs());
             for ( String o : pipeline.getOutputs() ) {
@@ -150,7 +159,7 @@ class CalabashXProcPipeline
         pipeline.run();
         ReadablePipe response_port = pipeline.readFrom(XProcProcessor.OUTPUT_PORT_NAME);
         XdmValue result = decodeResponse(response_port);
-        return new XdmConnector(result);
+        return new XdmConnector(new SaxonSequence(result));
     }
 
     /**
@@ -297,6 +306,85 @@ class CalabashXProcPipeline
 
     private CalabashXProc myCalabash;
     private String myPipe;
+
+
+    /**
+     * An instance of this component.
+     */
+    private static class MyInstance
+            implements ComponentInstance
+    {
+        public MyInstance(XPipeline pipe, ServerConfig config)
+        {
+            myPipe = pipe;
+            myConfig = config;
+        }
+
+        public void connect(Sequence input)
+                throws TechnicalException
+        {
+            if ( ! (input instanceof SaxonSequence) ) {
+                throw new IllegalStateException("Not a Saxon sequence: " + input);
+            }
+            SaxonSequence seq = (SaxonSequence) input;
+            CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myConfig);
+        }
+
+        public void error(ComponentError error, Document request)
+                throws TechnicalException
+        {
+            setErrorOptions(error);
+            writeErrorRequest(request);
+            writeErrorData(error);
+        }
+
+        private void setErrorOptions(ComponentError error)
+                throws TechnicalException
+        {
+            // the code-name
+            String prefix = error.getName().getPrefix();
+            String local  = error.getName().getLocalPart();
+            String name = local;
+            if ( prefix != null && ! prefix.equals("") ) {
+                name = prefix + ":" + local;
+            }
+            // the code-namespace
+            String ns     = error.getName().getNamespaceURI();
+            // the message
+            String msg    = error.getMsg();
+            // set them as options
+            myPipe.passOption(CODE_NAME_ATTRIBUTE, new RuntimeValue(name));
+            myPipe.passOption(CODE_NAMESPACE_ATTRIBUTE, new RuntimeValue(ns));
+            myPipe.passOption(MESSAGE_ATTRIBUTE, new RuntimeValue(msg));
+        }
+
+        private void writeErrorRequest(Document request)
+                throws TechnicalException
+        {
+            if ( ! (request instanceof SaxonDocument) ) {
+                throw new TechnicalException("Not a Saxon doc: " + request);
+            }
+            SaxonDocument doc = (SaxonDocument) request;
+            XdmNode node = doc.getSaxonNode();
+            // connect the web request to the source port
+            CalabashHelper.writeTo(myPipe, NAME, node, myConfig);
+        }
+
+        private void writeErrorData(ComponentError error)
+                throws TechnicalException
+        {
+            // connect the user sequence to the user-data port
+            XdmValue userdata = error.getSequence();
+            if ( userdata != null ) {
+                CalabashHelper.writeTo(myPipe, ERROR, userdata, myConfig);
+            }
+        }
+
+        private static final String NAME  = XProcProcessor.INPUT_PORT_NAME;
+        private static final String ERROR = XProcProcessor.ERROR_PORT_NAME;
+        private XPipeline myPipe;
+        private ServerConfig myConfig;
+    }
 }
 
 

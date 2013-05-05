@@ -1,51 +1,52 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       SaxonDocument.java                                          */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.processors.saxon;
 
-import javax.xml.transform.Source;
+import net.sf.saxon.s9api.XdmNode;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
+ * A document for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-15
+ * @date   2013-04-30
  */
-public interface Processors
+public class SaxonDocument
+        extends SaxonItem
+        implements Document
 {
-    public XSLTProcessor getXSLT()
-            throws TechnicalException;
+    public SaxonDocument(XdmNode doc)
+    {
+        super(doc);
+        myDoc = doc;
+    }
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException;
+    @Override
+    public Item getRootElement()
+            throws TechnicalException
+    {
+        XdmNode elem = SaxonHelper.getDocumentRootElement(this);
+        return new SaxonItem(elem);
+    }
 
-    public XProcProcessor getXProc()
-            throws TechnicalException;
+    // TODO: Should be package visible, but is used in CalabashHelper (which
+    // should be moved in this package...)
+    public XdmNode getSaxonNode()
+    {
+        return myDoc;
+    }
 
-    public Serializer makeSerializer()
-            throws TechnicalException;
-
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
-
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
-            throws TechnicalException;
+    private XdmNode myDoc;
 }
 
 

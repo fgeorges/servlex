@@ -15,7 +15,7 @@ import org.expath.servlex.components.Component;
 import org.expath.servlex.processors.XQueryProcessor;
 
 /**
- * The Saxon implementation of the XSLT processor.
+ * The Saxon implementation of the XQuery processor.
  *
  * @author Florent Georges
  * @date   2013-04-15
