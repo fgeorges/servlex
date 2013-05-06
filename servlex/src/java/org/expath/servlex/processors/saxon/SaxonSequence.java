@@ -15,11 +15,17 @@ import java.util.List;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * A document for Saxon.
+ * 
+ * TODO: Review the design.  Maybe storing the underlying {@link XdmValue}
+ * would be better here...?
  *
  * @author Florent Georges
  * @date   2013-04-30
@@ -29,10 +35,46 @@ public class SaxonSequence
 {
     public SaxonSequence(Iterable<Item> items)
     {
+        if ( items == null ) {
+            throw new NullPointerException("Underlying collection is null for Saxon sequence");
+        }
         myItems = items;
     }
 
+    public SaxonSequence(Iterator<Item> iter)
+    {
+        if ( iter == null ) {
+            throw new NullPointerException("Iterator is null for Saxon sequence");
+        }
+        init(iter);
+    }
+
     public SaxonSequence(XdmSequenceIterator iter)
+    {
+        if ( iter == null ) {
+            throw new NullPointerException("Iterator is null for Saxon sequence");
+        }
+        init(iter);
+    }
+
+    public SaxonSequence(XdmValue seq)
+    {
+        if ( seq == null ) {
+            throw new NullPointerException("Underlying sequence is null for Saxon sequence");
+        }
+        init(seq.iterator());
+    }
+
+    private void init(Iterator<Item> iter)
+    {
+        List<Item> items = new ArrayList<Item>();
+        while ( iter.hasNext() ) {
+            items.add(iter.next());
+        }
+        myItems = items;
+    }
+
+    private void init(XdmSequenceIterator iter)
     {
         List<Item> items = new ArrayList<Item>();
         while ( iter.hasNext() ) {
@@ -42,14 +84,51 @@ public class SaxonSequence
         myItems = items;
     }
 
-    public SaxonSequence(XdmValue seq)
-    {
-        this(seq.iterator());
-    }
-
+    @Override
     public Iterator<Item> iterator()
     {
         return myItems.iterator();
+    }
+
+    @Override
+    public Item itemAt(int position)
+    {
+        Iterator<Item> it = iterator();
+        while ( position > 0 && it.hasNext() ) {
+            --position;
+            it.next();
+        }
+        if ( position == 0 && it.hasNext() ) {
+            return it.next();
+        }
+        else {
+            return null;
+        }
+    }
+
+    @Override
+    public Element elementAt(int position)
+            throws TechnicalException
+    {
+        Item item = itemAt(position);
+        SaxonElement elem;
+        try {
+            return SaxonHelper.toSaxonElement(item);
+        }
+        catch ( TechnicalException ex ) {
+            SaxonDocument doc = SaxonHelper.toSaxonDocument(item);
+            return doc.getRootElement();
+        }
+    }
+
+    public Sequence subSequence(int start)
+    {
+        Iterator<Item> iter = iterator();
+        while ( start > 0 && iter.hasNext() ) {
+            iter.next();
+            --start;
+        }
+        return new SaxonSequence(iter);
     }
 
     // TODO: Should be package visible, but is used in XdmConnector (which
@@ -70,6 +149,7 @@ public class SaxonSequence
             myOriginal = original;
         }
 
+        @Override
         public Iterator<XdmItem> iterator()
         {
             return new ItemIterator(myOriginal.iterator());
@@ -86,11 +166,13 @@ public class SaxonSequence
             myOriginal = original;
         }
 
+        @Override
         public boolean hasNext()
         {
             return myOriginal.hasNext();
         }
 
+        @Override
         public XdmItem next()
         {
             Item item = myOriginal.next();
@@ -100,6 +182,7 @@ public class SaxonSequence
             return ((SaxonItem) item).getSaxonItem();
         }
 
+        @Override
         public void remove()
         {
             myOriginal.remove();

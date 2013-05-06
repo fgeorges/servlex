@@ -18,7 +18,6 @@ import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.DayTimeDurationValue;
 import org.expath.servlex.ServerConfig;
@@ -28,7 +27,6 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Serializer;
-import org.expath.servlex.processors.saxon.SaxonDocument;
 
 /**
  * Log audit information.
@@ -81,14 +79,7 @@ public class Auditor
                 serial.setMethod("xml");
                 serial.setIndent("yes");
                 serial.setOmitXmlDeclaration("yes");
-                // TODO: Move this kind of code to SaxonHelper.  Besides, this
-                // class must not be dependent on Saxon... (can be resolved only
-                // with a generic serializer)
-                if ( ! (doc instanceof SaxonDocument) ) {
-                    throw new ServlexException(500, "Not a Saxon document: " + doc);
-                }
-                XdmNode node = ((SaxonDocument) doc).getSaxonNode();
-                serial.serialize(node, myOutput);
+                serial.serialize(doc, myOutput);
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, getting the request-id.";
@@ -174,6 +165,8 @@ public class Auditor
 
     /**
      * Return a literal XML Schema duration, from a number of milliseconds.
+     * 
+     * TODO: Should not depend on Saxon here...
      */
     private String duration(long millis)
             throws ServlexException

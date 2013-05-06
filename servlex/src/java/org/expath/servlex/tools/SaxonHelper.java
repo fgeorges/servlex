@@ -15,6 +15,7 @@ import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
@@ -26,9 +27,15 @@ import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Element;
+import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.saxon.WebappFunctions;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.saxon.SaxonDocument;
+import org.expath.servlex.processors.saxon.SaxonElement;
+import org.expath.servlex.processors.saxon.SaxonItem;
+import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -49,6 +56,87 @@ public class SaxonHelper
         return saxon;
     }
 
+    public static SaxonItem toSaxonItem(Item item)
+            throws TechnicalException
+    {
+        if ( ! (item instanceof SaxonItem) ) {
+            throw new TechnicalException("Not a Saxon item: " + item);
+        }
+        return (SaxonItem) item;
+    }
+
+    public static SaxonElement toSaxonElement(Element elem)
+            throws TechnicalException
+    {
+        if ( ! (elem instanceof SaxonElement) ) {
+            throw new TechnicalException("Not a Saxon element: " + elem);
+        }
+        return (SaxonElement) elem;
+    }
+
+    public static SaxonElement toSaxonElement(Item item)
+            throws TechnicalException
+    {
+        SaxonItem sitem = toSaxonItem(item);
+        XdmItem xdm = sitem.getSaxonItem();
+        if ( ! (xdm instanceof XdmNode) ) {
+            throw new TechnicalException("Not a node: " + xdm);
+        }
+        XdmNode node = (XdmNode) xdm;
+        return new SaxonElement(node);
+    }
+
+    public static SaxonDocument toSaxonDocument(Document doc)
+            throws TechnicalException
+    {
+        if ( ! (doc instanceof SaxonDocument) ) {
+            throw new TechnicalException("Not a Saxon document: " + doc);
+        }
+        return (SaxonDocument) doc;
+    }
+
+    public static SaxonDocument toSaxonDocument(Item item)
+            throws TechnicalException
+    {
+        SaxonItem sitem = toSaxonItem(item);
+        XdmItem xdm = sitem.getSaxonItem();
+        if ( ! (xdm instanceof XdmNode) ) {
+            throw new TechnicalException("Not a node: " + xdm);
+        }
+        XdmNode node = (XdmNode) xdm;
+        return new SaxonDocument(node);
+    }
+
+    public static SaxonSequence toSaxonSequence(Sequence sequence)
+            throws TechnicalException
+    {
+        if ( ! (sequence instanceof SaxonSequence) ) {
+            throw new TechnicalException("Not a Saxon sequence: " + sequence);
+        }
+        return (SaxonSequence) sequence;
+    }
+
+    public static XdmValue toXdmValue(Item item)
+            throws TechnicalException
+    {
+        SaxonItem sitem = toSaxonItem(item);
+        return sitem.getSaxonItem();
+    }
+
+    public static XdmValue toXdmValue(Document doc)
+            throws TechnicalException
+    {
+        SaxonDocument sdoc = toSaxonDocument(doc);
+        return sdoc.getSaxonNode();
+    }
+
+    public static XdmValue toXdmValue(Sequence sequence)
+            throws TechnicalException
+    {
+        SaxonSequence sseq = toSaxonSequence(sequence);
+        return sseq.makeSaxonValue();
+    }
+
     /**
      * Return the root element of the document node passed in param.
      *
@@ -61,10 +149,7 @@ public class SaxonHelper
         if ( doc == null ) {
             throw new TechnicalException("doc is null");
         }
-        if ( ! (doc instanceof SaxonDocument) ) {
-            throw new TechnicalException("Not a Saxon document: " + doc);
-        }
-        SaxonDocument sdoc = (SaxonDocument) doc;
+        SaxonDocument sdoc = toSaxonDocument(doc);
         XdmNode node = sdoc.getSaxonNode();
         if ( node.getNodeKind() != XdmNodeKind.DOCUMENT ) {
             throw new TechnicalException("doc is not a document node: " + node.getNodeKind());

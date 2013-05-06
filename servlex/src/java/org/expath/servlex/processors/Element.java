@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       Sequence.java                                               */
+/*  File:       Element.java                                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-30                                                  */
+/*  Date:       2013-05-05                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,44 +9,47 @@
 
 package org.expath.servlex.processors;
 
-import org.expath.servlex.TechnicalException;
+import java.net.URI;
+import java.util.Iterator;
+import javax.xml.namespace.QName;
 
 /**
- * Represents an abstract XDM item.
+ * Represents an abstract element node.
  *
  * @author Florent Georges
- * @date   2013-04-30
+ * @date   2013-05-05
  */
-public interface Sequence
-        extends Iterable<Item>
+public interface Element
+        extends Item
 {
     /**
-     * Return the item at {@code position}, first item is at position 0.
-     * 
-     * Return null if {@code position} is outside the sequence.
+     * The element name.
      */
-    public Item itemAt(int position);
+    public QName name();
 
     /**
-     * Return the element at {@code position}, first item is at position 0.
-     * 
-     * Return null if {@code position} is outside the sequence.  The sequence
-     * can be of any type, but the item at {@code position} (if any) must be an
-     * element node (if there is such an item but it is not an element, this is
-     * en error).  If the item is a document node with exactly one child which
-     * is an element, then its element is returned instead.
+     * The element base URI.
      */
-    public Element elementAt(int position)
-            throws TechnicalException;
+    public URI baseUri();
 
     /**
-     * Return the sub-sequence starting at the item at position {@code start}.
-     * 
-     * Position starts at 0.  So if {@code start} is 1, returns the same
-     * sequence without the first item.  If {@code start} is outside the
-     * boundaries of the sequence, an empty sequence is returned.
+     * The attributes of the element.
      */
-    public Sequence subSequence(int start);
+    public Iterator<Attribute> attributes();
+
+    /**
+     * The children of this element, there must only be elements.
+     * 
+     * If there is any other kind of node than elements in the children, this
+     * is an error (except for whitespace-only text nodes and comment nodes,
+     * which are discarded).
+     */
+    public Iterator<Element> elements();
+
+    /**
+     * The children of this element.
+     */
+    public Iterator<Item> children();
 }
 
 

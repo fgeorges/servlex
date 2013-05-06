@@ -18,7 +18,10 @@ import net.sf.saxon.s9api.Serializer.Property;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * Implementation of serializer for Saxon.
@@ -93,7 +96,21 @@ class SaxonSerializer
         myVersion = v;
     }
 
-    public void serialize(XdmValue sequence, OutputStream out)
+    public void serialize(Document doc, OutputStream out)
+            throws TechnicalException
+    {
+        XdmValue value = SaxonHelper.toXdmValue(doc);
+        serialize(value, out);
+    }
+
+    public void serialize(Sequence sequence, OutputStream out)
+            throws TechnicalException
+    {
+        XdmValue value = SaxonHelper.toXdmValue(sequence);
+        serialize(value, out);
+    }
+
+    private void serialize(XdmValue sequence, OutputStream out)
             throws TechnicalException
     {
         String method = methodFromMime(myMediaType);

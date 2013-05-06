@@ -1,52 +1,61 @@
 /****************************************************************************/
-/*  File:       Sequence.java                                               */
+/*  File:       SaxonAttribute.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-30                                                  */
+/*  Date:       2013-05-06                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.processors.saxon;
 
+import javax.xml.namespace.QName;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Attribute;
 
 /**
- * Represents an abstract XDM item.
+ * An element for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-30
+ * @date   2013-05-06
  */
-public interface Sequence
-        extends Iterable<Item>
+public class SaxonAttribute
+        extends SaxonItem
+        implements Attribute
 {
-    /**
-     * Return the item at {@code position}, first item is at position 0.
-     * 
-     * Return null if {@code position} is outside the sequence.
-     */
-    public Item itemAt(int position);
+    public SaxonAttribute(XdmNode attr)
+            throws TechnicalException
+    {
+        super(attr);
+        if ( attr == null ) {
+            throw new NullPointerException("Underlying node is null for Saxon attribute");
+        }
+        XdmNodeKind kind = attr.getNodeKind();
+        if ( kind != XdmNodeKind.ATTRIBUTE ) {
+            throw new TechnicalException("Node is not an attribute, for Saxon attribute: " + kind);
+        }
+        myAttr = attr;
+    }
 
-    /**
-     * Return the element at {@code position}, first item is at position 0.
-     * 
-     * Return null if {@code position} is outside the sequence.  The sequence
-     * can be of any type, but the item at {@code position} (if any) must be an
-     * element node (if there is such an item but it is not an element, this is
-     * en error).  If the item is a document node with exactly one child which
-     * is an element, then its element is returned instead.
-     */
-    public Element elementAt(int position)
-            throws TechnicalException;
+    @Override
+    public QName name()
+    {
+        net.sf.saxon.s9api.QName name = myAttr.getNodeName();
+        String ns     = name.getNamespaceURI();
+        String local  = name.getLocalName();
+        String prefix = name.getPrefix();
+        return new QName(ns, local, prefix);
+    }
 
-    /**
-     * Return the sub-sequence starting at the item at position {@code start}.
-     * 
-     * Position starts at 0.  So if {@code start} is 1, returns the same
-     * sequence without the first item.  If {@code start} is outside the
-     * boundaries of the sequence, an empty sequence is returned.
-     */
-    public Sequence subSequence(int start);
+    @Override
+    public String value()
+    {
+        return myAttr.getStringValue();
+    }
+
+    private XdmNode myAttr;
 }
 
 

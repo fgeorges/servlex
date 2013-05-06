@@ -10,9 +10,10 @@
 package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
-import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Element;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
@@ -26,17 +27,25 @@ public class SaxonDocument
         implements Document
 {
     public SaxonDocument(XdmNode doc)
+            throws TechnicalException
     {
         super(doc);
+        if ( doc == null ) {
+            throw new NullPointerException("Underlying node is null for Saxon document");
+        }
+        XdmNodeKind kind = doc.getNodeKind();
+        if ( kind != XdmNodeKind.DOCUMENT ) {
+            throw new TechnicalException("Node is not a document, for Saxon document: " + kind);
+        }
         myDoc = doc;
     }
 
     @Override
-    public Item getRootElement()
+    public Element getRootElement()
             throws TechnicalException
     {
         XdmNode elem = SaxonHelper.getDocumentRootElement(this);
-        return new SaxonItem(elem);
+        return new SaxonElement(elem);
     }
 
     // TODO: Should be package visible, but is used in CalabashHelper (which

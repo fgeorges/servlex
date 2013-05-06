@@ -17,23 +17,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmValue;
+import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
+import org.expath.servlex.processors.Attribute;
+import org.expath.servlex.processors.Element;
+import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
-import org.expath.servlex.processors.saxon.SaxonDocument;
-import org.expath.servlex.processors.saxon.SaxonSequence;
-import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: ...
@@ -67,65 +62,32 @@ public class Result
     public Result(Sequence sequence, Processors procs)
             throws ServlexException
     {
-        if ( ! (sequence instanceof SaxonSequence) ) {
-            throw new ServlexException(500, "Not a Saxon sequence: " + sequence);
-        }
-        XdmValue value = ((SaxonSequence) sequence).makeSaxonValue();
         myProcs = procs;
         myStatus = -1;
         myMsg = null;
         myHeaders = new ArrayList<Header>();
-        // 1.) the web:response element
-        // TODO: Make something more elaborate than that (like ignoring text
-        // nodes if any, if they are withspace only, etc.)
-        LOG.debug("Result: sequence size: " + value.size());
-        if ( value.size() < 1 ) {
-            error(500, "Empty sequence");
+        // the web:response element
+        Element resp;
+        try {
+            resp = sequence.elementAt(0);
         }
-        XdmItem item = value.itemAt(0);
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Result: sequence[1]: " + item);
-        }
-        // if an atomic value, error
-        if ( item.isAtomicValue() ) {
-            error(500, "first item must be a web:response element");
-        }
-        XdmNode resp = (XdmNode) item;
-        // if a document, get its child instead
-        if ( resp.getNodeKind() == XdmNodeKind.DOCUMENT ) {
-            try {
-                resp = SaxonHelper.getDocumentRootElement(new SaxonDocument(resp));
-            }
-            catch ( TechnicalException ex ) {
-                error(500, "first item is a document not with exactly one element child", ex);
-            }
-        }
-        // if not an element, error
-        if ( resp.getNodeKind() != XdmNodeKind.ELEMENT ) {
-            error(500, "first item must be a web:response element (" + resp.getNodeKind() + ")");
+        catch ( TechnicalException ex ) {
+            error(500, "First item must be an element", ex);
+            return; // error() always throws an exception
         }
         // if not a web:response, error
-        if ( ! resp.getNodeName().equals(RESP_NAME) ) {
-            error(500, "first item must be a web:response element (" + resp.getNodeName() + ")");
+        if ( ! resp.name().equals(RESP_NAME) ) {
+            error(500, "First item must be a web:response element (" + resp.name() + ")");
         }
-        // 2.) the response bodies
-        XdmNode[] bodies = null;
-        if ( value.size() > 1 ) {
-            bodies = new XdmNode[value.size() - 1];
-            for ( int i = 1; i < value.size(); ++i ) {
-                XdmItem body = value.itemAt(i);
-                if ( LOG.isDebugEnabled() ) {
-                    LOG.debug("Result: sequence[" + (i+1) + "]: " + body);
-                }
-                if ( body.isAtomicValue() ) {
-                    // TODO: Really?
-                    error(500, "response body must be a node");
-                }
-                bodies[i - 1] = (XdmNode) body;
-            }
+        // the response bodies
+        Sequence bodies = sequence.subSequence(1);
+        // decode the response and bodies
+        try {
+            decodeResponse(resp, bodies);
         }
-        // 3.) decode the response and bodies
-        decodeResponse(resp, bodies);
+        catch ( TechnicalException ex ) {
+            error(500, "Error decoding the result", ex);
+        }
     }
 
     /**
@@ -156,18 +118,19 @@ public class Result
     //     -------------------
     // -----------------------------------------------------------------------
 
-    private void decodeResponse(XdmNode resp, XdmNode[] bodies)
+    private void decodeResponse(Element resp, Sequence bodies)
             throws ServlexException
+                 , TechnicalException
     {
-        XdmSequenceIterator it = resp.axisIterator(Axis.ATTRIBUTE);
-        while ( it.hasNext() ) {
-            XdmNode attr = (XdmNode) it.next();
-            QName name = attr.getNodeName();
+        Iterator<Attribute> attributes = resp.attributes();
+        while ( attributes.hasNext() ) {
+            Attribute attr = attributes.next();
+            QName name = attr.name();
             if ( name.equals(STATUS_NAME) ) {
-                myStatus = Integer.valueOf(attr.getStringValue());
+                myStatus = Integer.valueOf(attr.value());
             }
             else if ( name.equals(MSG_NAME) ) {
-                myMsg = attr.getStringValue();
+                myMsg = attr.value();
             }
             else if ( name.getNamespaceURI().equals("") ) {
                 error(500, "Unknown attribute on web:response: " + name);
@@ -179,52 +142,46 @@ public class Result
         // FIXME: Can have only ONE web:body (or web:multipart) at this level.
         // Enforce that!
         int body_count = 0;
-        it = resp.axisIterator(Axis.CHILD);
-        while ( it.hasNext() ) {
-            XdmNode node = (XdmNode) it.next();
-            if ( node.getNodeKind() == XdmNodeKind.TEXT ) {
-                // TODO: Check it is only whitespaces...  If not, error!
+        Iterator<Element> children = resp.elements();
+        while ( children.hasNext() ) {
+            Element child = children.next();
+            QName name = child.name();
+            if ( name.equals(HEADER_NAME) ) {
+                handleHeader(child);
             }
-            else if ( node.getNodeKind() == XdmNodeKind.ELEMENT ) {
-                QName name = node.getNodeName();
-                if ( name.equals(HEADER_NAME) ) {
-                    handleHeader(node);
-                }
-                else if ( name.equals(MULTI_NAME) ) {
-                    handleMultipart(node, bodies);
-                }
-                else if ( name.equals(BODY_NAME) ) {
-                    myBody = handleBody(node);
-                    if ( myBody.value == null && myBody.src == null ) {
-                        if ( bodies == null ) {
-                            error(500, "No body at all");
-                        }
-                        if ( bodies.length < body_count ) {
-                            error(500, "Not enough bodies: " + bodies.length + " - " + body_count);
-                        }
-                        myBody.value = bodies[body_count++];
+            else if ( name.equals(MULTI_NAME) ) {
+                handleMultipart(child, bodies);
+            }
+            else if ( name.equals(BODY_NAME) ) {
+                myBody = handleBody(child);
+                if ( myBody.value == null && myBody.src == null ) {
+                    Item body = bodies.itemAt(body_count++);
+                    myBody.value = body.asSequence();
+                    if ( myBody.value == null ) {
+                        error(500, "Not enough bodies: " + body_count);
                     }
                 }
-                else {
-                    error(500, "Unknown web:response child: " + name);
-                }
+            }
+            else {
+                error(500, "Unknown web:response child: " + name);
             }
         }
     }
 
-    private void handleHeader(XdmNode node)
+    private void handleHeader(Element header)
             throws ServlexException
+                 , TechnicalException
     {
         Header h = new Header();
-        XdmSequenceIterator it = node.axisIterator(Axis.ATTRIBUTE);
-        while ( it.hasNext() ) {
-            XdmNode attr = (XdmNode) it.next();
-            QName name = attr.getNodeName();
+        Iterator<Attribute> attributes = header.attributes();
+        while ( attributes.hasNext() ) {
+            Attribute attr = attributes.next();
+            QName name = attr.name();
             if ( name.equals(NAME_NAME) ) {
-                h.name = attr.getStringValue();
+                h.name = attr.value();
             }
             else if ( name.equals(VALUE_NAME) ) {
-                h.value = attr.getStringValue();
+                h.value = attr.value();
             }
             else {
                 error(500, "Unknown attribute on web:header: " + name);
@@ -233,19 +190,20 @@ public class Result
         myHeaders.add(h);
     }
 
-    private void handleMultipart(XdmNode node, XdmNode[] bodies)
+    private void handleMultipart(Element multipart, Sequence bodies)
             throws ServlexException
+                 , TechnicalException
     {
         myMultipart = new Multipart();
-        XdmSequenceIterator it = node.axisIterator(Axis.ATTRIBUTE);
-        while ( it.hasNext() ) {
-            XdmNode attr = (XdmNode) it.next();
-            QName name = attr.getNodeName();
+        Iterator<Attribute> attributes = multipart.attributes();
+        while ( attributes.hasNext() ) {
+            Attribute attr = attributes.next();
+            QName name = attr.name();
             if ( name.equals(TYPE_NAME) ) {
-                myMultipart.type = attr.getStringValue();
+                myMultipart.type = attr.value();
             }
             else if ( name.equals(BOUND_NAME) ) {
-                myMultipart.boundary = attr.getStringValue();
+                myMultipart.boundary = attr.value();
             }
             else {
                 error(500, "Unknown attribute on web:multipart: " + name);
@@ -253,106 +211,103 @@ public class Result
         }
         myMultipart.bodies = new ArrayList<Body>();
         int body_count = 0;
-        it = node.axisIterator(Axis.CHILD);
-        while ( it.hasNext() ) {
-            XdmNode child = (XdmNode) it.next();
-            if ( child.getNodeKind() == XdmNodeKind.TEXT ) {
-                // TODO: Check it is only whitespaces...  If not, error!
+        Iterator<Element> children = multipart.elements();
+        while ( children.hasNext() ) {
+            Element child = children.next();
+            QName name = child.name();
+            // TODO: Support web:multipart/web:header elements !
+            if ( name.equals(HEADER_NAME) ) {
+                error(501, "TODO: web:multipart/web:header not supported yet!");
             }
-            else if ( child.getNodeKind() == XdmNodeKind.ELEMENT ) {
-                QName name = child.getNodeName();
-                // TODO: Support web:multipart/web:header elements !
-                if ( name.equals(HEADER_NAME) ) {
-                    error(501, "TODO: web:multipart/web:header not supported yet!");
+            else if ( name.equals(BODY_NAME) ) {
+                Body b = handleBody(child);
+                if ( b.value == null && b.src == null ) {
+                    Item body = bodies.itemAt(body_count++);
+                    b.value = body.asSequence();
                 }
-                else if ( name.equals(BODY_NAME) ) {
-                    Body b = handleBody(child);
-                    if ( b.value == null && b.src == null ) {
-                        b.value = bodies[body_count++];
-                    }
-                    myMultipart.bodies.add(b);
-                }
-                else {
-                    error(500, "Unknown web:multipart child: " + name);
-                }
+                myMultipart.bodies.add(b);
+            }
+            else {
+                error(500, "Unknown web:multipart child: " + name);
             }
         }
     }
 
-    private Body handleBody(XdmNode node)
+    private Body handleBody(Element body)
             throws ServlexException
+                 , TechnicalException
     {
         Body b = new Body();
-        b.base = node.getBaseURI();
+        b.base = body.baseUri();
         try {
             b.serializer = myProcs.makeSerializer();
         }
         catch ( TechnicalException ex ) {
             error(500, "Error instantiating a serializer", ex);
         }
-        XdmSequenceIterator it = node.axisIterator(Axis.ATTRIBUTE);
-        while ( it.hasNext() ) {
-            XdmNode attr = (XdmNode) it.next();
-            QName name = attr.getNodeName();
+        Iterator<Attribute> attributes = body.attributes();
+        while ( attributes.hasNext() ) {
+            Attribute attr = attributes.next();
+            QName name = attr.name();
             if ( LOG.isDebugEnabled() ) {
-                LOG.debug("body attribute: " + name + " = " + attr.getStringValue());
+                LOG.debug("body attribute: " + name + " = " + attr.value());
             }
             if ( name.equals(TYPE_NAME) ) {
-                b.serializer.setMediaType(attr.getStringValue());
+                b.serializer.setMediaType(attr.value());
             }
             else if ( name.equals(ID_NAME) ) {
-                b.id = attr.getStringValue();
+                b.id = attr.value();
             }
             else if ( name.equals(DESC_NAME) ) {
-                b.description = attr.getStringValue();
+                b.description = attr.value();
             }
             else if ( name.equals(SRC_NAME) ) {
-                b.src = attr.getStringValue();
+                b.src = attr.value();
             }
             else if ( name.equals(METHOD_NAME) ) {
-                b.serializer.setMethod(attr.getStringValue());
+                b.serializer.setMethod(attr.value());
             }
             else if ( name.equals(ENC_NAME) ) {
-                b.serializer.setEncoding(attr.getStringValue());
+                b.serializer.setEncoding(attr.value());
             }
             else if ( name.equals(BYTE_ORDER_NAME) ) {
-                b.serializer.setByteOrderMark(attr.getStringValue());
+                b.serializer.setByteOrderMark(attr.value());
             }
             else if ( name.equals(CDATA_ELEMENTS_NAME) ) {
-                b.serializer.setCdataSectionElements(attr.getStringValue());
+                b.serializer.setCdataSectionElements(attr.value());
             }
             else if ( name.equals(PUBID_NAME) ) {
-                b.serializer.setDoctypePublic(attr.getStringValue());
+                b.serializer.setDoctypePublic(attr.value());
             }
             else if ( name.equals(SYSID_NAME) ) {
-                b.serializer.setDoctypeSystem(attr.getStringValue());
+                b.serializer.setDoctypeSystem(attr.value());
             }
             else if ( name.equals(ESCAPE_URI_NAME) ) {
-                b.serializer.setEscapeUriAttributes(attr.getStringValue());
+                b.serializer.setEscapeUriAttributes(attr.value());
             }
             else if ( name.equals(INCLUDE_CT_NAME) ) {
-                b.serializer.setIncludeContentType(attr.getStringValue());
+                b.serializer.setIncludeContentType(attr.value());
             }
             else if ( name.equals(INDENT_NAME) ) {
-                b.serializer.setIndent(attr.getStringValue());
+                b.serializer.setIndent(attr.value());
             }
             else if ( name.equals(NORM_FORM_NAME) ) {
-                b.serializer.setNormalizationForm(attr.getStringValue());
+                b.serializer.setNormalizationForm(attr.value());
             }
             else if ( name.equals(OMIT_XML_DECL_NAME) ) {
-                b.serializer.setOmitXmlDeclaration(attr.getStringValue());
+                b.serializer.setOmitXmlDeclaration(attr.value());
             }
             else if ( name.equals(STANDALONE_NAME) ) {
-                b.serializer.setStandalone(attr.getStringValue());
+                b.serializer.setStandalone(attr.value());
             }
             else if ( name.equals(UNDECL_PREFIXES_NAME) ) {
-                b.serializer.setUndeclarePrefixes(attr.getStringValue());
+                b.serializer.setUndeclarePrefixes(attr.value());
             }
             else if ( name.equals(USE_CHAR_MAPS_NAME) ) {
-                b.serializer.setUseCharacterMaps(attr.getStringValue());
+                b.serializer.setUseCharacterMaps(attr.value());
             }
             else if ( name.equals(VERSION_NAME) ) {
-                b.serializer.setVersion(attr.getStringValue());
+                b.serializer.setVersion(attr.value());
             }
             else if ( "xml".equals(name.getPrefix()) ) {
                 // nothing (ignore standard XML attributes, like xml:base, xml:id...)
@@ -361,14 +316,14 @@ public class Result
                 error(500, "Unknown attribute on web:body: " + name);
             }
         }
-        XdmSequenceIterator seq = node.axisIterator(Axis.CHILD);
-        if ( seq.hasNext() ) {
-            List<XdmItem> nodes = new ArrayList<XdmItem>();
-            while ( seq.hasNext() ) {
-                XdmItem next = seq.next();
+        Iterator<Item> children = body.children();
+        if ( children.hasNext() ) {
+            List<Item> nodes = new ArrayList<Item>();
+            while ( children.hasNext() ) {
+                Item next = children.next();
                 nodes.add(next);
             }
-            b.value = new XdmValue(nodes);
+            b.value = myProcs.buildSequence(nodes);
         }
         return b;
     }
@@ -523,24 +478,24 @@ public class Result
     private Body myBody;
     private Multipart myMultipart;
 
-    // TODO: Rationalize those interfaces...  Public members, really?!?
-    public static class Header
+    // TODO: Rationalize those interfaces...
+    private static class Header
     {
         public String name;
         public String value;
     }
 
-    public static class Body
+    private static class Body
     {
         public String     id;
         public String     description;
         public String     src;
         public URI        base;
-        public XdmValue   value;
+        public Sequence   value;
         public Serializer serializer;
     }
 
-    public static class Multipart
+    private static class Multipart
     {
         public String     type;
         public String     boundary;

@@ -11,6 +11,7 @@ package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.XdmItem;
 import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Sequence;
 
 /**
  * A document for Saxon.
@@ -23,7 +24,15 @@ public class SaxonItem
 {
     public SaxonItem(XdmItem item)
     {
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
+        }
         myItem = item;
+    }
+
+    public Sequence asSequence()
+    {
+        return new SaxonSequence(myItem);
     }
 
     // TODO: Should be package visible, but is used in ParseBasicAuthCall

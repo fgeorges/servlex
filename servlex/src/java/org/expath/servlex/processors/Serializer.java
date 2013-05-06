@@ -10,7 +10,6 @@
 package org.expath.servlex.processors;
 
 import java.io.OutputStream;
-import net.sf.saxon.s9api.XdmValue;
 import org.expath.servlex.TechnicalException;
 
 /**
@@ -45,8 +44,9 @@ public interface Serializer
     public void setUseCharacterMaps(String v);
     public void setVersion(String v);
 
-    // TODO: FIXME: XdmValue is Saxon-specific, this has NOTHING to do here...!
-    public void serialize(XdmValue sequence, OutputStream out)
+    public void serialize(Document doc, OutputStream out)
+            throws TechnicalException;
+    public void serialize(Sequence sequence, OutputStream out)
             throws TechnicalException;
 }
 

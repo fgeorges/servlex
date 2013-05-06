@@ -17,7 +17,7 @@ package org.expath.servlex.processors;
  */
 public interface Item
 {
-
+    public Sequence asSequence();
 }
 
 

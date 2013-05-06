@@ -23,7 +23,7 @@ public interface Document
     /**
      * Return the root element of the document.
      */
-    public Item getRootElement()
+    public Element getRootElement()
             throws TechnicalException;
 }
 
