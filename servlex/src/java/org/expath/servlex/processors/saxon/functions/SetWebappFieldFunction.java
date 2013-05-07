@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       GetRequestFieldNamesCall.java                               */
+/*  File:       SetWebappFieldFunction.java                                 */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,50 +7,73 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
-import org.expath.servlex.Servlex;
-import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
-import org.expath.servlex.tools.SaxonHelper;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.ItemType;
+import net.sf.saxon.value.SequenceType;
+import org.expath.servlex.ServlexConstants;
 
 /**
  * TODO: Doc...
  *
+ *     web:set-webapp-field($name as xs:string, $value as item()*)
+ *        as empty-sequence()
+ *
+ * (return value is the previous value is any)
+ *
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class GetRequestFieldNamesCall
-        extends ExtensionFunctionCall
+public class SetWebappFieldFunction
+        extends ExtensionFunctionDefinition
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
-            throws XPathException
+    public StructuredQName getFunctionQName()
     {
-        // num of params
-        if ( params.length != 0 ) {
-            throw new XPathException("There are actual params: " + params.length);
-        }
-        // returning the name of every fields in the request
-        try {
-            LOG.debug("Get request field names");
-            Properties props = Servlex.getRequestMap();
-            Sequence seq = props.keys();
-            return SaxonHelper.toSequenceIterator(seq);
-        }
-        catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex request management", ex);
-        }
+        final String uri    = ServlexConstants.WEBAPP_NS;
+        final String prefix = ServlexConstants.WEBAPP_PREFIX;
+        return new StructuredQName(prefix, uri, LOCAL_NAME);
     }
 
-    /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetRequestFieldCall.class);
+    @Override
+    public int getMinimumNumberOfArguments()
+    {
+        return 2;
+    }
+
+    @Override
+    public SequenceType[] getArgumentTypes()
+    {
+        // xs:string
+        final int      one    = StaticProperty.EXACTLY_ONE;
+        final ItemType itype  = BuiltInAtomicType.STRING;
+        SequenceType   string = SequenceType.makeSequenceType(itype, one);
+        // item()*
+        final int      any    = StaticProperty.ALLOWS_ZERO_OR_MORE;
+        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
+        SequenceType   items  = SequenceType.makeSequenceType(atomic, any);
+        // xs:string, item()*
+        return new SequenceType[]{ string, items };
+    }
+
+    @Override
+    public SequenceType getResultType(SequenceType[] params)
+    {
+        return SequenceType.EMPTY_SEQUENCE;
+    }
+
+    @Override
+    public ExtensionFunctionCall makeCallExpression()
+    {
+        return new SetWebappFieldCall();
+    }
+
+    private static final String LOCAL_NAME = "set-webapp-field";
 }
 
 

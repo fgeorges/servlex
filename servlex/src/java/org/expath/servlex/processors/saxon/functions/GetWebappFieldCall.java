@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       GetRequestFieldFunction.java                                */
+/*  File:       GetWebappFieldCall.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,71 +7,64 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
+import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
-import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.StringValue;
+import org.apache.log4j.Logger;
+import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
  *
- *     web:get-request-field($name as xs:string) as item()*
- *
- * TODO: Add a second arity with the default value to use in case the request
- * field for that name is not defined:
- *
- *     web:get-request-field($name as xs:string, $default as item()*) as item()*
- *
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class GetRequestFieldFunction
-        extends ExtensionFunctionDefinition
+public class GetWebappFieldCall
+        extends ExtensionFunctionCall
 {
     @Override
-    public StructuredQName getFunctionQName()
+    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+            throws XPathException
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
+        // num of params
+        if ( params.length != 1 ) {
+            throw new XPathException("There is not exactly 1 param: " + params.length);
+        }
+        // the first param
+        Item first = params[0].next();
+        if ( first == null ) {
+            throw new XPathException("The 1st param is an empty sequence");
+        }
+        if ( params[0].next() != null ) {
+            throw new XPathException("The 1st param sequence has more than one item");
+        }
+        if ( ! ( first instanceof StringValue ) ) {
+            throw new XPathException("The 1st param is not a string");
+        }
+        String name = first.getStringValue();
+        // getting the sequence in the webapp
+        try {
+            LOG.debug("Get webapp field: '" + name + "'");
+            Properties props = Servlex.getWebappMap();
+            Sequence seq = props.get(name);
+            return SaxonHelper.toSequenceIterator(seq);
+        }
+        catch ( TechnicalException ex ) {
+            throw new XPathException("Error in the Servlex webapp management", ex);
+        }
     }
 
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 1;
-    }
-
-    @Override
-    public SequenceType[] getArgumentTypes()
-    {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
-        return new SequenceType[]{ stype };
-    }
-
-    @Override
-    public SequenceType getResultType(SequenceType[] params)
-    {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(itype, any);
-    }
-
-    @Override
-    public ExtensionFunctionCall makeCallExpression()
-    {
-        return new GetRequestFieldCall();
-    }
-
-    private static final String LOCAL_NAME = "get-request-field";
+    /** The logger. */
+    private static final Logger LOG = Logger.getLogger(GetWebappFieldCall.class);
 }
 
 

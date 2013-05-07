@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       SetWebappFieldFunction.java                                 */
+/*  File:       SetRequestFieldFunction.java                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,7 +21,7 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:set-webapp-field($name as xs:string, $value as item()*)
+ *     web:set-request-field($name as xs:string, $value as item()*)
  *        as empty-sequence()
  *
  * (return value is the previous value is any)
@@ -29,7 +29,7 @@ import org.expath.servlex.ServlexConstants;
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class SetWebappFieldFunction
+public class SetRequestFieldFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -70,10 +70,10 @@ public class SetWebappFieldFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new SetWebappFieldCall();
+        return new SetRequestFieldCall();
     }
 
-    private static final String LOCAL_NAME = "set-webapp-field";
+    private static final String LOCAL_NAME = "set-request-field";
 }
 
 

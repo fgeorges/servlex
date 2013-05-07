@@ -1,18 +1,20 @@
 /****************************************************************************/
-/*  File:       GetSessionFieldNamesCall.java                               */
+/*  File:       GetRequestFieldCall.java                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-06-12                                                  */
+/*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
@@ -24,9 +26,9 @@ import org.expath.servlex.tools.SaxonHelper;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-06-12
+ * @date   2010-11-22
  */
-public class GetSessionFieldNamesCall
+public class GetRequestFieldCall
         extends ExtensionFunctionCall
 {
     @Override
@@ -34,23 +36,35 @@ public class GetSessionFieldNamesCall
             throws XPathException
     {
         // num of params
-        if ( params.length != 0 ) {
-            throw new XPathException("There are actual params: " + params.length);
+        if ( params.length != 1 ) {
+            throw new XPathException("There is not exactly 1 param: " + params.length);
         }
-        // returning the name of every fields in the session
+        // the first param
+        Item first = params[0].next();
+        if ( first == null ) {
+            throw new XPathException("The 1st param is an empty sequence");
+        }
+        if ( params[0].next() != null ) {
+            throw new XPathException("The 1st param sequence has more than one item");
+        }
+        if ( ! ( first instanceof StringValue ) ) {
+            throw new XPathException("The 1st param is not a string");
+        }
+        String name = first.getStringValue();
+        // getting the sequence in the request
         try {
-            LOG.debug("Get session field names");
-            Properties props = Servlex.getSessionMap();
-            Sequence seq = props.keys();
+            LOG.debug("Get request field: '" + name + "'");
+            Properties props = Servlex.getRequestMap();
+            Sequence seq = props.get(name);
             return SaxonHelper.toSequenceIterator(seq);
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex session management", ex);
+            throw new XPathException("Error in the Servlex request management", ex);
         }
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetSessionFieldCall.class);
+    private static final Logger LOG = Logger.getLogger(GetRequestFieldCall.class);
 }
 
 

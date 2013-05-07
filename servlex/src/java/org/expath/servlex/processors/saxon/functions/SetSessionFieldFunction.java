@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       GetWebappFieldFunction.java                                 */
+/*  File:       SetSessionFieldFunction.java                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2010-06-10                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,17 +21,15 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-webapp-field($name as xs:string) as item()*
+ *     web:set-session-field($name as xs:string, $value as item()*)
+ *        as empty-sequence()
  *
- * TODO: Add a second arity with the default value to use in case the webapp
- * field for that name is not defined:
- *
- *     web:get-webapp-field($name as xs:string, $default as item()*) as item()*
+ * (return value is the previous value is any)
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2010-06-10
  */
-public class GetWebappFieldFunction
+public class SetSessionFieldFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -45,33 +43,37 @@ public class GetWebappFieldFunction
     @Override
     public int getMinimumNumberOfArguments()
     {
-        return 1;
+        return 2;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
-        return new SequenceType[]{ stype };
+        // xs:string
+        final int      one    = StaticProperty.EXACTLY_ONE;
+        final ItemType itype  = BuiltInAtomicType.STRING;
+        SequenceType   string = SequenceType.makeSequenceType(itype, one);
+        // item()*
+        final int      any    = StaticProperty.ALLOWS_ZERO_OR_MORE;
+        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
+        SequenceType   items  = SequenceType.makeSequenceType(atomic, any);
+        // xs:string, item()*
+        return new SequenceType[]{ string, items };
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(itype, any);
+        return SequenceType.EMPTY_SEQUENCE;
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetWebappFieldCall();
+        return new SetSessionFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-webapp-field";
+    private static final String LOCAL_NAME = "set-session-field";
 }
 
 

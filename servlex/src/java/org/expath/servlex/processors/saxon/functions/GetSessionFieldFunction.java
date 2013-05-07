@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       GetServerFieldFunction.java                                 */
+/*  File:       GetSessionFieldFunction.java                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2010-06-10                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,17 +21,17 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-server-field($name as xs:string) as item()*
+ *     web:get-session-field($name as xs:string) as item()*
  *
- * TODO: Add a second arity with the default value to use in case the server
+ * TODO: Add a second arity with the default value to use in case the session
  * field for that name is not defined:
  *
- *     web:get-server-field($name as xs:string, $default as item()*) as item()*
+ *     web:get-session-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2010-06-10
  */
-public class GetServerFieldFunction
+public class GetSessionFieldFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -68,10 +68,10 @@ public class GetServerFieldFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetServerFieldCall();
+        return new GetSessionFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-container-field";
+    private static final String LOCAL_NAME = "get-session-field";
 }
 
 

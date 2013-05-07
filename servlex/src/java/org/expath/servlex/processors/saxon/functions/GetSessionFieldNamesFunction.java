@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       GetWebappFieldNamesFunction.java                            */
+/*  File:       GetSessionFieldNamesFunction.java                           */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2010-06-12                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,12 +21,12 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-webapp-field-names() as xs:string*
+ *     web:get-session-field-names() as xs:string*
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2010-06-12
  */
-public class GetWebappFieldNamesFunction
+public class GetSessionFieldNamesFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -60,10 +60,10 @@ public class GetWebappFieldNamesFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetWebappFieldNamesCall();
+        return new GetSessionFieldNamesCall();
     }
 
-    private static final String LOCAL_NAME = "get-webapp-field-names";
+    private static final String LOCAL_NAME = "get-session-field-names";
 }
 
 

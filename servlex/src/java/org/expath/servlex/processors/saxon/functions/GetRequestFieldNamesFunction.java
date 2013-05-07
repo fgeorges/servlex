@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       GetServerFieldNamesFunction.java                            */
+/*  File:       GetRequestFieldNamesFunction.java                           */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,12 +21,12 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-server-field-names() as xs:string*
+ *     web:get-request-field-names() as xs:string*
  *
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class GetServerFieldNamesFunction
+public class GetRequestFieldNamesFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -60,10 +60,10 @@ public class GetServerFieldNamesFunction
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetServerFieldNamesCall();
+        return new GetRequestFieldNamesCall();
     }
 
-    private static final String LOCAL_NAME = "get-container-field-names";
+    private static final String LOCAL_NAME = "get-request-field-names";
 }
 
 

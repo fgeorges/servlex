@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       GetRequestFieldNamesFunction.java                           */
+/*  File:       GetWebappFieldFunction.java                                 */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,12 +21,17 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-request-field-names() as xs:string*
+ *     web:get-webapp-field($name as xs:string) as item()*
+ *
+ * TODO: Add a second arity with the default value to use in case the webapp
+ * field for that name is not defined:
+ *
+ *     web:get-webapp-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class GetRequestFieldNamesFunction
+public class GetWebappFieldFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -40,30 +45,33 @@ public class GetRequestFieldNamesFunction
     @Override
     public int getMinimumNumberOfArguments()
     {
-        return 0;
+        return 1;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        return new SequenceType[]{ SequenceType.EMPTY_SEQUENCE };
+        final int      one   = StaticProperty.EXACTLY_ONE;
+        final ItemType itype = BuiltInAtomicType.STRING;
+        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
+        return new SequenceType[]{ stype };
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
         final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.STRING;
+        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
         return SequenceType.makeSequenceType(itype, any);
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetRequestFieldNamesCall();
+        return new GetWebappFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-request-field-names";
+    private static final String LOCAL_NAME = "get-webapp-field";
 }
 
 

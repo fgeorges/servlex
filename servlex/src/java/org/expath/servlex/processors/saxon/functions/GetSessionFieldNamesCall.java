@@ -1,77 +1,56 @@
 /****************************************************************************/
-/*  File:       GetSessionFieldFunction.java                                */
+/*  File:       GetSessionFieldNamesCall.java                               */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-06-10                                                  */
+/*  Date:       2010-06-12                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
+import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
-import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.trans.XPathException;
+import org.apache.log4j.Logger;
+import org.expath.servlex.Servlex;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
  *
- *     web:get-session-field($name as xs:string) as item()*
- *
- * TODO: Add a second arity with the default value to use in case the session
- * field for that name is not defined:
- *
- *     web:get-session-field($name as xs:string, $default as item()*) as item()*
- *
  * @author Florent Georges
- * @date   2010-06-10
+ * @date   2010-06-12
  */
-public class GetSessionFieldFunction
-        extends ExtensionFunctionDefinition
+public class GetSessionFieldNamesCall
+        extends ExtensionFunctionCall
 {
     @Override
-    public StructuredQName getFunctionQName()
+    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+            throws XPathException
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
+        // num of params
+        if ( params.length != 0 ) {
+            throw new XPathException("There are actual params: " + params.length);
+        }
+        // returning the name of every fields in the session
+        try {
+            LOG.debug("Get session field names");
+            Properties props = Servlex.getSessionMap();
+            Sequence seq = props.keys();
+            return SaxonHelper.toSequenceIterator(seq);
+        }
+        catch ( TechnicalException ex ) {
+            throw new XPathException("Error in the Servlex session management", ex);
+        }
     }
 
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 1;
-    }
-
-    @Override
-    public SequenceType[] getArgumentTypes()
-    {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
-        return new SequenceType[]{ stype };
-    }
-
-    @Override
-    public SequenceType getResultType(SequenceType[] params)
-    {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(itype, any);
-    }
-
-    @Override
-    public ExtensionFunctionCall makeCallExpression()
-    {
-        return new GetSessionFieldCall();
-    }
-
-    private static final String LOCAL_NAME = "get-session-field";
+    /** The logger. */
+    private static final Logger LOG = Logger.getLogger(GetSessionFieldCall.class);
 }
 
 

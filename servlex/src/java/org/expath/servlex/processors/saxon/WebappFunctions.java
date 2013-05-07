@@ -10,20 +10,20 @@
 package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.Processor;
-import org.expath.servlex.functions.GetRequestFieldFunction;
-import org.expath.servlex.functions.GetRequestFieldNamesFunction;
-import org.expath.servlex.functions.GetServerFieldFunction;
-import org.expath.servlex.functions.GetServerFieldNamesFunction;
-import org.expath.servlex.functions.GetSessionFieldFunction;
-import org.expath.servlex.functions.GetSessionFieldNamesFunction;
-import org.expath.servlex.functions.GetWebappFieldFunction;
-import org.expath.servlex.functions.GetWebappFieldNamesFunction;
-import org.expath.servlex.functions.ParseBasicAuthFunction;
-import org.expath.servlex.functions.ParseHeaderValueFunction;
-import org.expath.servlex.functions.SetRequestFieldFunction;
-import org.expath.servlex.functions.SetServerFieldFunction;
-import org.expath.servlex.functions.SetSessionFieldFunction;
-import org.expath.servlex.functions.SetWebappFieldFunction;
+import org.expath.servlex.processors.saxon.functions.GetRequestFieldFunction;
+import org.expath.servlex.processors.saxon.functions.GetRequestFieldNamesFunction;
+import org.expath.servlex.processors.saxon.functions.GetServerFieldFunction;
+import org.expath.servlex.processors.saxon.functions.GetServerFieldNamesFunction;
+import org.expath.servlex.processors.saxon.functions.GetSessionFieldFunction;
+import org.expath.servlex.processors.saxon.functions.GetSessionFieldNamesFunction;
+import org.expath.servlex.processors.saxon.functions.GetWebappFieldFunction;
+import org.expath.servlex.processors.saxon.functions.GetWebappFieldNamesFunction;
+import org.expath.servlex.processors.saxon.functions.ParseBasicAuthFunction;
+import org.expath.servlex.processors.saxon.functions.ParseHeaderValueFunction;
+import org.expath.servlex.processors.saxon.functions.SetRequestFieldFunction;
+import org.expath.servlex.processors.saxon.functions.SetServerFieldFunction;
+import org.expath.servlex.processors.saxon.functions.SetSessionFieldFunction;
+import org.expath.servlex.processors.saxon.functions.SetWebappFieldFunction;
 import org.expath.servlex.processors.Processors;
 
 /**

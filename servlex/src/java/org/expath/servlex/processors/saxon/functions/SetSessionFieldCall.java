@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       SetWebappFieldCall.java                                     */
+/*  File:       SetSessionFieldCall.java                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2010-06-10                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -27,9 +27,9 @@ import org.expath.servlex.tools.Properties;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2010-06-10
  */
-public class SetWebappFieldCall
+public class SetSessionFieldCall
         extends ExtensionFunctionCall
 {
     @Override
@@ -54,21 +54,21 @@ public class SetWebappFieldCall
         String name = first.getStringValue();
         // the second param
         SequenceIterator value = params[1];
-        // setting the sequence in the webapp
+        // setting the sequence in the session
         try {
-            LOG.debug("Set webapp field: '" + name + "'");
-            Properties props = Servlex.getWebappMap();
+            LOG.debug("Set session field: '" + name + "'");
+            Properties props = Servlex.getSessionMap();
             Sequence seq = new SaxonSequence(value);
             props.set(name, seq);
             return EmptyIterator.getInstance();
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex webapp management", ex);
+            throw new XPathException("Error in the Servlex session management", ex);
         }
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SetWebappFieldCall.class);
+    private static final Logger LOG = Logger.getLogger(SetSessionFieldCall.class);
 }
 
 

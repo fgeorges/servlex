@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       GetSessionFieldNamesFunction.java                           */
+/*  File:       GetRequestFieldFunction.java                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-06-12                                                  */
+/*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -21,12 +21,17 @@ import org.expath.servlex.ServlexConstants;
 /**
  * TODO: Doc...
  *
- *     web:get-session-field-names() as xs:string*
+ *     web:get-request-field($name as xs:string) as item()*
+ *
+ * TODO: Add a second arity with the default value to use in case the request
+ * field for that name is not defined:
+ *
+ *     web:get-request-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
- * @date   2010-06-12
+ * @date   2010-11-22
  */
-public class GetSessionFieldNamesFunction
+public class GetRequestFieldFunction
         extends ExtensionFunctionDefinition
 {
     @Override
@@ -40,30 +45,33 @@ public class GetSessionFieldNamesFunction
     @Override
     public int getMinimumNumberOfArguments()
     {
-        return 0;
+        return 1;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        return new SequenceType[]{ SequenceType.EMPTY_SEQUENCE };
+        final int      one   = StaticProperty.EXACTLY_ONE;
+        final ItemType itype = BuiltInAtomicType.STRING;
+        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
+        return new SequenceType[]{ stype };
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
         final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.STRING;
+        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
         return SequenceType.makeSequenceType(itype, any);
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new GetSessionFieldNamesCall();
+        return new GetRequestFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-session-field-names";
+    private static final String LOCAL_NAME = "get-request-field";
 }
 
 

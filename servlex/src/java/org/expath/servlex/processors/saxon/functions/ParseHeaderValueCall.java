@@ -1,36 +1,48 @@
 /****************************************************************************/
-/*  File:       GetServerFieldCall.java                                     */
+/*  File:       ParseHeaderValueCall.java                                   */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2010-11-26                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
+import org.apache.http.HeaderElement;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicHeaderValueParser;
+import org.apache.http.message.HeaderValueParser;
 import org.apache.log4j.Logger;
-import org.expath.servlex.Servlex;
+import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2010-11-26
  */
-public class GetServerFieldCall
+public class ParseHeaderValueCall
         extends ExtensionFunctionCall
 {
+    public ParseHeaderValueCall(Processors procs)
+    {
+        myProcs = procs;
+    }
+
     @Override
     public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
             throws XPathException
@@ -50,21 +62,57 @@ public class GetServerFieldCall
         if ( ! ( first instanceof StringValue ) ) {
             throw new XPathException("The 1st param is not a string");
         }
-        String name = first.getStringValue();
-        // getting the sequence in the server
+        String value = first.getStringValue();
         try {
-            LOG.debug("Get server field: '" + name + "'");
-            Properties props = Servlex.getServerMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            TreeBuilder b = myProcs.makeTreeBuilder(NS, PREFIX);
+            // parsing the header
+            if ( LOG.isDebugEnabled() ) {
+                LOG.debug("Parse header value: '" + value + "'");
+            }
+            b.startElem("header");
+            b.startContent();
+            HeaderValueParser parser = new BasicHeaderValueParser();
+            HeaderElement[] elems = BasicHeaderValueParser.parseElements(value, parser);
+            for ( HeaderElement e : elems ) {
+                b.startElem("element");
+                b.attribute("name", e.getName());
+                if ( e.getValue() != null ) {
+                    b.attribute("value", e.getValue());
+                }
+                b.startContent();
+                for ( NameValuePair p : e.getParameters() ) {
+                    b.startElem("param");
+                    b.attribute("name", p.getName());
+                    if ( p.getValue() != null ) {
+                        b.attribute("value", p.getValue());
+                    }
+                    b.startContent(); // necessary for an empty element?
+                    b.endElem();
+                }
+                b.endElem();
+            }
+            b.endElem();
+            if ( LOG.isDebugEnabled() ) {
+                LOG.debug("Result of parsing header value: " + b.getRoot());
+            }
+            // return the header element, inside the document node
+            Document doc = b.getRoot();
+            XdmNode root = SaxonHelper.getDocumentRootElement(doc);
+            return SingletonIterator.makeIterator(root.getUnderlyingNode());
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error getting the value of the property: " + name, ex);
+            String msg = "Technical exception occured in Saxon extension function";
+            throw new XPathException(msg, ex);
         }
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetServerFieldCall.class);
+    private static final Logger LOG = Logger.getLogger(ParseHeaderValueCall.class);
+    /** Shortcuts. */
+    private static final String NS     = ServlexConstants.WEBAPP_NS;
+    private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
+    /** The processors. */
+    private Processors myProcs;
 }
 
 

@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       GetRequestFieldCall.java                                    */
+/*  File:       SetWebappFieldCall.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
@@ -7,10 +7,11 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
@@ -19,8 +20,8 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.tools.Properties;
-import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -28,7 +29,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2010-11-22
  */
-public class GetRequestFieldCall
+public class SetWebappFieldCall
         extends ExtensionFunctionCall
 {
     @Override
@@ -36,8 +37,8 @@ public class GetRequestFieldCall
             throws XPathException
     {
         // num of params
-        if ( params.length != 1 ) {
-            throw new XPathException("There is not exactly 1 param: " + params.length);
+        if ( params.length != 2 ) {
+            throw new XPathException("There is not exactly 2 params: " + params.length);
         }
         // the first param
         Item first = params[0].next();
@@ -51,20 +52,23 @@ public class GetRequestFieldCall
             throw new XPathException("The 1st param is not a string");
         }
         String name = first.getStringValue();
-        // getting the sequence in the request
+        // the second param
+        SequenceIterator value = params[1];
+        // setting the sequence in the webapp
         try {
-            LOG.debug("Get request field: '" + name + "'");
-            Properties props = Servlex.getRequestMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            LOG.debug("Set webapp field: '" + name + "'");
+            Properties props = Servlex.getWebappMap();
+            Sequence seq = new SaxonSequence(value);
+            props.set(name, seq);
+            return EmptyIterator.getInstance();
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex request management", ex);
+            throw new XPathException("Error in the Servlex webapp management", ex);
         }
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetRequestFieldCall.class);
+    private static final Logger LOG = Logger.getLogger(SetWebappFieldCall.class);
 }
 
 

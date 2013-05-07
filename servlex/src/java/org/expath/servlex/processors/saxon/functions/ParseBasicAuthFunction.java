@@ -1,37 +1,50 @@
 /****************************************************************************/
-/*  File:       SetRequestFieldFunction.java                                */
+/*  File:       ParseBasicAuthFunction.java                                 */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2012-05-04                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2012 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.pattern.NameTest;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ItemType;
+import net.sf.saxon.type.Type;
 import net.sf.saxon.value.SequenceType;
 import org.expath.servlex.ServlexConstants;
+import org.expath.servlex.processors.Processors;
 
 /**
- * TODO: Doc...
- *
- *     web:set-request-field($name as xs:string, $value as item()*)
- *        as empty-sequence()
- *
- * (return value is the previous value is any)
+ * Parse the value of an Authorization HTTP header with Basic scheme.
+ * 
+ *     web:parse-basic-auth($header as xs:string) as element(web:basic-auth)
+ * 
+ *     <web:basic-auth username="..." password="..."/>
+ * 
+ * The value of $header is the value of the Authorization header.  It must be
+ * of the form "Basic XXX" where XXX is "user:password" encoded using Base64.
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2012-05-04
  */
-public class SetRequestFieldFunction
+public class ParseBasicAuthFunction
         extends ExtensionFunctionDefinition
 {
+    public ParseBasicAuthFunction(Processors procs, Processor saxon)
+    {
+        myProcs = procs;
+        mySaxon = saxon;
+    }
+
     @Override
     public StructuredQName getFunctionQName()
     {
@@ -43,37 +56,39 @@ public class SetRequestFieldFunction
     @Override
     public int getMinimumNumberOfArguments()
     {
-        return 2;
+        return 1;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        // xs:string
-        final int      one    = StaticProperty.EXACTLY_ONE;
-        final ItemType itype  = BuiltInAtomicType.STRING;
-        SequenceType   string = SequenceType.makeSequenceType(itype, one);
-        // item()*
-        final int      any    = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
-        SequenceType   items  = SequenceType.makeSequenceType(atomic, any);
-        // xs:string, item()*
-        return new SequenceType[]{ string, items };
+        final int      one   = StaticProperty.EXACTLY_ONE;
+        final ItemType itype = BuiltInAtomicType.STRING;
+        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
+        return new SequenceType[]{ stype };
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        return SequenceType.EMPTY_SEQUENCE;
+        final int      one   = StaticProperty.EXACTLY_ONE;
+        final int      kind  = Type.ELEMENT;
+        final String   uri   = ServlexConstants.WEBAPP_NS;
+        final NamePool pool  = mySaxon.getUnderlyingConfiguration().getNamePool();
+        final ItemType itype = new NameTest(kind, uri, ELEMENT_NAME, pool);
+        return SequenceType.makeSequenceType(itype, one);
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new SetRequestFieldCall();
+        return new ParseBasicAuthCall(myProcs);
     }
 
-    private static final String LOCAL_NAME = "set-request-field";
+    private static final String LOCAL_NAME   = "parse-basic-auth";
+    private static final String ELEMENT_NAME = "basic-auth";
+    private Processors myProcs;
+    private Processor mySaxon;
 }
 
 

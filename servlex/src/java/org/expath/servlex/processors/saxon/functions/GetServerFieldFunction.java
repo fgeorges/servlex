@@ -1,50 +1,39 @@
 /****************************************************************************/
-/*  File:       ParseBasicAuthFunction.java                                 */
+/*  File:       GetServerFieldFunction.java                                 */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2012-05-04                                                  */
+/*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2012 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.pattern.NameTest;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ItemType;
-import net.sf.saxon.type.Type;
 import net.sf.saxon.value.SequenceType;
 import org.expath.servlex.ServlexConstants;
-import org.expath.servlex.processors.Processors;
 
 /**
- * Parse the value of an Authorization HTTP header with Basic scheme.
- * 
- *     web:parse-basic-auth($header as xs:string) as element(web:basic-auth)
- * 
- *     <web:basic-auth username="..." password="..."/>
- * 
- * The value of $header is the value of the Authorization header.  It must be
- * of the form "Basic XXX" where XXX is "user:password" encoded using Base64.
+ * TODO: Doc...
+ *
+ *     web:get-server-field($name as xs:string) as item()*
+ *
+ * TODO: Add a second arity with the default value to use in case the server
+ * field for that name is not defined:
+ *
+ *     web:get-server-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
- * @date   2012-05-04
+ * @date   2010-11-22
  */
-public class ParseBasicAuthFunction
+public class GetServerFieldFunction
         extends ExtensionFunctionDefinition
 {
-    public ParseBasicAuthFunction(Processors procs, Processor saxon)
-    {
-        myProcs = procs;
-        mySaxon = saxon;
-    }
-
     @Override
     public StructuredQName getFunctionQName()
     {
@@ -71,24 +60,18 @@ public class ParseBasicAuthFunction
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final int      kind  = Type.ELEMENT;
-        final String   uri   = ServlexConstants.WEBAPP_NS;
-        final NamePool pool  = mySaxon.getUnderlyingConfiguration().getNamePool();
-        final ItemType itype = new NameTest(kind, uri, ELEMENT_NAME, pool);
-        return SequenceType.makeSequenceType(itype, one);
+        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
+        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
+        return SequenceType.makeSequenceType(itype, any);
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new ParseBasicAuthCall(myProcs);
+        return new GetServerFieldCall();
     }
 
-    private static final String LOCAL_NAME   = "parse-basic-auth";
-    private static final String ELEMENT_NAME = "basic-auth";
-    private Processors myProcs;
-    private Processor mySaxon;
+    private static final String LOCAL_NAME = "get-container-field";
 }
 
 

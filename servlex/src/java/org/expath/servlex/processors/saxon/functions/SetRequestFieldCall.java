@@ -1,13 +1,13 @@
 /****************************************************************************/
-/*  File:       SetSessionFieldCall.java                                    */
+/*  File:       SetRequestFieldCall.java                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-06-10                                                  */
+/*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.functions;
+package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -27,9 +27,9 @@ import org.expath.servlex.tools.Properties;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-06-10
+ * @date   2010-11-22
  */
-public class SetSessionFieldCall
+public class SetRequestFieldCall
         extends ExtensionFunctionCall
 {
     @Override
@@ -54,21 +54,21 @@ public class SetSessionFieldCall
         String name = first.getStringValue();
         // the second param
         SequenceIterator value = params[1];
-        // setting the sequence in the session
+        // setting the sequence in the request
         try {
-            LOG.debug("Set session field: '" + name + "'");
-            Properties props = Servlex.getSessionMap();
+            LOG.debug("Set request field: '" + name + "'");
+            Properties props = Servlex.getRequestMap();
             Sequence seq = new SaxonSequence(value);
             props.set(name, seq);
             return EmptyIterator.getInstance();
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex session management", ex);
+            throw new XPathException("Error in the Servlex request management", ex);
         }
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SetSessionFieldCall.class);
+    private static final Logger LOG = Logger.getLogger(SetRequestFieldCall.class);
 }
 
 
