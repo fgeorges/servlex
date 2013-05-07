@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
-import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.ComponentError;
@@ -187,12 +186,7 @@ public class Servlex
             ourConfig = ServerConfig.getInstance(config);
         }
         catch ( TechnicalException ex ) {
-            String msg = "Error in the servlet initialization...";
-            LOG.info(msg, ex);
-            throw new ServletException(msg, ex);
-        }
-        catch ( PackageException ex ) {
-            String msg = "Error in the servlet initialization...";
+            String msg = "Error initializing the server configuration...";
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);
         }

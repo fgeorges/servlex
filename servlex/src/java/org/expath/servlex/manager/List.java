@@ -17,7 +17,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
 
@@ -50,10 +49,7 @@ public class List
             myConfig = ServerConfig.getInstance(config);
         }
         catch ( TechnicalException ex ) {
-            throw new ServletException("Error in the servlet initialization...", ex);
-        }
-        catch ( PackageException ex ) {
-            throw new ServletException("Error in the servlet initialization...", ex);
+            throw new ServletException("Error initializing the server configuration...", ex);
         }
     }
 

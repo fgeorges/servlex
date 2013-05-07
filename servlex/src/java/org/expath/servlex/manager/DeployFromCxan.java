@@ -54,12 +54,7 @@ public class DeployFromCxan
             myConfig = ServerConfig.getInstance(config);
         }
         catch ( TechnicalException ex ) {
-            String msg = "Error in the servlet initialization...";
-            LOG.info(msg, ex);
-            throw new ServletException(msg, ex);
-        }
-        catch ( PackageException ex ) {
-            String msg = "Error in the servlet initialization...";
+            String msg = "Error initializing the server configuration...";
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);
         }

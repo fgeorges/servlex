@@ -47,6 +47,8 @@ import org.expath.servlex.processors.saxon.SaxonCalabash;
  */
 public class ServerConfig
 {
+    /** The system property name for the processors implementation class. */
+    private static final String PROCESSORS_PROPERTY      = "org.expath.servlex.processors";
     /** The system property name for the repo directory. */
     private static final String REPO_DIR_PROPERTY        = "org.expath.servlex.repo.dir";
     /** The system property name for the repo classpath prefix. */
@@ -63,7 +65,6 @@ public class ServerConfig
      */
     protected ServerConfig()
             throws TechnicalException
-                 , PackageException
     {
         this(System.getProperty(REPO_DIR_PROPERTY), System.getProperty(REPO_CP_PROPERTY));
     }
@@ -73,7 +74,6 @@ public class ServerConfig
      */
     protected ServerConfig(String repo_dir, String repo_classpath)
             throws TechnicalException
-                 , PackageException
     {
         this(getStorage(repo_dir, repo_classpath));
     }
@@ -81,59 +81,120 @@ public class ServerConfig
     /**
      * Initialize the webapp list from the repository got from the parameter.
      */
-    protected ServerConfig(Storage repo_storage)
+    protected ServerConfig(Storage storage)
             throws TechnicalException
-                 , PackageException
     {
-        LOG.info("ServerConfig with storage: " + repo_storage);
-        myStorage = repo_storage;
-        // the repository object
+        LOG.info("ServerConfig with storage: " + storage);
+        myStorage = storage;
+        myRepo = initRepo(myStorage);
+        myProcessors = initProcessors(myRepo, this);
+        myProfileDir = initProfiling();
+        initVersions();
+        myTraceContent = initTracing();
+        myDefaultCharset = initCharset();
+        myApps = initApplications(myProcessors, myRepo);
+    }
+
+    private static Repository initRepo(Storage storage)
+            throws TechnicalException
+    {
         try {
-            myRepo = new Repository(myStorage);
+            return new Repository(storage);
         }
         catch ( PackageException ex ) {
-            throw new PackageException("Error inityializing the repository", ex);
+            throw new TechnicalException("Error initializing the repository", ex);
         }
-        // the processors
-        // TODO: Must use a kind of registry, but must not instantiate explicitly Saxon
-        // and Calabash from here, it should be injected somehow...
-        myProcessors = new SaxonCalabash(myRepo, this);
-        // Calabash profiling
-        String prof_prop = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
-        if ( prof_prop != null ) {
-            myProfileDir = new File(prof_prop);
-            if ( ! myProfileDir.exists() ) {
-                LOG.error("Calabash profile dir does not exist, disabling profiling (" + myProfileDir + ")");
-                myProfileDir = null;
+    }
+
+    private static Processors initProcessors(Repository repo, ServerConfig config)
+            throws TechnicalException
+    {
+        try {
+            // the processors
+            // TODO: Must use a kind of registry, but must not instantiate explicitly Saxon
+            // and Calabash from here, it should be injected somehow...
+            return new SaxonCalabash(repo, config);
+        }
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error initializing the processors", ex);
+        }
+    }
+
+    private static File initProfiling()
+            throws TechnicalException
+    {
+        String value = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
+        File dir = null;
+        if ( value != null ) {
+            dir = new File(value);
+            if ( ! dir.exists() ) {
+                LOG.error("Calabash profile dir does not exist, disabling profiling (" + dir + ")");
+                dir = null;
             }
         }
-        // set version and revision numbers
-        setVersion();
-        // the trace content property
-        String trace_prop = System.getProperty(ServerConfig.TRACE_CONTENT_PROPERTY);
-        if ( trace_prop == null ) {
-            myTraceContent = false;
+        return dir;
+    }
+
+    /**
+     * Set the version and revision number by reading the properties file.
+     */
+    private void initVersions()
+            throws ParseException
+    {
+        Properties props = new Properties();
+        InputStream rsrc = ServerConfig.class.getResourceAsStream(VERSION_RSRC);
+        if ( rsrc == null ) {
+            throw new ParseException("Version properties file does not exist: " + VERSION_RSRC);
         }
-        else if ( "true".equals(trace_prop) ) {
-            myTraceContent = true;
+        try {
+            props.load(rsrc);
+            rsrc.close();
         }
-        else if ( "false".equals(trace_prop) ) {
-            myTraceContent = false;
+        catch ( IOException ex ) {
+            throw new ParseException("Error reading the version properties: " + VERSION_RSRC, ex);
+        }
+        myVersion  = props.getProperty(VERSION_PROP);
+        myRevision = props.getProperty(REVISION_PROP);
+    }
+
+    private static boolean initTracing()
+            throws TechnicalException
+    {
+        String name = ServerConfig.TRACE_CONTENT_PROPERTY;
+        String value = System.getProperty(name);
+        if ( value == null ) {
+            return false;
+        }
+        else if ( "true".equals(value) ) {
+            return true;
+        }
+        else if ( "false".equals(value) ) {
+            return false;
         }
         else {
-            // TODO: Don't use a package exception, use another exception type.
-            throw new PackageException("Invalid value for the property " + TRACE_CONTENT_PROPERTY + ": " + trace_prop);
+            throw new TechnicalException("Invalid value for the property " + name + ": " + value);
         }
-        // the default charset property
-        myDefaultCharset = System.getProperty(ServerConfig.DEFAULT_CHARSET_PROPERTY);
+    }
+
+    private static String initCharset()
+            throws TechnicalException
+    {
+        return System.getProperty(ServerConfig.DEFAULT_CHARSET_PROPERTY);
+    }
+
+    private static Map<String, Application> initApplications(Processors procs, Repository repo)
+            throws TechnicalException
+    {
         // the parser
-        EXPathWebParser parser = new EXPathWebParser(myProcessors);
+        EXPathWebParser parser = new EXPathWebParser(procs);
         // the application map
-        myApps = new HashMap<String, Application>();
-        for ( Application app : parser.parseDescriptors(myRepo.listPackages()) ) {
-            myApps.put(app.getName(), app);
+        Map<String, Application> applications = new HashMap<String, Application>();
+        // parse and save the result in the map
+        for ( Application app : parser.parseDescriptors(repo.listPackages()) ) {
+            applications.put(app.getName(), app);
             LOG.info("Add the application to the store: " + app.getName());
         }
+        return applications;
     }
 
     /**
@@ -180,53 +241,36 @@ public class ServerConfig
         }
     }
 
-    /**
-     * Set the version and revision number by reading the properties file.
-     */
-    private void setVersion()
-            throws ParseException
-    {
-        Properties props = new Properties();
-        InputStream rsrc = ServerConfig.class.getResourceAsStream(VERSION_RSRC);
-        if ( rsrc == null ) {
-            throw new ParseException("Version properties file does not exist: " + VERSION_RSRC);
-        }
-        try {
-            props.load(rsrc);
-            rsrc.close();
-        }
-        catch ( IOException ex ) {
-            throw new ParseException("Error reading the version properties: " + VERSION_RSRC, ex);
-        }
-        myVersion  = props.getProperty(VERSION_PROP);
-        myRevision = props.getProperty(REVISION_PROP);
-    }
-
     private static Storage getStorage(String repo_dir, String repo_classpath)
-            throws PackageException
+            throws TechnicalException
     {
-        if ( repo_dir == null && repo_classpath == null ) {
-            // TODO: DEBUG: Must be set within web.xml...
-            // repo_classpath = "appengine.repo";
-            throw new PackageException("Neither " + REPO_DIR_PROPERTY + " nor " + REPO_CP_PROPERTY + " is set");
-        }
-        if ( repo_dir != null && repo_classpath != null ) {
-            throw new PackageException("Both " + REPO_DIR_PROPERTY + " and " + REPO_CP_PROPERTY + " are set");
-        }
-        // the storage object
-        Storage store;
-        if ( repo_dir != null ) {
-            File f = new File(repo_dir);
-            if ( ! f.exists() ) {
-                String msg = "The EXPath repository does not exist (" + REPO_DIR_PROPERTY + "=" + repo_dir + "): " + f;
-                throw new PackageException(msg);
+        try {
+            if ( repo_dir == null && repo_classpath == null ) {
+                // TODO: DEBUG: Must be set within web.xml...
+                // repo_classpath = "appengine.repo";
+                throw new PackageException("Neither " + REPO_DIR_PROPERTY + " nor " + REPO_CP_PROPERTY + " is set");
             }
-            store = new FileSystemStorage(f);
+            if ( repo_dir != null && repo_classpath != null ) {
+                throw new PackageException("Both " + REPO_DIR_PROPERTY + " and " + REPO_CP_PROPERTY + " are set");
+            }
+            // the storage object
+            Storage store;
+            if ( repo_dir != null ) {
+                File f = new File(repo_dir);
+                if ( ! f.exists() ) {
+                    String msg = "The EXPath repository does not exist (" + REPO_DIR_PROPERTY + "=" + repo_dir + "): " + f;
+                    throw new PackageException(msg);
+                }
+                store = new FileSystemStorage(f);
+            }
+            else {
+                store = new ClasspathStorage(repo_classpath);
+            }
+            return store;
         }
-        else {
-            store = new ClasspathStorage(repo_classpath);
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error initializing the storage", ex);
         }
-        return store;
     }
 
     /**
@@ -260,7 +304,6 @@ public class ServerConfig
      */
     public static synchronized ServerConfig reload(ServletConfig config)
             throws TechnicalException
-                 , PackageException
     {
         // Just get rid of the previous one and instantiate a new one.
         INSTANCE = null;
@@ -276,7 +319,6 @@ public class ServerConfig
      */
     public static synchronized ServerConfig getInstance(ServletConfig config)
             throws TechnicalException
-                 , PackageException
     {
         if ( INSTANCE == null ) {
             ServletContext ctxt = config.getServletContext();
@@ -296,40 +338,6 @@ public class ServerConfig
             else {
                 INSTANCE = new ServerConfig(dir, cp);
             }
-        }
-        return INSTANCE;
-    }
-
-    /**
-     * Return the singleton instance.
-     *
-     * TODO: Return the instance if it exists, without taking the params into
-     * account.  That's correct, but can be confusing.  Document it, or maybe
-     * find a more flexible mechanism.
-     */
-    public static synchronized ServerConfig getInstance(String repo_dir, String repo_classpath)
-            throws TechnicalException
-                 , PackageException
-    {
-        if ( INSTANCE == null ) {
-            INSTANCE = new ServerConfig(repo_dir, repo_classpath);
-        }
-        return INSTANCE;
-    }
-
-    /**
-     * Return the singleton instance.
-     *
-     * TODO: Return the instance if it exists, without taking the param into
-     * account.  That's correct, but can be confusing.  Document it, or maybe
-     * find a more flexible mechanism.
-     */
-    public static synchronized ServerConfig getInstance(Storage repo_storage)
-            throws TechnicalException
-                 , PackageException
-    {
-        if ( INSTANCE == null ) {
-            INSTANCE = new ServerConfig(repo_storage);
         }
         return INSTANCE;
     }

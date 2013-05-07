@@ -15,7 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
 
@@ -77,10 +76,6 @@ public class Reset
             view.println("<p>The application cache has been reloaded.</p>");
         }
         catch ( TechnicalException ex ) {
-            view.print("<b>Error</b> reloading the config: " + ex.getMessage());
-            resp.setStatus(500);
-        }
-        catch ( PackageException ex ) {
             view.print("<b>Error</b> reloading the config: " + ex.getMessage());
             resp.setStatus(500);
         }
