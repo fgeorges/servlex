@@ -21,6 +21,9 @@ public class ServlexConstants
     public static final String WEBAPP_NS     = "http://expath.org/ns/webapp";
     public static final String DESCRIPTOR_NS = "http://expath.org/ns/webapp/descriptor";
     public static final String PRIVATE_NS    = "http://expath.org/ns/webapp/private";
+    public static final String OPTION_CODE_NAME = "code-name";
+    public static final String OPTION_CODE_NS   = "code-namespace";
+    public static final String OPTION_MESSAGE   = "message";
 }
 
 

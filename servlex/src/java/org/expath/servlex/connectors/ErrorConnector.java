@@ -11,9 +11,7 @@ package org.expath.servlex.connectors;
 
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.saxon.s9api.*;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.ComponentInstance;
@@ -113,13 +111,6 @@ public class ErrorConnector
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    public static final QName CODE_NAME_ATTRIBUTE      =
-            new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "code-name");
-    public static final QName CODE_NAMESPACE_ATTRIBUTE =
-            new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "code-namespace");
-    public static final QName MESSAGE_ATTRIBUTE        =
-            new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "message");
 
     private ComponentError   myError;
     private RequestConnector myRequest;

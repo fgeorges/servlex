@@ -9,16 +9,9 @@
 
 package org.expath.servlex.model;
 
-import com.xmlcalabash.core.XProcRuntime;
 import javax.xml.namespace.QName;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.XdmNode;
-import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
-import org.expath.servlex.connectors.Connector;
-import org.expath.servlex.connectors.ErrorConnector;
 import org.expath.servlex.connectors.RequestConnector;
-import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.runtime.ErrorHandlerInvocation;
 import org.expath.servlex.runtime.Invocation;
 

@@ -12,18 +12,18 @@ package org.expath.servlex.runtime;
 import org.expath.servlex.model.Resource;
 import java.io.InputStream;
 import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.functions.regex.JRegularExpression;
-import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Storage;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexHelper;
 
 /**
  * Represent a specific invocation of an application's resource, at a specific URI.
@@ -46,8 +46,9 @@ public class ResourceInvocation
     public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
     {
-        String path = replaceMatches(getPath());
+        String orig_path = getPath();
         try {
+            String path = RegexHelper.replaceMatches(orig_path, myJavaRegex, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
             StreamSource rsrc = pkg.getResolver().resolveComponent(path);
             // return a 404 if the resource does not exist
@@ -58,32 +59,16 @@ public class ResourceInvocation
             return new ResourceConnector(in, 200, myRsrc.getType());
         }
         catch ( Storage.NotExistException ex ) {
-            LOG.error("Page not found: " + getPath(), ex);
+            LOG.error("Page not found: " + orig_path, ex);
             throw new ServlexException(404, "Page not found");
         }
         catch ( PackageException ex ) {
-            LOG.error("Internal server error serving: " + getPath(), ex);
+            LOG.error("Internal server error serving: " + orig_path, ex);
             throw new ServlexException(500, "Internal server error");
         }
-    }
-
-    /**
-     * Replace the matches in the actual path if there is a rewrite attribute.
-     */
-    private String replaceMatches(String path)
-            throws ServlexException
-    {
-        if ( myRewrite == null ) {
-            return path;
-        }
-        else {
-            try {
-                JRegularExpression re = new JRegularExpression(myJavaRegex, 0);
-                return re.replace(path, myRewrite).toString();
-            }
-            catch ( XPathException ex ) {
-                throw new ServlexException(500, "Error replacing matches in pattern", ex);
-            }
+        catch ( TechnicalException ex ) {
+            LOG.error("Internal server error serving: " + orig_path, ex);
+            throw new ServlexException(500, "Internal server error");
         }
     }
 

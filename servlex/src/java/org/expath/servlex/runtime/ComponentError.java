@@ -10,7 +10,7 @@
 package org.expath.servlex.runtime;
 
 import javax.xml.namespace.QName;
-import net.sf.saxon.s9api.XdmValue;
+import org.expath.servlex.processors.Sequence;
 
 /**
  * An error thrown by a component. Can be caught by an error handler.
@@ -30,7 +30,7 @@ public class ComponentError
      *
      * An XPath error contains a name, a message and a user sequence.
      */
-    public ComponentError(Throwable ex, QName name, String msg, XdmValue sequence)
+    public ComponentError(Throwable ex, QName name, String msg, Sequence sequence)
     {
         super(ex);
         myName = name;
@@ -48,14 +48,14 @@ public class ComponentError
         return myMsg;
     }
 
-    public XdmValue getSequence()
+    public Sequence getSequence()
     {
         return mySequence;
     }
 
     private QName myName;
     private String myMsg;
-    private XdmValue mySequence;
+    private Sequence mySequence;
 }
 
 

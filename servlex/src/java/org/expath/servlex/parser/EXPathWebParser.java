@@ -16,9 +16,6 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.functions.regex.JDK15RegexTranslator;
-import net.sf.saxon.functions.regex.RegexSyntaxException;
-import net.sf.saxon.functions.regex.RegularExpression;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
@@ -32,6 +29,7 @@ import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.model.*;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.RegexHelper;
 
 /**
  * Facade class for this package, to parse EXPath Webapp descriptors.
@@ -201,16 +199,21 @@ public class EXPathWebParser
         Application app    = new Application(abbrev, title, pkg);
         // build the servlets
         for ( ParsingServlet s : ctxt.getServlets() ) {
-            String    name    = s.getName();
-            Component implem  = s.getImplem();
-            String    pattern = s.getPattern();
-            String    java_re = translateXPathToJavaRegex(pattern);
-            Pattern   regex   = Pattern.compile(java_re);
-            String[]  groups  = s.getMatchGroups();
-            Servlet   servlet = new Servlet(name, implem, regex, groups);
-            Wrapper   wrapper = s.makeWrapper(ctxt);
-            servlet.setWrapper(wrapper);
-            app.addHandler(servlet);
+            try {
+                String    name    = s.getName();
+                Component implem  = s.getImplem();
+                String    pattern = s.getPattern();
+                String    java_re = RegexHelper.xpathToJava(pattern, LOG);
+                Pattern   regex   = Pattern.compile(java_re);
+                String[]  groups  = s.getMatchGroups();
+                Servlet   servlet = new Servlet(name, implem, regex, groups);
+                Wrapper   wrapper = s.makeWrapper(ctxt);
+                servlet.setWrapper(wrapper);
+                app.addHandler(servlet);
+            }
+            catch ( TechnicalException ex ) {
+                throw new ParseException("The pattern is not a valid XPath regex", ex);
+            }
         }
         // add the resources
         for ( Resource rsrc : ctxt.getResources() ) {
@@ -312,26 +315,11 @@ public class EXPathWebParser
         String type    = parser.getAttribute("media-type");
         parser.nextTag();
         parser.ensureEndTag(true);
-        String java_regex = translateXPathToJavaRegex(pattern);
-        return new Resource(Pattern.compile(java_regex), java_regex, rewrite, type);
-    }
-
-    /**
-     * Translate an XPath regex to a native Java SE 1.5 regex.
-     */
-    private String translateXPathToJavaRegex(String pattern)
-            throws ParseException
-    {
         try {
-            int options = RegularExpression.XML11 | RegularExpression.XPATH20;
-            List<RegexSyntaxException> warnings = new ArrayList<RegexSyntaxException>();
-            String res = JDK15RegexTranslator.translate(pattern, options, 0, warnings);
-            for ( RegexSyntaxException w : warnings ) {
-                LOG.warn("expath-web.xml parser: Warning in regex: '" + w + "'");
-            }
-            return res;
+            String java_regex = RegexHelper.xpathToJava(pattern, LOG);
+            return new Resource(Pattern.compile(java_regex), java_regex, rewrite, type);
         }
-        catch ( RegexSyntaxException ex ) {
+        catch ( TechnicalException ex ) {
             throw new ParseException("The pattern is not a valid XPath regex", ex);
         }
     }

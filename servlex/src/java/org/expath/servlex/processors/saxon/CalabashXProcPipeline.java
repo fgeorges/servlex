@@ -33,9 +33,6 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
-import static org.expath.servlex.connectors.ErrorConnector.CODE_NAMESPACE_ATTRIBUTE;
-import static org.expath.servlex.connectors.ErrorConnector.CODE_NAME_ATTRIBUTE;
-import static org.expath.servlex.connectors.ErrorConnector.MESSAGE_ATTRIBUTE;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
@@ -353,9 +350,9 @@ class CalabashXProcPipeline
             // the message
             String msg    = error.getMsg();
             // set them as options
-            myPipe.passOption(CODE_NAME_ATTRIBUTE, new RuntimeValue(name));
-            myPipe.passOption(CODE_NAMESPACE_ATTRIBUTE, new RuntimeValue(ns));
-            myPipe.passOption(MESSAGE_ATTRIBUTE, new RuntimeValue(msg));
+            myPipe.passOption(CODE_NAME, new RuntimeValue(name));
+            myPipe.passOption(CODE_NS, new RuntimeValue(ns));
+            myPipe.passOption(MESSAGE, new RuntimeValue(msg));
         }
 
         private void writeErrorRequest(Document request)
@@ -374,14 +371,20 @@ class CalabashXProcPipeline
                 throws TechnicalException
         {
             // connect the user sequence to the user-data port
-            XdmValue userdata = error.getSequence();
+            Sequence sequence = error.getSequence();
+            XdmValue userdata = SaxonHelper.toXdmValue(sequence);
             if ( userdata != null ) {
                 CalabashHelper.writeTo(myPipe, ERROR, userdata, myConfig);
             }
         }
 
-        private static final String NAME  = XProcProcessor.INPUT_PORT_NAME;
-        private static final String ERROR = XProcProcessor.ERROR_PORT_NAME;
+        private static final String NAME      = XProcProcessor.INPUT_PORT_NAME;
+        private static final String ERROR     = XProcProcessor.ERROR_PORT_NAME;
+        private static final String PREFIX    = ServlexConstants.WEBAPP_PREFIX;
+        private static final String NS        = ServlexConstants.WEBAPP_NS;
+        private static final QName  CODE_NAME = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NAME);
+        private static final QName  CODE_NS   = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NS);
+        private static final QName  MESSAGE   = new QName(PREFIX, NS, ServlexConstants.OPTION_MESSAGE);
         private XPipeline myPipe;
         private ServerConfig myConfig;
     }

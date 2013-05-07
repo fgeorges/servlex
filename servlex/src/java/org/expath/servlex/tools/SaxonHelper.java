@@ -202,7 +202,7 @@ public class SaxonHelper
         QName name = cause.getErrorCodeQName().toJaxpQName();
         String msg = cause.getMessage();
         XdmValue sequence = MyValue.wrap(cause.getErrorObject());
-        return new ComponentError(cause, name, msg, sequence);
+        return new ComponentError(cause, name, msg, new SaxonSequence(sequence));
     }
 
     /**

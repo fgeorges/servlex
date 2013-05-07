@@ -26,15 +26,18 @@ public interface Component
     /**
      * Implement an entry point invocation.
      *
-     * @param saxon
-     *          The Saxon processor.
-     * @param calabash
-     *          The Calabash processor.
      * @param connector
      *          The input of the component. If Servlex is the direct caller,
      *          that means the web:request element and the HTTP request entity
      *          content (aka the bodies). It can be different if there are any
      *          filter or error handler in between.
+     * 
+     * @param config
+     *          The server configuration object.
+     * 
+     * @param auditor
+     *          The auditor object.
+     * 
      * @return
      *          The result of the component. If Servlex is the direct caller,
      *          that must be the web:response element and the HTTP response

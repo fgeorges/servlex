@@ -34,7 +34,7 @@ import org.expath.servlex.processors.Serializer;
  * TODO: ...
  *
  * TODO: ServletException is obviously not an adapted exception type here...
- * Nor SaxonApiException (and maybe even IOException).
+ * (and maybe even IOException).
  *
  * TODO: Refactor this code and integrate it all to XdmConnector.  Then remove
  * this class.

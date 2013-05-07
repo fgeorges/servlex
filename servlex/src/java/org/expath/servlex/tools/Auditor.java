@@ -165,8 +165,6 @@ public class Auditor
 
     /**
      * Return a literal XML Schema duration, from a number of milliseconds.
-     * 
-     * TODO: Should not depend on Saxon here...
      */
     private String duration(long millis)
             throws ServlexException

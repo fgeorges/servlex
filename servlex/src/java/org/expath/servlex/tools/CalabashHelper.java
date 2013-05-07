@@ -22,6 +22,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.SaxonDocument;
+import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -49,7 +50,7 @@ public class CalabashHelper
         // the error object
         XdmValue sequence = ex.getNode();
         LOG.error("TODO: Cannot get the p:error input out of an XProcException");
-        return new ComponentError(ex, name, msg, sequence);
+        return new ComponentError(ex, name, msg, new SaxonSequence(sequence));
     }
 
     /**
