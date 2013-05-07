@@ -43,13 +43,18 @@ public class SaxonCalabash
     implements Processors
 {
     public SaxonCalabash(Repository repo, ServerConfig config)
-            throws PackageException
+            throws TechnicalException
     {
-        myRepo = new SaxonRepository(repo);
-        mySaxon = SaxonHelper.makeSaxon(myRepo, this);
-        myXslt = new SaxonXSLT(mySaxon);
-        myXQuery = new SaxonXQuery(mySaxon, repo);
-        myXProc = new CalabashXProc(mySaxon, myRepo, config);
+        try {
+            myRepo = new SaxonRepository(repo);
+            mySaxon = SaxonHelper.makeSaxon(myRepo, this);
+            myXslt = new SaxonXSLT(mySaxon);
+            myXQuery = new SaxonXQuery(mySaxon, repo);
+            myXProc = new CalabashXProc(mySaxon, myRepo, config);
+        }
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error initializing the saxon and calabash processors", ex);
+        }
     }
 
     public SaxonRepository getRepository()

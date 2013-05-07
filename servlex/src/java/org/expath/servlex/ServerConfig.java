@@ -9,10 +9,11 @@
 
 package org.expath.servlex;
 
-import org.expath.servlex.model.Application;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -29,10 +30,10 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.processors.Processors;
-import org.expath.servlex.processors.saxon.SaxonCalabash;
 
 
 /**
@@ -47,6 +48,9 @@ import org.expath.servlex.processors.saxon.SaxonCalabash;
  */
 public class ServerConfig
 {
+    /** The default processors implementation class to use. */
+    private static final String DEFAULT_PROCESSORS
+            = "org.expath.servlex.processors.saxon.SaxonCalabash";
     /** The system property name for the processors implementation class. */
     private static final String PROCESSORS_PROPERTY      = "org.expath.servlex.processors";
     /** The system property name for the repo directory. */
@@ -109,14 +113,52 @@ public class ServerConfig
     private static Processors initProcessors(Repository repo, ServerConfig config)
             throws TechnicalException
     {
-        try {
-            // the processors
-            // TODO: Must use a kind of registry, but must not instantiate explicitly Saxon
-            // and Calabash from here, it should be injected somehow...
-            return new SaxonCalabash(repo, config);
+        String class_name = System.getProperty(ServerConfig.PROCESSORS_PROPERTY);
+        if ( class_name == null ) {
+            class_name = DEFAULT_PROCESSORS;
         }
-        catch ( PackageException ex ) {
-            throw new TechnicalException("Error initializing the processors", ex);
+        try {
+            // get the raw class object
+            ClassLoader loader = ServerConfig.class.getClassLoader();
+            Class<?> class_raw = loader.loadClass(class_name);
+            // check it implements Processors
+            if ( ! Processors.class.isAssignableFrom(class_raw) ) {
+                String msg = "The processors implementation must implement Processors: ";
+                throw new TechnicalException(msg + class_name);
+            }
+            // get the ctor
+            Class<Processors> clazz = (Class<Processors>) class_raw;
+            Constructor<Processors> ctor = clazz.getConstructor(Repository.class, ServerConfig.class);
+            // instantiate
+            return ctor.newInstance(repo, config);
+        }
+        catch ( ClassNotFoundException ex ) {
+            String msg = "The processors implementation class not found: ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( NoSuchMethodException ex ) {
+            String msg = "The processors implementation must have a constructor(Repository,ServerConfig): ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( SecurityException ex ) {
+            String msg = "Servlex must have access to the processors implementation: ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( InstantiationException ex ) {
+            String msg = "The processors implementation must be instantiable: ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( IllegalAccessException ex ) {
+            String msg = "Servlex must have access to the processors implementation: ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( IllegalArgumentException ex ) {
+            String msg = "The processors implementation constructor must accept the Repository and ServerConfig: ";
+            throw new TechnicalException(msg + class_name, ex);
+        }
+        catch ( InvocationTargetException ex ) {
+            String msg = "The processors implementation constructor threw an exception: ";
+            throw new TechnicalException(msg + class_name, ex);
         }
     }
 
