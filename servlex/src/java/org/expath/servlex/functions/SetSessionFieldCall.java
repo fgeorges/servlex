@@ -19,6 +19,8 @@ import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.tools.Properties;
 
 /**
@@ -56,7 +58,8 @@ public class SetSessionFieldCall
         try {
             LOG.debug("Set session field: '" + name + "'");
             Properties props = Servlex.getSessionMap();
-            props.set(name, value.getAnother());
+            Sequence seq = new SaxonSequence(value);
+            props.set(name, seq);
             return EmptyIterator.getInstance();
         }
         catch ( TechnicalException ex ) {

@@ -10,7 +10,10 @@
 package org.expath.servlex.parser;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -29,6 +32,7 @@ import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.model.*;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.Properties;
 import org.expath.servlex.tools.RegexHelper;
 
 /**
@@ -196,7 +200,8 @@ public class EXPathWebParser
         // get values and build the app object
         String      abbrev = ctxt.getAbbrev();
         String      title  = ctxt.getTitle();
-        Application app    = new Application(abbrev, title, pkg);
+        Properties  props  = new Properties("web:", myProcs);
+        Application app    = new Application(abbrev, title, pkg, props);
         // build the servlets
         for ( ParsingServlet s : ctxt.getServlets() ) {
             try {

@@ -30,11 +30,12 @@ public class Application
     /**
      * TODO: ...
      */
-    public Application(String name, String title, Package pkg)
+    public Application(String name, String title, Package pkg, Properties props)
     {
         myName  = name;
         myTitle = title;
         myPkg   = pkg;
+        myProps = props;
     }
 
     public String getName()
@@ -94,8 +95,8 @@ public class Application
     private String myName;
     private String myTitle;
     private Package myPkg;
+    private Properties myProps;
     private List<AddressHandler> myHandlers = new ArrayList<AddressHandler>();
-    private Properties myProps = new Properties("web:");
 }
 
 

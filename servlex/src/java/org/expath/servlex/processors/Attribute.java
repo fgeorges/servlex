@@ -24,11 +24,6 @@ public interface Attribute
      * The attribute name.
      */
     public QName name();
-
-    /**
-     * The attribute value.
-     */
-    public String value();
 }
 
 

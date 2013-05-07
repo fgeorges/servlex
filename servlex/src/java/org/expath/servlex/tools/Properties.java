@@ -9,17 +9,16 @@
 
 package org.expath.servlex.tools;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.ArrayIterator;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 
 /**
  * Properties (either server, webapp, session or request properties).
@@ -32,18 +31,19 @@ public class Properties
     /**
      * Constructs a new Properties object without any private property name prefix.
      */
-    public Properties()
+    public Properties(Processors procs)
     {
-        this(null);
+        this(null, procs);
     }
 
     /**
      * Constructs a new Properties object with a private property name prefix.
      */
-    public Properties(String private_prefix)
+    public Properties(String private_prefix, Processors procs)
     {
         myPrivatePrefix = private_prefix;
-        myMap = new HashMap<String, SequenceIterator>();
+        myProcs = procs;
+        myMap = new HashMap<String, Sequence>();
     }
 
     /**
@@ -51,25 +51,17 @@ public class Properties
      * 
      * Never return null.
      */
-    public SequenceIterator get(String key)
+    public Sequence get(String key)
             throws TechnicalException
     {
-        SequenceIterator value = myMap.get(key);
+        Sequence value = myMap.get(key);
         if ( value == null ) {
-            return EmptyIterator.getInstance();
+            value = myProcs.emptySequence();
         }
-        // don't consume the initial iterator
-        SequenceIterator copy;
-        try {
-            copy = value.getAnother();
-            if ( LOG.isDebugEnabled() ) {
-                logGetValue(key, value);
-            }
+        if ( LOG.isDebugEnabled() ) {
+            logGetValue(key, value);
         }
-        catch ( XPathException ex ) {
-            throw new TechnicalException("Error copying the sequence iterator for " + key, ex);
-        }
-        return copy;
+        return value;
     }
 
     /**
@@ -89,37 +81,25 @@ public class Properties
         if ( ! key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
         }
-        SequenceIterator value = get(key);
-        try {
-            Item item = value.next();
-            if ( item == null ) {
-                return null;
-            }
-            if ( value.next() != null ) {
-                throw new TechnicalException("The value of " + key + " contains more than one item.");
-            }
-            if ( ! (item instanceof StringValue) ) {
-                throw new TechnicalException("The value of " + key + " is not a string: " + item.getClass());
-            }
-            StringValue string = (StringValue) item;
-            return string.getPrimitiveStringValue().toString();
+        Sequence sequence = get(key);
+        Item item = sequence.itemAt(0);
+        if ( item == null ) {
+            return null;
         }
-        catch ( XPathException ex ) {
-            throw new TechnicalException("Error accessing the string for " + key, ex);
+        if ( sequence.itemAt(1) != null ) {
+            throw new TechnicalException("The value of " + key + " contains more than one item.");
         }
+        // TODO: Check if the item actually is a string item?
+        return item.stringValue();
     }
 
-    private void logGetValue(String key, SequenceIterator value)
+    private void logGetValue(String key, Sequence value)
             throws TechnicalException
-                 , XPathException
     {
         LOG.debug("Properties.get: " + key + ", " + value);
         if ( LOG.isTraceEnabled() ) {
-            SequenceIterator another = value.getAnother();
-            Item i = another.next();
-            while ( i != null ) {
-                LOG.trace("          .get: " + i.getStringValue());
-                i = another.next();
+            for ( Item i : value ) {
+                LOG.trace("          .get: " + i);
             }
         }
     }
@@ -127,7 +107,7 @@ public class Properties
     /**
      * Set a property value (it is an error if the property name starts with the private prefix).
      */
-    public SequenceIterator set(String key, SequenceIterator value)
+    public Sequence set(String key, Sequence value)
             throws TechnicalException
     {
         if ( LOG.isDebugEnabled() ) {
@@ -145,7 +125,7 @@ public class Properties
     /**
      * Set a private value (the property name must start with the private prefix).
      */
-    public SequenceIterator setPrivate(String key, String value)
+    public Sequence setPrivate(String key, String value)
             throws TechnicalException
     {
         if ( LOG.isDebugEnabled() ) {
@@ -160,9 +140,8 @@ public class Properties
         if ( ! key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
         }
-        StringValue string = StringValue.makeStringValue(value);
-        SequenceIterator iterator = string.iterate();
-        return myMap.put(key, iterator);
+        Item string = myProcs.buildString(value);
+        return myMap.put(key, string.asSequence());
     }
 
     /**
@@ -176,18 +155,18 @@ public class Properties
     /**
      * Return all the property names, as a set.
      */
-    public SequenceIterator<StringValue> keys()
+    public Sequence keys()
+            throws TechnicalException
     {
         if ( size() == 0 ) {
-            return EmptyIterator.getInstance();
+            return myProcs.emptySequence();
         }
-        StringValue[] items = new StringValue[size()];
-        int i = 0;
+        List items = new ArrayList<Item>(size());
         for ( String name : myMap.keySet() ) {
-            items[i] = new StringValue(name);
-            ++i;
+            Item i = myProcs.buildString(name);
+            items.add(i);
         }
-        return new ArrayIterator<StringValue>(items);
+        return myProcs.buildSequence(items);
     }
 
     /** The logger. */
@@ -195,7 +174,9 @@ public class Properties
     /** The private property name prefix, if any. */
     private String myPrivatePrefix;
     /** The store map. */
-    private Map<String, SequenceIterator> myMap;
+    private Map<String, Sequence> myMap;
+    /** The processors to use. */
+    private Processors myProcs;
 }
 
 

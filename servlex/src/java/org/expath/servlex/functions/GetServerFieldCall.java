@@ -18,7 +18,9 @@ import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -53,7 +55,8 @@ public class GetServerFieldCall
         try {
             LOG.debug("Get server field: '" + name + "'");
             Properties props = Servlex.getServerMap();
-            return props.get(name);
+            Sequence seq = props.get(name);
+            return SaxonHelper.toSequenceIterator(seq);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error getting the value of the property: " + name, ex);

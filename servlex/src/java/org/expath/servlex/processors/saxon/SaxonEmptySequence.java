@@ -1,54 +1,70 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       SaxonEmptySequence.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2013-05-07                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors;
+package org.expath.servlex.processors.saxon;
 
-import javax.xml.transform.Source;
-import org.expath.servlex.TechnicalException;
+import java.util.ArrayList;
+import java.util.List;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmValue;
+import org.expath.servlex.processors.Element;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Sequence;
 
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
- *
+ * An empty sequence for Saxon.
+ * 
  * @author Florent Georges
- * @date   2013-04-15
+ * @date   2013-05-07
  */
-public interface Processors
+public class SaxonEmptySequence
+        extends SaxonSequence
 {
-    public XSLTProcessor getXSLT()
-            throws TechnicalException;
+    private static final List<XdmItem> ourItemsList = new ArrayList<XdmItem>();
+    private static final XdmValue ourXdmValue = new XdmValue(ourItemsList);
+    private static final SaxonEmptySequence ourInstance = new SaxonEmptySequence();
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException;
+    public static SaxonEmptySequence getInstance()
+    {
+        return ourInstance;
+    }
 
-    public XProcProcessor getXProc()
-            throws TechnicalException;
+    private SaxonEmptySequence()
+    {
+        super(ourXdmValue);
+    }
 
-    public Serializer makeSerializer()
-            throws TechnicalException;
+    @Override
+    public Item itemAt(int position)
+    {
+        return null;
+    }
 
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
+    @Override
+    public Element elementAt(int position)
+    {
+        return null;
+    }
 
-    public Sequence emptySequence()
-            throws TechnicalException;
+    @Override
+    public Sequence subSequence(int start)
+    {
+        return ourInstance;
+    }
 
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
-            throws TechnicalException;
+    // TODO: Should be package visible, but is used in XdmConnector (which
+    // should use instead a method on SaxonHelper which should be move here...)
+    @Override
+    public XdmValue makeSaxonValue()
+    {
+        return ourXdmValue;
+    }
 }
 
 

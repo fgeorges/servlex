@@ -18,7 +18,9 @@ import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -53,7 +55,8 @@ public class GetWebappFieldCall
         try {
             LOG.debug("Get webapp field: '" + name + "'");
             Properties props = Servlex.getWebappMap();
-            return props.get(name);
+            Sequence seq = props.get(name);
+            return SaxonHelper.toSequenceIterator(seq);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex webapp management", ex);

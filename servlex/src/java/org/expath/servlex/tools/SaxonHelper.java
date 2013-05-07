@@ -11,6 +11,7 @@ package org.expath.servlex.tools;
 
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
+import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
@@ -21,6 +22,7 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.Value;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
@@ -34,6 +36,7 @@ import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.saxon.SaxonDocument;
 import org.expath.servlex.processors.saxon.SaxonElement;
+import org.expath.servlex.processors.saxon.SaxonEmptySequence;
 import org.expath.servlex.processors.saxon.SaxonItem;
 import org.expath.servlex.processors.saxon.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
@@ -137,6 +140,19 @@ public class SaxonHelper
         return sseq.makeSaxonValue();
     }
 
+    public static SequenceIterator toSequenceIterator(Sequence sequence)
+            throws TechnicalException
+    {
+        XdmValue value = toXdmValue(sequence);
+        ValueRepresentation rep = value.getUnderlyingValue();
+        try {
+            return Value.asIterator(rep);
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error getting an iterator out of an XDM value", ex);
+        }
+    }
+
     /**
      * Return the root element of the document node passed in param.
      *
@@ -201,8 +217,11 @@ public class SaxonHelper
         XPathException cause = (XPathException) ex.getCause();
         QName name = cause.getErrorCodeQName().toJaxpQName();
         String msg = cause.getMessage();
-        XdmValue sequence = MyValue.wrap(cause.getErrorObject());
-        return new ComponentError(cause, name, msg, new SaxonSequence(sequence));
+        XdmValue value = MyValue.wrap(cause.getErrorObject());
+        Sequence sequence = value == null
+                ? SaxonEmptySequence.getInstance()
+                : new SaxonSequence(value);
+        return new ComponentError(cause, name, msg, sequence);
     }
 
     /**

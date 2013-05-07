@@ -127,10 +127,10 @@ public class Result
             Attribute attr = attributes.next();
             QName name = attr.name();
             if ( name.equals(STATUS_NAME) ) {
-                myStatus = Integer.valueOf(attr.value());
+                myStatus = Integer.valueOf(attr.stringValue());
             }
             else if ( name.equals(MSG_NAME) ) {
-                myMsg = attr.value();
+                myMsg = attr.stringValue();
             }
             else if ( name.getNamespaceURI().equals("") ) {
                 error(500, "Unknown attribute on web:response: " + name);
@@ -178,10 +178,10 @@ public class Result
             Attribute attr = attributes.next();
             QName name = attr.name();
             if ( name.equals(NAME_NAME) ) {
-                h.name = attr.value();
+                h.name = attr.stringValue();
             }
             else if ( name.equals(VALUE_NAME) ) {
-                h.value = attr.value();
+                h.value = attr.stringValue();
             }
             else {
                 error(500, "Unknown attribute on web:header: " + name);
@@ -200,10 +200,10 @@ public class Result
             Attribute attr = attributes.next();
             QName name = attr.name();
             if ( name.equals(TYPE_NAME) ) {
-                myMultipart.type = attr.value();
+                myMultipart.type = attr.stringValue();
             }
             else if ( name.equals(BOUND_NAME) ) {
-                myMultipart.boundary = attr.value();
+                myMultipart.boundary = attr.stringValue();
             }
             else {
                 error(500, "Unknown attribute on web:multipart: " + name);
@@ -250,64 +250,64 @@ public class Result
             Attribute attr = attributes.next();
             QName name = attr.name();
             if ( LOG.isDebugEnabled() ) {
-                LOG.debug("body attribute: " + name + " = " + attr.value());
+                LOG.debug("body attribute: " + name + " = " + attr.stringValue());
             }
             if ( name.equals(TYPE_NAME) ) {
-                b.serializer.setMediaType(attr.value());
+                b.serializer.setMediaType(attr.stringValue());
             }
             else if ( name.equals(ID_NAME) ) {
-                b.id = attr.value();
+                b.id = attr.stringValue();
             }
             else if ( name.equals(DESC_NAME) ) {
-                b.description = attr.value();
+                b.description = attr.stringValue();
             }
             else if ( name.equals(SRC_NAME) ) {
-                b.src = attr.value();
+                b.src = attr.stringValue();
             }
             else if ( name.equals(METHOD_NAME) ) {
-                b.serializer.setMethod(attr.value());
+                b.serializer.setMethod(attr.stringValue());
             }
             else if ( name.equals(ENC_NAME) ) {
-                b.serializer.setEncoding(attr.value());
+                b.serializer.setEncoding(attr.stringValue());
             }
             else if ( name.equals(BYTE_ORDER_NAME) ) {
-                b.serializer.setByteOrderMark(attr.value());
+                b.serializer.setByteOrderMark(attr.stringValue());
             }
             else if ( name.equals(CDATA_ELEMENTS_NAME) ) {
-                b.serializer.setCdataSectionElements(attr.value());
+                b.serializer.setCdataSectionElements(attr.stringValue());
             }
             else if ( name.equals(PUBID_NAME) ) {
-                b.serializer.setDoctypePublic(attr.value());
+                b.serializer.setDoctypePublic(attr.stringValue());
             }
             else if ( name.equals(SYSID_NAME) ) {
-                b.serializer.setDoctypeSystem(attr.value());
+                b.serializer.setDoctypeSystem(attr.stringValue());
             }
             else if ( name.equals(ESCAPE_URI_NAME) ) {
-                b.serializer.setEscapeUriAttributes(attr.value());
+                b.serializer.setEscapeUriAttributes(attr.stringValue());
             }
             else if ( name.equals(INCLUDE_CT_NAME) ) {
-                b.serializer.setIncludeContentType(attr.value());
+                b.serializer.setIncludeContentType(attr.stringValue());
             }
             else if ( name.equals(INDENT_NAME) ) {
-                b.serializer.setIndent(attr.value());
+                b.serializer.setIndent(attr.stringValue());
             }
             else if ( name.equals(NORM_FORM_NAME) ) {
-                b.serializer.setNormalizationForm(attr.value());
+                b.serializer.setNormalizationForm(attr.stringValue());
             }
             else if ( name.equals(OMIT_XML_DECL_NAME) ) {
-                b.serializer.setOmitXmlDeclaration(attr.value());
+                b.serializer.setOmitXmlDeclaration(attr.stringValue());
             }
             else if ( name.equals(STANDALONE_NAME) ) {
-                b.serializer.setStandalone(attr.value());
+                b.serializer.setStandalone(attr.stringValue());
             }
             else if ( name.equals(UNDECL_PREFIXES_NAME) ) {
-                b.serializer.setUndeclarePrefixes(attr.value());
+                b.serializer.setUndeclarePrefixes(attr.stringValue());
             }
             else if ( name.equals(USE_CHAR_MAPS_NAME) ) {
-                b.serializer.setUseCharacterMaps(attr.value());
+                b.serializer.setUseCharacterMaps(attr.stringValue());
             }
             else if ( name.equals(VERSION_NAME) ) {
-                b.serializer.setVersion(attr.value());
+                b.serializer.setVersion(attr.stringValue());
             }
             else if ( "xml".equals(name.getPrefix()) ) {
                 // nothing (ignore standard XML attributes, like xml:base, xml:id...)

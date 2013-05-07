@@ -14,12 +14,13 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -54,7 +55,8 @@ public class GetRequestFieldCall
         try {
             LOG.debug("Get request field: '" + name + "'");
             Properties props = Servlex.getRequestMap();
-            return props.get(name);
+            Sequence seq = props.get(name);
+            return SaxonHelper.toSequenceIterator(seq);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex request management", ex);

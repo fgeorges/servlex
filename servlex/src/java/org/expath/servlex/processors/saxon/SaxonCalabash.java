@@ -84,6 +84,12 @@ public class SaxonCalabash
         return new SaxonTreeBuilder(mySaxon, uri, prefix);
     }
 
+    public Sequence emptySequence()
+            throws TechnicalException
+    {
+        return SaxonEmptySequence.getInstance();
+    }
+
     public Sequence buildSequence(Iterable<Item> items)
             throws TechnicalException
     {

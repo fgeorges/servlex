@@ -12,6 +12,7 @@ package org.expath.servlex.processors.saxon;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
@@ -22,7 +23,7 @@ import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.SaxonHelper;
 
 /**
- * A document for Saxon.
+ * A sequence for Saxon.
  * 
  * TODO: Review the design.  Maybe storing the underlying {@link XdmValue}
  * would be better here...?
@@ -65,6 +66,14 @@ public class SaxonSequence
         init(seq.iterator());
     }
 
+    public SaxonSequence(SequenceIterator iter)
+    {
+        if ( iter == null ) {
+            throw new NullPointerException("Iterator is null for Saxon sequence");
+        }
+        init(iter);
+    }
+
     private void init(Iterator<Item> iter)
     {
         List<Item> items = new ArrayList<Item>();
@@ -79,6 +88,16 @@ public class SaxonSequence
         List<Item> items = new ArrayList<Item>();
         while ( iter.hasNext() ) {
             XdmItem item = iter.next();
+            items.add(new SaxonItem(item));
+        }
+        myItems = items;
+    }
+
+    private void init(SequenceIterator iter)
+    {
+        List<Item> items = new ArrayList<Item>();
+        net.sf.saxon.om.Item item;
+        while ( (item = iter.current()) != null ) {
             items.add(new SaxonItem(item));
         }
         myItems = items;
@@ -123,11 +142,21 @@ public class SaxonSequence
 
     public Sequence subSequence(int start)
     {
+        // if index is < 0, return ()
+        if ( start < 0 ) {
+            return SaxonEmptySequence.getInstance();
+        }
+        // get an iterator and iterate 'start' times
         Iterator<Item> iter = iterator();
         while ( start > 0 && iter.hasNext() ) {
             iter.next();
             --start;
         }
+        // if reached the end, return ()
+        if ( ! iter.hasNext() ) {
+            return SaxonEmptySequence.getInstance();
+        }
+        // if not, return the sub-sequence, till the end
         return new SaxonSequence(iter);
     }
 

@@ -30,9 +30,24 @@ public class SaxonItem
         myItem = item;
     }
 
+    public SaxonItem(net.sf.saxon.om.Item item)
+    {
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
+        }
+        myItem = AccessProtectedItem.wrap(item);
+    }
+
+    @Override
     public Sequence asSequence()
     {
         return new SaxonSequence(myItem);
+    }
+
+    @Override
+    public String stringValue()
+    {
+        return myItem.getStringValue();
     }
 
     // TODO: Should be package visible, but is used in ParseBasicAuthCall
@@ -44,6 +59,15 @@ public class SaxonItem
     }
 
     private XdmItem myItem;
+
+    private static class AccessProtectedItem
+            extends XdmItem
+    {
+        public static XdmItem wrap(net.sf.saxon.om.Item item)
+        {
+            return wrapItem(item);
+        }
+    }
 }
 
 

@@ -49,12 +49,6 @@ public class SaxonAttribute
         return new QName(ns, local, prefix);
     }
 
-    @Override
-    public String value()
-    {
-        return myAttr.getStringValue();
-    }
-
     private XdmNode myAttr;
 }
 

@@ -53,7 +53,7 @@ public class Servlex
         HttpServletRequest request = myCurrentRequest.get();
         Object obj = request.getAttribute(REQUEST_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:");
+            Properties props = new Properties("web:", ourConfig.getProcessors());
             // TODO: Add a request unique identifier in the properties, in order to identify a
             // request uniquely, e.g. to create file name for the audit..., say "web:request-id"...
             try {
@@ -87,7 +87,7 @@ public class Servlex
         HttpSession session = request.getSession();
         Object obj = session.getAttribute(SESSION_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:");
+            Properties props = new Properties("web:", ourConfig.getProcessors());
             session.setAttribute(SESSION_MAP_ATTR, props);
             return props;
         }
@@ -132,12 +132,11 @@ public class Servlex
         ServletContext ctxt = ourServletConfig.getServletContext();
         Object obj = ctxt.getAttribute(SERVER_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:");
+            Properties props = new Properties("web:", ourConfig.getProcessors());
             // TODO: Define the standard system properties.  See XSLT 2.0.
             try {
-                ServerConfig config = ServerConfig.getInstance(ourServletConfig);
-                String ver = config.getVersion();
-                String rev = config.getRevision();
+                String ver = ourConfig.getVersion();
+                String rev = ourConfig.getRevision();
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
                 props.setPrivate("web:product", product);
                 String product_html
@@ -156,9 +155,6 @@ public class Servlex
             catch ( TechnicalException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
             }
-            catch ( PackageException ex ) {
-                throw new TechnicalException("Unexpected exception", ex);
-            }
             ctxt.setAttribute(SERVER_MAP_ATTR, props);
             return props;
         }
@@ -168,11 +164,6 @@ public class Servlex
         else {
             return ( Properties ) obj;
         }
-    }
-
-    protected ServerConfig getConfig()
-    {
-        return myConfig;
     }
 
     /**
@@ -193,7 +184,7 @@ public class Servlex
     {
         ourServletConfig = config;
         try {
-            myConfig = ServerConfig.getInstance(config);
+            ourConfig = ServerConfig.getInstance(config);
         }
         catch ( TechnicalException ex ) {
             String msg = "Error in the servlet initialization...";
@@ -219,7 +210,7 @@ public class Servlex
         myCurrentRequest.set(req);
         // set the encoding if not explicit
         if ( req.getCharacterEncoding() == null ) {
-            String charset = myConfig.getDefaultCharset();
+            String charset = ourConfig.getDefaultCharset();
             if ( charset != null ) {
                 req.setCharacterEncoding(charset);
             }
@@ -289,25 +280,25 @@ public class Servlex
             path = pathinfo.substring(slash);
         }
         // retrieve the application
-        Application app = myConfig.getApplication(appname);
+        Application app = ourConfig.getApplication(appname);
         req.setAttribute("servlex.webapp", app);
         // resolve the component
         RequestConnector request = new RequestConnector(req, path, appname);
         Invocation invoc = app.resolve(path, req.getMethod(), request);
         // log request and profiling info
-        Auditor auditor = new Auditor(myConfig);
+        Auditor auditor = new Auditor(ourConfig);
         auditor.begin(request);
         // invoke the component
         Connector result;
         try {
-            result = invoc.invoke(request, myConfig, auditor);
+            result = invoc.invoke(request, ourConfig, auditor);
         }
         catch ( ComponentError ex ) {
             // TODO: Shouldn't we set the result even in this case...?
             throw new ServlexException(500, "Internal error", ex);
         }
         // connect the result to the client
-        result.connectToResponse(resp, myConfig);
+        result.connectToResponse(resp, ourConfig);
         // end the audit
         auditor.end();
     }
@@ -327,6 +318,7 @@ public class Servlex
     /** The HTTP request currently handled (thread-local storage). */
     private static final ThreadLocal<HttpServletRequest> myCurrentRequest
             = new ThreadLocal<HttpServletRequest>();
+
     /**
      * The config of this servlet.
      *
@@ -335,8 +327,13 @@ public class Servlex
      */
     private static ServletConfig ourServletConfig;
 
-    /** The server configuration. */
-    private ServerConfig myConfig;
+    /**
+     * The server configuration.
+     *
+     * It can be stored in a static variable, as it must be exactly one instance
+     * of this servlet (and anyway the config must always be the same).
+     */
+    private static ServerConfig ourConfig;
 }
 
 
