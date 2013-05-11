@@ -10,15 +10,12 @@
 package org.expath.servlex;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -35,6 +32,14 @@ import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
 import org.expath.servlex.processors.Processors;
 
+import static org.expath.servlex.ServlexConstants.DEFAULT_CHARSET_PROPERTY;
+import static org.expath.servlex.ServlexConstants.DEFAULT_PROCESSORS;
+import static org.expath.servlex.ServlexConstants.PROCESSORS_PROPERTY;
+import static org.expath.servlex.ServlexConstants.PROFILE_DIR_PROPERTY;
+import static org.expath.servlex.ServlexConstants.REPO_CP_PROPERTY;
+import static org.expath.servlex.ServlexConstants.REPO_DIR_PROPERTY;
+import static org.expath.servlex.ServlexConstants.TRACE_CONTENT_PROPERTY;
+
 
 /**
  * Singleton class with the config of the server.
@@ -48,22 +53,6 @@ import org.expath.servlex.processors.Processors;
  */
 public class ServerConfig
 {
-    /** The default processors implementation class to use. */
-    private static final String DEFAULT_PROCESSORS
-            = "org.expath.servlex.processors.saxon.SaxonCalabash";
-    /** The system property name for the processors implementation class. */
-    private static final String PROCESSORS_PROPERTY      = "org.expath.servlex.processors";
-    /** The system property name for the repo directory. */
-    private static final String REPO_DIR_PROPERTY        = "org.expath.servlex.repo.dir";
-    /** The system property name for the repo classpath prefix. */
-    private static final String REPO_CP_PROPERTY         = "org.expath.servlex.repo.classpath";
-    /** The system property name for the log directory. */
-    private static final String PROFILE_DIR_PROPERTY     = "org.expath.servlex.profile.dir";
-    /** The system property name for whether logging HTTP entity content. */
-    private static final String TRACE_CONTENT_PROPERTY   = "org.expath.servlex.trace.content";
-    /** The system property name for whether logging HTTP entity content. */
-    private static final String DEFAULT_CHARSET_PROPERTY = "org.expath.servlex.default.charset";
-
     /**
      * Initialize the webapp list from the repository got from system properties.
      */
@@ -93,7 +82,6 @@ public class ServerConfig
         myRepo = initRepo(myStorage);
         myProcessors = initProcessors(myRepo, this);
         myProfileDir = initProfiling();
-        initVersions();
         myTraceContent = initTracing();
         myDefaultCharset = initCharset();
         myApps = initApplications(myProcessors, myRepo);
@@ -113,7 +101,7 @@ public class ServerConfig
     private static Processors initProcessors(Repository repo, ServerConfig config)
             throws TechnicalException
     {
-        String class_name = System.getProperty(ServerConfig.PROCESSORS_PROPERTY);
+        String class_name = System.getProperty(PROCESSORS_PROPERTY);
         if ( class_name == null ) {
             class_name = DEFAULT_PROCESSORS;
         }
@@ -165,7 +153,7 @@ public class ServerConfig
     private static File initProfiling()
             throws TechnicalException
     {
-        String value = System.getProperty(ServerConfig.PROFILE_DIR_PROPERTY);
+        String value = System.getProperty(PROFILE_DIR_PROPERTY);
         File dir = null;
         if ( value != null ) {
             dir = new File(value);
@@ -177,32 +165,10 @@ public class ServerConfig
         return dir;
     }
 
-    /**
-     * Set the version and revision number by reading the properties file.
-     */
-    private void initVersions()
-            throws ParseException
-    {
-        Properties props = new Properties();
-        InputStream rsrc = ServerConfig.class.getResourceAsStream(VERSION_RSRC);
-        if ( rsrc == null ) {
-            throw new ParseException("Version properties file does not exist: " + VERSION_RSRC);
-        }
-        try {
-            props.load(rsrc);
-            rsrc.close();
-        }
-        catch ( IOException ex ) {
-            throw new ParseException("Error reading the version properties: " + VERSION_RSRC, ex);
-        }
-        myVersion  = props.getProperty(VERSION_PROP);
-        myRevision = props.getProperty(REVISION_PROP);
-    }
-
     private static boolean initTracing()
             throws TechnicalException
     {
-        String name = ServerConfig.TRACE_CONTENT_PROPERTY;
+        String name = TRACE_CONTENT_PROPERTY;
         String value = System.getProperty(name);
         if ( value == null ) {
             return false;
@@ -221,7 +187,7 @@ public class ServerConfig
     private static String initCharset()
             throws TechnicalException
     {
-        return System.getProperty(ServerConfig.DEFAULT_CHARSET_PROPERTY);
+        return System.getProperty(DEFAULT_CHARSET_PROPERTY);
     }
 
     private static Map<String, Application> initApplications(Processors procs, Repository repo)
@@ -313,22 +279,6 @@ public class ServerConfig
         catch ( PackageException ex ) {
             throw new TechnicalException("Error initializing the storage", ex);
         }
-    }
-
-    /**
-     * Return the Servlex version number.
-     */
-    public String getVersion()
-    {
-        return myVersion;
-    }
-
-    /**
-     * Return the Servlex revision number.
-     */
-    public String getRevision()
-    {
-        return myRevision;
     }
 
     public boolean canInstall()
@@ -482,20 +432,10 @@ public class ServerConfig
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ServerConfig.class);
-    /** The resource name of the version properties file. */
-    private static final String VERSION_RSRC = "/org/expath/servlex/tools/version.properties";
-    /** The property for the version number. */
-    private static final String VERSION_PROP = "org.expath.servlex.version";
-    /** The property for the revision number. */
-    private static final String REVISION_PROP = "org.expath.servlex.revision";
 
     /** The singleton instance. */
     private static ServerConfig INSTANCE;
 
-    /** The Servlex implementation version. */
-    private String myVersion;
-    /** The Servlex implementation revision number. */
-    private String myRevision;
     /** The repository for webapps. */
     private Repository myRepo;
     /** The storage used by the repository. */

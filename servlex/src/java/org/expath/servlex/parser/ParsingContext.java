@@ -12,7 +12,6 @@ package org.expath.servlex.parser;
 import java.util.*;
 import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
-import org.expath.servlex.model.ErrorHandler;
 import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Wrapper;
 

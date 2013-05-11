@@ -25,6 +25,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Packages;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
+import org.expath.pkg.repo.Storage.PackageResolver;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.components.Component;
@@ -65,22 +66,9 @@ public class EXPathWebParser
         // iterate on every sub-directories of the repo (i.e. on each package)
         for ( Packages pp : packages ) {
             Package pkg = pp.latest();
-            try {
-                // the web descriptor location
-                StreamSource descriptor = pkg.getResolver().resolveResource("expath-web.xml");
-                // ignore non-webapps (i.e. plain library packages)
-                if ( descriptor == null ) {
-                    continue;
-                }
-                // parse the descriptor and add it to the app list
-                apps.add(parseDescriptorFile(descriptor.getInputStream(), pkg));
-            }
-            catch ( Storage.NotExistException ex ) {
-                String msg = "Package does not have any web descriptor, must be a library, ignore it: ";
-                LOG.debug(msg + pkg.getName());
-            }
-            catch ( PackageException ex ) {
-                throw new ParseException("Error accessing the web descriptor of " + pkg.getName(), ex);
+            Application app = loadPackage(pkg);
+            if ( app != null ) {
+                apps.add(app);
             }
         }
         // return the application maps
@@ -97,12 +85,17 @@ public class EXPathWebParser
                  , TechnicalException
     {
         try {
-            StreamSource descriptor = pkg.getResolver().resolveResource("expath-web.xml");
-            return parseDescriptorFile(descriptor.getInputStream(), pkg);
+            // the package resolver
+            PackageResolver resolver = pkg.getResolver();
+            // the web descriptor source
+            StreamSource descriptor = resolver.resolveResource("expath-web.xml");
+            InputStream input = descriptor.getInputStream();
+            // parse the application
+            return parseDescriptorFile(input, pkg);
         }
         catch ( Storage.NotExistException ex ) {
                 String msg = "Package does not have any web descriptor, must be a library, ignore it: ";
-                LOG.debug(msg + pkg.getName());
+                LOG.debug(msg + pkg.getName() + " (" + ex + ")");
                 return null;
         }
         catch ( PackageException ex ) {
@@ -220,6 +213,9 @@ public class EXPathWebParser
                 throw new ParseException("The pattern is not a valid XPath regex", ex);
             }
         }
+        // TODO: FIXME: If I am right, all the servlets are added first, then
+        // all the resources.  But they should preserve the order from the 
+        // descriptor, because of the regex precedence...
         // add the resources
         for ( Resource rsrc : ctxt.getResources() ) {
             app.addHandler(rsrc);

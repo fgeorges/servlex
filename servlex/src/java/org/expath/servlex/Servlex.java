@@ -31,6 +31,13 @@ import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Properties;
 
+import static org.expath.servlex.ServlexConstants.PRIVATE_PROPS_PREFIX;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_HTML;
+import static org.expath.servlex.ServlexConstants.PROP_REQUEST_ID;
+import static org.expath.servlex.ServlexConstants.PROP_VENDOR;
+import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
+
 
 /**
  * TODO: ...
@@ -52,13 +59,13 @@ public class Servlex
         HttpServletRequest request = myCurrentRequest.get();
         Object obj = request.getAttribute(REQUEST_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:", ourConfig.getProcessors());
+            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
             // TODO: Add a request unique identifier in the properties, in order to identify a
             // request uniquely, e.g. to create file name for the audit..., say "web:request-id"...
             try {
                 String now  = NOW_FORMAT.format(new Date());
                 String uuid = UUID.randomUUID().toString();
-                props.setPrivate("web:request-id", now + "-" + uuid);
+                props.setPrivate(PROP_REQUEST_ID, now + "-" + uuid);
             }
             catch ( TechnicalException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
@@ -86,7 +93,7 @@ public class Servlex
         HttpSession session = request.getSession();
         Object obj = session.getAttribute(SESSION_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:", ourConfig.getProcessors());
+            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
             session.setAttribute(SESSION_MAP_ATTR, props);
             return props;
         }
@@ -131,25 +138,26 @@ public class Servlex
         ServletContext ctxt = ourServletConfig.getServletContext();
         Object obj = ctxt.getAttribute(SERVER_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties("web:", ourConfig.getProcessors());
+            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
             // TODO: Define the standard system properties.  See XSLT 2.0.
             try {
-                String ver = ourConfig.getVersion();
-                String rev = ourConfig.getRevision();
+                ServlexVersion versions = ServlexVersion.getInstance();
+                String ver = versions.getVersion();
+                String rev = versions.getRevision();
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
-                props.setPrivate("web:product", product);
+                props.setPrivate(PROP_PRODUCT, product);
                 String product_html
                         = "<a href='https://servlex.net/'>Servlex</a> version "
                         + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
-                props.setPrivate("web:product-html", product_html);
+                props.setPrivate(PROP_PRODUCT_HTML, product_html);
                 String vendor = "Florent Georges, from H2O Consulting, for EXPath";
-                props.setPrivate("web:vendor", vendor);
+                props.setPrivate(PROP_VENDOR, vendor);
                 String vendor_html
                         = "<a href='http://fgeorges.org/'>Florent Georges</a>,"
                         + " from <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
                         + " for <a href='http://expath.org/'>EXPath</a>";
-                props.setPrivate("web:vendor-html", vendor_html);
+                props.setPrivate(PROP_VENDOR_HTML, vendor_html);
             }
             catch ( TechnicalException ex ) {
                 throw new TechnicalException("Unexpected exception", ex);
