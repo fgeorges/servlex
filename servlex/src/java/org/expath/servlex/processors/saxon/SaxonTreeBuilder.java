@@ -9,6 +9,7 @@
 
 package org.expath.servlex.processors.saxon;
 
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Builder;
 import net.sf.saxon.om.*;

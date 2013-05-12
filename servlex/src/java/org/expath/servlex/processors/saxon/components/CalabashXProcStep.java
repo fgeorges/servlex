@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.components;
 
 import com.xmlcalabash.runtime.XPipeline;
 import java.io.StringReader;
@@ -23,9 +23,11 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.processors.saxon.CalabashPipeline;
+import org.expath.servlex.processors.saxon.CalabashXProc;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: ...
@@ -33,7 +35,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2010-09-06
  */
-class CalabashXProcStep
+public class CalabashXProcStep
         implements Component
 {
     public CalabashXProcStep(CalabashXProc calabash, String import_uri, String ns, String localname)

@@ -9,6 +9,10 @@
 
 package org.expath.servlex.processors.saxon;
 
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.processors.saxon.model.SaxonItem;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
+import org.expath.servlex.processors.saxon.model.SaxonEmptySequence;
 import javax.xml.transform.Source;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -31,7 +35,6 @@ import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.processors.XQueryProcessor;
 import org.expath.servlex.processors.XSLTProcessor;
-import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * XSLT, XQuery and XProc processors based on Saxon and Calabash.

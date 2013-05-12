@@ -9,6 +9,8 @@
 
 package org.expath.servlex.processors.saxon;
 
+import org.expath.servlex.processors.saxon.components.CalabashXProcStep;
+import org.expath.servlex.processors.saxon.components.CalabashXProcPipeline;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XdmNode;
 import org.expath.pkg.repo.PackageException;

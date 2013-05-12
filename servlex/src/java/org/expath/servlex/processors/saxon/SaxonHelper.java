@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package org.expath.servlex.processors.saxon;
 
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
@@ -31,14 +31,13 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
-import org.expath.servlex.processors.saxon.WebappFunctions;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.processors.saxon.SaxonDocument;
-import org.expath.servlex.processors.saxon.SaxonElement;
-import org.expath.servlex.processors.saxon.SaxonEmptySequence;
-import org.expath.servlex.processors.saxon.SaxonItem;
-import org.expath.servlex.processors.saxon.SaxonSequence;
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.processors.saxon.model.SaxonElement;
+import org.expath.servlex.processors.saxon.model.SaxonEmptySequence;
+import org.expath.servlex.processors.saxon.model.SaxonItem;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 
 /**

@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.runtime.XPipeline;
@@ -21,8 +21,8 @@ import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.TreeBuilder;
-import org.expath.servlex.processors.saxon.SaxonDocument;
-import org.expath.servlex.processors.saxon.SaxonSequence;
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 
 /**

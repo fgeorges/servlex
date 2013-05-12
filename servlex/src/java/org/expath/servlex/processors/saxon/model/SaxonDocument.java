@@ -7,14 +7,14 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Element;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * A document for Saxon.

@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,7 +20,7 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * A sequence for Saxon.

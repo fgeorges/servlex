@@ -9,6 +9,9 @@
 
 package org.expath.servlex.processors.saxon;
 
+import org.expath.servlex.processors.saxon.components.SaxonXSLTTransform;
+import org.expath.servlex.processors.saxon.components.SaxonXSLTFunction;
+import org.expath.servlex.processors.saxon.components.SaxonXSLTTemplate;
 import net.sf.saxon.s9api.Processor;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.processors.XSLTProcessor;

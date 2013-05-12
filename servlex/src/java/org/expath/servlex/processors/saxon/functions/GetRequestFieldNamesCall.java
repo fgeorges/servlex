@@ -18,7 +18,7 @@ import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.Properties;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: Doc...

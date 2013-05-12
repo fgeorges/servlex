@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.components;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
@@ -37,10 +37,14 @@ import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.processors.saxon.CalabashPipeline;
+import org.expath.servlex.processors.saxon.CalabashXProc;
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.CalabashHelper;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.CalabashHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * ...
@@ -68,7 +72,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-class CalabashXProcPipeline
+public class CalabashXProcPipeline
         implements Component
 {
     public CalabashXProcPipeline(CalabashXProc calabash, String pipe)

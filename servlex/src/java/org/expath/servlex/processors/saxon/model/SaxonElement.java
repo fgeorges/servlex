@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
 import java.net.URI;
 import java.util.Iterator;

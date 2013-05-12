@@ -9,6 +9,8 @@
 
 package org.expath.servlex.processors.saxon;
 
+import org.expath.servlex.processors.saxon.components.SaxonXQueryFunction;
+import org.expath.servlex.processors.saxon.components.SaxonXQueryModule;
 import net.sf.saxon.s9api.Processor;
 import org.expath.pkg.repo.Repository;
 import org.expath.servlex.components.Component;

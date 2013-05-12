@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.components;
 
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -25,9 +25,10 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * A component that is an XQuery function.
@@ -35,7 +36,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-class SaxonXQueryFunction
+public class SaxonXQueryFunction
         implements Component
 {
     public SaxonXQueryFunction(Processor saxon, String ns, String localname)

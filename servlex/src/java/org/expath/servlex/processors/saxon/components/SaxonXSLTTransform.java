@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.components;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -38,9 +38,10 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * ...
@@ -48,7 +49,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-class SaxonXSLTTransform
+public class SaxonXSLTTransform
         implements Component
 {
     public SaxonXSLTTransform(Processor saxon, String stylesheet)

@@ -27,7 +27,7 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: Doc...

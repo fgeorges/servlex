@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.components;
 
 import java.io.IOException;
 import javax.xml.transform.stream.StreamSource;
@@ -31,9 +31,10 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.SaxonHelper;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * A component that is an XQuery Main Module, AKA "a query".
@@ -41,7 +42,7 @@ import org.expath.servlex.tools.SaxonHelper;
  * @author Florent Georges
  * @date   2009-12-12
  */
-class SaxonXQueryModule
+public class SaxonXQueryModule
         implements Component
 {
     // FIXME: We should not need to pass the repo, using getModuleURIResolver should be enough!

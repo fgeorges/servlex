@@ -27,7 +27,6 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * Abstract an XProc pipeline.

@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.processors.saxon.SaxonSequence;
+import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.tools.Properties;
 
 /**

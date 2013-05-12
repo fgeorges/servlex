@@ -1,69 +1,72 @@
 /****************************************************************************/
-/*  File:       SaxonEmptySequence.java                                     */
+/*  File:       SaxonItem.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-05-07                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmValue;
-import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Sequence;
 
 /**
- * An empty sequence for Saxon.
- * 
+ * A document for Saxon.
+ *
  * @author Florent Georges
- * @date   2013-05-07
+ * @date   2013-04-30
  */
-public class SaxonEmptySequence
-        extends SaxonSequence
+public class SaxonItem
+        implements Item
 {
-    private static final List<XdmItem> ourItemsList = new ArrayList<XdmItem>();
-    private static final XdmValue ourXdmValue = new XdmValue(ourItemsList);
-    private static final SaxonEmptySequence ourInstance = new SaxonEmptySequence();
-
-    public static SaxonEmptySequence getInstance()
+    public SaxonItem(XdmItem item)
     {
-        return ourInstance;
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
+        }
+        myItem = item;
     }
 
-    private SaxonEmptySequence()
+    public SaxonItem(net.sf.saxon.om.Item item)
     {
-        super(ourXdmValue);
-    }
-
-    @Override
-    public Item itemAt(int position)
-    {
-        return null;
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
+        }
+        myItem = AccessProtectedItem.wrap(item);
     }
 
     @Override
-    public Element elementAt(int position)
+    public Sequence asSequence()
     {
-        return null;
+        return new SaxonSequence(myItem);
     }
 
     @Override
-    public Sequence subSequence(int start)
+    public String stringValue()
     {
-        return ourInstance;
+        return myItem.getStringValue();
     }
 
-    // TODO: Should be package visible, but is used in XdmConnector (which
-    // should use instead a method on SaxonHelper which should be move here...)
-    @Override
-    public XdmValue makeSaxonValue()
+    // TODO: Should be package visible, but is used in ParseBasicAuthCall
+    // (which should use instead a method on SaxonHelper which should be move
+    // here...)
+    public XdmItem getSaxonItem()
     {
-        return ourXdmValue;
+        return myItem;
+    }
+
+    private XdmItem myItem;
+
+    private static class AccessProtectedItem
+            extends XdmItem
+    {
+        public static XdmItem wrap(net.sf.saxon.om.Item item)
+        {
+            return wrapItem(item);
+        }
     }
 }
 

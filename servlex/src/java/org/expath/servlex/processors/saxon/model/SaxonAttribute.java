@@ -1,73 +1,55 @@
 /****************************************************************************/
-/*  File:       SaxonItem.java                                              */
+/*  File:       SaxonAttribute.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-30                                                  */
+/*  Date:       2013-05-06                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
-import net.sf.saxon.s9api.XdmItem;
-import org.expath.servlex.processors.Item;
-import org.expath.servlex.processors.Sequence;
+import javax.xml.namespace.QName;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Attribute;
 
 /**
- * A document for Saxon.
+ * An element for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-30
+ * @date   2013-05-06
  */
-public class SaxonItem
-        implements Item
+public class SaxonAttribute
+        extends SaxonItem
+        implements Attribute
 {
-    public SaxonItem(XdmItem item)
+    public SaxonAttribute(XdmNode attr)
+            throws TechnicalException
     {
-        if ( item == null ) {
-            throw new NullPointerException("Underlying item is null for Saxon item");
+        super(attr);
+        if ( attr == null ) {
+            throw new NullPointerException("Underlying node is null for Saxon attribute");
         }
-        myItem = item;
-    }
-
-    public SaxonItem(net.sf.saxon.om.Item item)
-    {
-        if ( item == null ) {
-            throw new NullPointerException("Underlying item is null for Saxon item");
+        XdmNodeKind kind = attr.getNodeKind();
+        if ( kind != XdmNodeKind.ATTRIBUTE ) {
+            throw new TechnicalException("Node is not an attribute, for Saxon attribute: " + kind);
         }
-        myItem = AccessProtectedItem.wrap(item);
+        myAttr = attr;
     }
 
     @Override
-    public Sequence asSequence()
+    public QName name()
     {
-        return new SaxonSequence(myItem);
+        net.sf.saxon.s9api.QName name = myAttr.getNodeName();
+        String ns     = name.getNamespaceURI();
+        String local  = name.getLocalName();
+        String prefix = name.getPrefix();
+        return new QName(ns, local, prefix);
     }
 
-    @Override
-    public String stringValue()
-    {
-        return myItem.getStringValue();
-    }
-
-    // TODO: Should be package visible, but is used in ParseBasicAuthCall
-    // (which should use instead a method on SaxonHelper which should be move
-    // here...)
-    public XdmItem getSaxonItem()
-    {
-        return myItem;
-    }
-
-    private XdmItem myItem;
-
-    private static class AccessProtectedItem
-            extends XdmItem
-    {
-        public static XdmItem wrap(net.sf.saxon.om.Item item)
-        {
-            return wrapItem(item);
-        }
-    }
+    private XdmNode myAttr;
 }
 
 

@@ -21,7 +21,6 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
-import org.expath.servlex.tools.SaxonHelper;
 
 /**
  * Implementation of serializer for Saxon.

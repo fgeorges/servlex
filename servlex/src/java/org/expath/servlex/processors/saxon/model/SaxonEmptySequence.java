@@ -1,55 +1,70 @@
 /****************************************************************************/
-/*  File:       SaxonAttribute.java                                         */
+/*  File:       SaxonEmptySequence.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-05-06                                                  */
+/*  Date:       2013-05-07                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon;
+package org.expath.servlex.processors.saxon.model;
 
-import javax.xml.namespace.QName;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Attribute;
+import java.util.ArrayList;
+import java.util.List;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmValue;
+import org.expath.servlex.processors.Element;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Sequence;
 
 /**
- * An element for Saxon.
- *
+ * An empty sequence for Saxon.
+ * 
  * @author Florent Georges
- * @date   2013-05-06
+ * @date   2013-05-07
  */
-public class SaxonAttribute
-        extends SaxonItem
-        implements Attribute
+public class SaxonEmptySequence
+        extends SaxonSequence
 {
-    public SaxonAttribute(XdmNode attr)
-            throws TechnicalException
+    private static final List<XdmItem> ourItemsList = new ArrayList<XdmItem>();
+    private static final XdmValue ourXdmValue = new XdmValue(ourItemsList);
+    private static final SaxonEmptySequence ourInstance = new SaxonEmptySequence();
+
+    public static SaxonEmptySequence getInstance()
     {
-        super(attr);
-        if ( attr == null ) {
-            throw new NullPointerException("Underlying node is null for Saxon attribute");
-        }
-        XdmNodeKind kind = attr.getNodeKind();
-        if ( kind != XdmNodeKind.ATTRIBUTE ) {
-            throw new TechnicalException("Node is not an attribute, for Saxon attribute: " + kind);
-        }
-        myAttr = attr;
+        return ourInstance;
+    }
+
+    private SaxonEmptySequence()
+    {
+        super(ourXdmValue);
     }
 
     @Override
-    public QName name()
+    public Item itemAt(int position)
     {
-        net.sf.saxon.s9api.QName name = myAttr.getNodeName();
-        String ns     = name.getNamespaceURI();
-        String local  = name.getLocalName();
-        String prefix = name.getPrefix();
-        return new QName(ns, local, prefix);
+        return null;
     }
 
-    private XdmNode myAttr;
+    @Override
+    public Element elementAt(int position)
+    {
+        return null;
+    }
+
+    @Override
+    public Sequence subSequence(int start)
+    {
+        return ourInstance;
+    }
+
+    // TODO: Should be package visible, but is used in XdmConnector (which
+    // should use instead a method on SaxonHelper which should be move here...)
+    @Override
+    public XdmValue makeSaxonValue()
+    {
+        return ourXdmValue;
+    }
 }
 
 
