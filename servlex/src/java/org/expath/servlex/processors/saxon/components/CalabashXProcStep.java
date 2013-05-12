@@ -9,7 +9,6 @@
 
 package org.expath.servlex.processors.saxon.components;
 
-import com.xmlcalabash.runtime.XPipeline;
 import java.io.StringReader;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -52,8 +51,10 @@ public class CalabashXProcStep
              , ComponentError
     {
         try {
-            XPipeline pipeline = getPipeline(config, auditor);
-            return CalabashXProcPipeline.evaluatePipeline(config, pipeline, connector);
+            CalabashPipeline pipeline = myCalabash.prepare(auditor);
+            XdmNode pipe = makeCallPipe();
+            pipeline.compile(pipe);
+            return pipeline.evaluate(connector);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
@@ -62,22 +63,9 @@ public class CalabashXProcStep
     }
 
     /**
-     * TODO: Cache using the new Servlex Calabash API...
-     */
-    private XPipeline getPipeline(ServerConfig config, Auditor auditor)
-            throws SaxonApiException
-                 , ComponentError
-                 , ServlexException
-    {
-        XdmNode pipe = makeCallPipe(config);
-        CalabashPipeline compiled = myCalabash.compile(pipe);
-        return compiled.prepare(auditor);
-    }
-
-    /**
      * TODO: Use a tree builder instead of string concatenation!
      */
-    private XdmNode makeCallPipe(ServerConfig config)
+    private XdmNode makeCallPipe()
             throws SaxonApiException
     {
         StringBuilder b = new StringBuilder();

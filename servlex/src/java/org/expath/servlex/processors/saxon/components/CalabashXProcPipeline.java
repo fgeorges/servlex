@@ -10,37 +10,17 @@
 package org.expath.servlex.processors.saxon.components;
 
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.runtime.XPipeline;
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.transform.SourceLocator;
-import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmEmptySequence;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
-import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
-import org.expath.servlex.connectors.XdmConnector;
-import org.expath.servlex.processors.Document;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.processors.saxon.CalabashPipeline;
 import org.expath.servlex.processors.saxon.CalabashXProc;
-import org.expath.servlex.processors.saxon.model.SaxonDocument;
-import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.CalabashHelper;
@@ -83,28 +63,7 @@ public class CalabashXProcPipeline
 
     /**
      * ...
-     */
-    @Override
-    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
-            throws ServlexException
-                 , ComponentError
-    {
-        try {
-            XPipeline pipeline = getPipeline(config, auditor);
-            return evaluatePipeline(config, pipeline, connector);
-        }
-        catch ( SaxonApiException ex ) {
-            LOG.error("User error in pipeline", ex);
-            throw SaxonHelper.makeError(ex);
-        }
-        catch ( XProcException ex ) {
-            SourceLocator loc = ex.getLocator();
-            LOG.error("User error in pipeline at " + loc.getSystemId() + ":" + loc.getLineNumber(), ex);
-            throw CalabashHelper.makeError(ex);
-        }
-    }
-
-    /**
+     * 
      * TODO: XPipeline is not cacheable (this is the runtime object).  It is
      * not clear to me what I can use to cache the compiled version (nor whether
      * it is possible at all).  See the email I've sent to XProc-Dev at
@@ -118,280 +77,28 @@ public class CalabashXProcPipeline
      * will have a much cleaner distinction between compile- and evaluation-time
      * objects (see the above-mentioned thread on XProc-Dev).
      */
-    private XPipeline getPipeline(ServerConfig config, Auditor auditor)
-            throws SaxonApiException
+    @Override
+    public Connector run(Connector connector, ServerConfig config, Auditor auditor)
+            throws ServlexException
                  , ComponentError
-                 , ServlexException
     {
-        CalabashPipeline compiled = myCalabash.compile(myPipe);
-        return compiled.prepare(auditor);
-    }
-
-    /**
-     * ...
-     * 
-     * TODO: Will probably need a specific type of connector, like XProcConnector,
-     * to be able to connect to another pipeline based on port names.  For now,
-     * this supports only the case where it is called directly from Servlex (no
-     * filter nor error handler in between, at least no pipelines, so no other
-     * needs than passing through an XDM sequence).
-     */
-    static Connector evaluatePipeline(ServerConfig config, XPipeline pipeline, Connector connector)
-            throws SaxonApiException
-                 , ServlexException
-    {
-        ComponentInstance instance = new MyInstance(pipeline, config);
-        connector.connectToPipeline(instance, config);
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Existing output ports: " + pipeline.getOutputs());
-            for ( String o : pipeline.getOutputs() ) {
-                LOG.debug("Existing output port: " + o);
-            }
-            LOG.debug("The pipeline: " + pipeline);
-            // LOG.debug("The Calabash processor: " + myCalabash);
-            // LOG.debug("The Calabash config: " + config.getSaxon().getUnderlyingConfiguration());
-            // LOG.debug("The URI resolver: " + config.getSaxon().getUnderlyingConfiguration().getURIResolver());
-            // LOG.debug("The source resolver: " + config.getSaxon().getUnderlyingConfiguration().getSourceResolver());
+        try {
+            CalabashPipeline pipeline = myCalabash.prepare(auditor);
+            pipeline.compile(myPipe);
+            return pipeline.evaluate(connector);
         }
-        // check before running
-        if ( ! pipeline.getOutputs().contains(XProcProcessor.OUTPUT_PORT_NAME) ) {
-            throw new ServlexException(501, "The output port '" + XProcProcessor.OUTPUT_PORT_NAME + "' is mandatory on an XProc pipeline.");
+        catch ( XProcException ex ) {
+            SourceLocator loc = ex.getLocator();
+            LOG.error("User error in pipeline at " + loc.getSystemId() + ":" + loc.getLineNumber(), ex);
+            throw CalabashHelper.makeError(ex);
         }
-        pipeline.run();
-        ReadablePipe response_port = pipeline.readFrom(XProcProcessor.OUTPUT_PORT_NAME);
-        XdmValue result = decodeResponse(response_port);
-        return new XdmConnector(new SaxonSequence(result));
-    }
-
-    /**
-     * Create an XdmValue object from the 'response' port.
-     *
-     * <pre>
-     * if sequence                   # sequence? then use it directly
-     *   for item
-     *     add item to result
-     * else if wrapper               # web:wrapper? unwrap the sequence
-     *   for unwrapped
-     *     add item to result
-     * else                          # a single doc, must be web:response
-     *   add doc to result
-     * </pre>
-     */
-    private static XdmValue decodeResponse(ReadablePipe port)
-            throws SaxonApiException
-                 , ServlexException
-    {
-        List<XdmItem> result = new ArrayList<XdmItem>();
-        port.canReadSequence(true);
-        // if there are more than 1 docs, the first one must be web:response,
-        // and the following ones are the bodies
-        int count = port.documentCount();
-        if ( count == 0 ) {
-            LOG.debug("The pipeline returned no document on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
-            // TODO: If there is no document on the port, we return an empty
-            // sequence.  We should probably throw an error instead...
-            return XdmEmptySequence.getInstance();
-        }
-        else if ( count > 1 ) {
-            LOG.debug("The pipeline returned " + count + " documents on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
-            while ( port.moreDocuments() ) {
-                XdmNode doc = port.read();
-                addToList(result, doc);
-            }
-        }
-        else {
-            LOG.debug("The pipeline returned 1 document on '" + XProcProcessor.OUTPUT_PORT_NAME + "'.");
-            XdmNode response = port.read();
-            if ( LOG.isDebugEnabled() ) {
-                LOG.debug("Content of the outpot port '" + XProcProcessor.OUTPUT_PORT_NAME + "': " + response);
-            }
-            if ( response == null ) {
-                // TODO: If there is no web:response, we return an empty sequence.
-                // We should probably throw an error instead...
-                return XdmEmptySequence.getInstance();
-            }
-            XdmNode wrapper_elem = getWrapperElem(response);
-            // not a web:wrapper, so only one doc, so must be web:response
-            if ( wrapper_elem == null ) {
-                addToList(result, response);
-            }
-            // a web:wrapper, so unwrap the sequence
-            else {
-                XdmSequenceIterator it = wrapper_elem.axisIterator(Axis.CHILD);
-                while ( it.hasNext() ) {
-                    // TODO: FIXME: For now, due to some strange behaviour in
-                    // Calabash, we ignore everything but elements (because it
-                    // exposes the indentation as text nodes, which is wrong...)
-                    XdmItem child = it.next();
-                    if ( child instanceof XdmNode && ((XdmNode) child).getNodeKind() == XdmNodeKind.ELEMENT ) {
-                        addToList(result, (XdmNode) child);
-                    }
-                }
-            }
-        }
-        return new XdmValue(result);
-    }
-
-    private static void addToList(List<XdmItem> list, XdmNode node)
-            throws ServlexException
-    {
-        if ( LOG.isDebugEnabled() ) {
-            // a document node
-            if ( node.getNodeKind() == XdmNodeKind.DOCUMENT ) {
-                XdmNode child = getDocElement(node);
-                // without element children
-                if ( child == null ) {
-                    LOG.debug("Adding a document node without any element to the list");
-                }
-                // with an element child
-                else {
-                    LOG.debug("Adding a document node with child '" + child.getNodeName() + "' to the list");
-                }
-            }
-            // any other kind of node
-            else {
-                LOG.debug("Adding the node '" + node.getNodeName() + "' of kind " + node.getNodeKind() + " to the list");
-            }
-        }
-        list.add(node);
-    }
-
-    /**
-     * Return the root element of {@code doc} (which must be a document node).
-     * 
-     * Error if there is other element children.
-     */
-    private static XdmNode getDocElement(XdmNode doc)
-            throws ServlexException
-    {
-        XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-        XdmNode child = null;
-        while ( ( child == null || child.getNodeKind() != XdmNodeKind.ELEMENT ) && it.hasNext() ) {
-            child = (XdmNode) it.next();
-        }
-        while ( it.hasNext() ) {
-            XdmNode n = (XdmNode) it.next();
-            if ( n.getNodeKind() == XdmNodeKind.ELEMENT ) {
-                throw new ServlexException(500, "More than 1 element in a document");
-            }
-        }
-        return child;
-    }
-
-    private static XdmNode getWrapperElem(XdmNode node)
-            throws SaxonApiException
-                 , ServlexException
-    {
-        if ( node.getNodeKind() == XdmNodeKind.DOCUMENT ) {
-            node = getDocElement(node);
-            if ( node == null ) {
-                return null;
-            }
-        }
-        QName name = node.getNodeName();
-        // element(web:wrapper)
-        if ( node.getNodeKind() == XdmNodeKind.ELEMENT && name.equals(WRAPPER_NAME) ) {
-            LOG.debug("The pipeline returned a web:wrapper");
-            return node;
-        }
-        // is not a wrapper at all
-        LOG.debug("The pipeline did not return a web:wrapper (" + name + ")");
-        return null;
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(CalabashXProcPipeline.class);
-    /** QName for 'web:response'. */
-    private static final QName WRAPPER_NAME
-            = new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "wrapper");
 
     private CalabashXProc myCalabash;
     private String myPipe;
-
-
-    /**
-     * An instance of this component.
-     */
-    private static class MyInstance
-            implements ComponentInstance
-    {
-        public MyInstance(XPipeline pipe, ServerConfig config)
-        {
-            myPipe = pipe;
-            myConfig = config;
-        }
-
-        public void connect(Sequence input)
-                throws TechnicalException
-        {
-            if ( ! (input instanceof SaxonSequence) ) {
-                throw new IllegalStateException("Not a Saxon sequence: " + input);
-            }
-            SaxonSequence seq = (SaxonSequence) input;
-            CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myConfig);
-        }
-
-        public void error(ComponentError error, Document request)
-                throws TechnicalException
-        {
-            setErrorOptions(error);
-            writeErrorRequest(request);
-            writeErrorData(error);
-        }
-
-        private void setErrorOptions(ComponentError error)
-                throws TechnicalException
-        {
-            // the code-name
-            String prefix = error.getName().getPrefix();
-            String local  = error.getName().getLocalPart();
-            String name = local;
-            if ( prefix != null && ! prefix.equals("") ) {
-                name = prefix + ":" + local;
-            }
-            // the code-namespace
-            String ns     = error.getName().getNamespaceURI();
-            // the message
-            String msg    = error.getMsg();
-            // set them as options
-            myPipe.passOption(CODE_NAME, new RuntimeValue(name));
-            myPipe.passOption(CODE_NS, new RuntimeValue(ns));
-            myPipe.passOption(MESSAGE, new RuntimeValue(msg));
-        }
-
-        private void writeErrorRequest(Document request)
-                throws TechnicalException
-        {
-            if ( ! (request instanceof SaxonDocument) ) {
-                throw new TechnicalException("Not a Saxon doc: " + request);
-            }
-            SaxonDocument doc = (SaxonDocument) request;
-            XdmNode node = doc.getSaxonNode();
-            // connect the web request to the source port
-            CalabashHelper.writeTo(myPipe, NAME, node, myConfig);
-        }
-
-        private void writeErrorData(ComponentError error)
-                throws TechnicalException
-        {
-            // connect the user sequence to the user-data port
-            Sequence sequence = error.getSequence();
-            XdmValue userdata = SaxonHelper.toXdmValue(sequence);
-            if ( userdata != null ) {
-                CalabashHelper.writeTo(myPipe, ERROR, userdata, myConfig);
-            }
-        }
-
-        private static final String NAME      = XProcProcessor.INPUT_PORT_NAME;
-        private static final String ERROR     = XProcProcessor.ERROR_PORT_NAME;
-        private static final String PREFIX    = ServlexConstants.WEBAPP_PREFIX;
-        private static final String NS        = ServlexConstants.WEBAPP_NS;
-        private static final QName  CODE_NAME = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NAME);
-        private static final QName  CODE_NS   = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NS);
-        private static final QName  MESSAGE   = new QName(PREFIX, NS, ServlexConstants.OPTION_MESSAGE);
-        private XPipeline myPipe;
-        private ServerConfig myConfig;
-    }
 }
 
 

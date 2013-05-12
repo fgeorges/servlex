@@ -12,12 +12,12 @@ package org.expath.servlex.processors.saxon;
 import org.expath.servlex.processors.saxon.components.CalabashXProcStep;
 import org.expath.servlex.processors.saxon.components.CalabashXProcPipeline;
 import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.XdmNode;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Abstract an XProc processor.
@@ -57,19 +57,11 @@ public class CalabashXProc
     }
 
     /**
-     * Compile a pipeline from a URI.
+     * Prepare a new {@link CalabashPipeline} object, to compile and evaluate a pipeline.
      */
-    public CalabashPipeline compile(String pipe)
+    public CalabashPipeline prepare(Auditor auditor)
     {
-        return new CalabashPipeline(this, pipe, myConfig);
-    }
-
-    /**
-     * Compile a pipeline from an in-memory XML tree.
-     */
-    public CalabashPipeline compile(XdmNode pipe)
-    {
-        return new CalabashPipeline(this, pipe, myConfig);
+        return new CalabashPipeline(this, myConfig, auditor);
     }
 
     public Processor getSaxon()
