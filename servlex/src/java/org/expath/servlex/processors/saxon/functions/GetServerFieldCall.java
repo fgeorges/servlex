@@ -9,18 +9,20 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.ShareableSequence;
 import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.StringsProperties;
 
 /**
  * TODO: Doc...
@@ -54,9 +56,9 @@ public class GetServerFieldCall
         // getting the sequence in the server
         try {
             LOG.debug("Get server field: '" + name + "'");
-            Properties props = Servlex.getServerMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            StringsProperties props = Servlex.getServerMap();
+            Iterable<String> value = props.get(name);
+            return SaxonHelper.toSequenceIterator(value);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error getting the value of the property: " + name, ex);

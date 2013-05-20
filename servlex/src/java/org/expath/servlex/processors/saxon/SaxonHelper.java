@@ -9,6 +9,8 @@
 
 package org.expath.servlex.processors.saxon;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import net.sf.saxon.om.SequenceIterator;
@@ -22,6 +24,8 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.ShareableSequence;
+import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.Value;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
@@ -150,6 +154,17 @@ public class SaxonHelper
         catch ( XPathException ex ) {
             throw new TechnicalException("Error getting an iterator out of an XDM value", ex);
         }
+    }
+
+    public static SequenceIterator toSequenceIterator(Iterable<String> strings)
+            throws TechnicalException
+    {
+        List<StringValue> items = new ArrayList<StringValue>();
+        for ( String s : strings ) {
+            StringValue v = new StringValue(s);
+            items.add(v);
+        }
+        return new ShareableSequence(items).iterate();
     }
 
     /**

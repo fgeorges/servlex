@@ -27,9 +27,11 @@ import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SequenceProperties;
+import org.expath.servlex.tools.StringsProperties;
 
 import static org.expath.servlex.ServlexConstants.PRIVATE_PROPS_PREFIX;
 import static org.expath.servlex.ServlexConstants.PROP_PRODUCT;
@@ -40,7 +42,7 @@ import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
 
 
 /**
- * TODO: ...
+ * The servlet dispatching the requests to the web applications in the container.
  *
  * @author Florent Georges
  * @date   2009-12-10
@@ -50,16 +52,19 @@ public class Servlex
 {
     /**
      * Get the request properties.
-     * 
-     * TODO: Use a Properties object, like getServerMap().
      */
-    public static Properties getRequestMap()
+    public static SequenceProperties getRequestMap()
             throws TechnicalException
     {
         HttpServletRequest request = myCurrentRequest.get();
         Object obj = request.getAttribute(REQUEST_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
+            Application app = myCurrentApplication.get();
+            if ( app == null ) {
+                throw new TechnicalException("No current application when accessing the request map");
+            }
+            Processors procs = app.getProcessors();
+            SequenceProperties props = new SequenceProperties(PRIVATE_PROPS_PREFIX, procs);
             // TODO: Add a request unique identifier in the properties, in order to identify a
             // request uniquely, e.g. to create file name for the audit..., say "web:request-id"...
             try {
@@ -73,62 +78,58 @@ public class Servlex
             request.setAttribute(REQUEST_MAP_ATTR, props);
             return props;
         }
-        else if ( ! ( obj instanceof Properties ) ) {
+        else if ( ! ( obj instanceof SequenceProperties ) ) {
             throw new TechnicalException(REQUEST_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Properties ) obj;
+            return ( SequenceProperties ) obj;
         }
     }
 
     /**
      * Get the session properties.
-     * 
-     * TODO: Use a Properties object, like getServerMap().
      */
-    public static Properties getSessionMap()
+    public static SequenceProperties getSessionMap()
             throws TechnicalException
     {
         HttpServletRequest request = myCurrentRequest.get();
         HttpSession session = request.getSession();
         Object obj = session.getAttribute(SESSION_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
+            Application app = myCurrentApplication.get();
+            if ( app == null ) {
+                throw new TechnicalException("No current application when accessing the session map");
+            }
+            Processors procs = app.getProcessors();
+            SequenceProperties props = new SequenceProperties(PRIVATE_PROPS_PREFIX, procs);
             session.setAttribute(SESSION_MAP_ATTR, props);
             return props;
         }
-        else if ( ! ( obj instanceof Properties ) ) {
+        else if ( ! ( obj instanceof SequenceProperties ) ) {
             throw new TechnicalException(SESSION_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Properties ) obj;
+            return ( SequenceProperties ) obj;
         }
     }
 
     /**
      * Get the webapp properties.
-     * 
-     * TODO: Use a Properties object, like getServerMap().
      */
-    public static Properties getWebappMap()
+    public static SequenceProperties getWebappMap()
             throws TechnicalException
     {
-        HttpServletRequest request = myCurrentRequest.get();
-        Object obj = request.getAttribute(WEBAPP_ATTR);
-        if ( obj == null ) {
-            throw new TechnicalException(WEBAPP_ATTR + " is not set on the request");
+        Application app = myCurrentApplication.get();
+        if ( app == null ) {
+            throw new TechnicalException("No current application when accessing the application map");
         }
-        if ( ! ( obj instanceof Application ) ) {
-            throw new TechnicalException(WEBAPP_ATTR + " is invalid: " + obj.getClass());
-        }
-        Application app = (Application) obj;
         return app.getProperties();
     }
 
     /**
      * Get the server properties.
      */
-    public static Properties getServerMap()
+    public static StringsProperties getServerMap()
             throws TechnicalException
     {
         if ( ourServletConfig == null ) {
@@ -138,8 +139,7 @@ public class Servlex
         ServletContext ctxt = ourServletConfig.getServletContext();
         Object obj = ctxt.getAttribute(SERVER_MAP_ATTR);
         if ( obj == null ) {
-            Properties props = new Properties(PRIVATE_PROPS_PREFIX, ourConfig.getProcessors());
-            // TODO: Define the standard system properties.  See XSLT 2.0.
+            StringsProperties props = new StringsProperties(PRIVATE_PROPS_PREFIX);
             try {
                 ServlexVersion versions = ServlexVersion.getInstance();
                 String ver = versions.getVersion();
@@ -165,11 +165,11 @@ public class Servlex
             ctxt.setAttribute(SERVER_MAP_ATTR, props);
             return props;
         }
-        else if ( ! ( obj instanceof Properties ) ) {
+        else if ( ! ( obj instanceof StringsProperties ) ) {
             throw new TechnicalException(SERVER_MAP_ATTR + " is invalid: " + obj.getClass());
         }
         else {
-            return ( Properties ) obj;
+            return ( StringsProperties ) obj;
         }
     }
 
@@ -219,11 +219,15 @@ public class Servlex
         }
         // do it!
         try {
-            if ( req.getPathInfo().equals("/") ) {
+            // parse the request path
+            PathInfo path = new PathInfo(req);
+            Application app = path.getApplication();
+            myCurrentApplication.set(app);
+            if ( app == null ) {
                 welcome(resp);
             }
             else {
-                invoke(req, resp);
+                invoke(path, req, resp);
             }
         }
         catch ( ServlexException ex ) {
@@ -232,6 +236,7 @@ public class Servlex
         }
         finally {
             myCurrentRequest.set(null);
+            myCurrentApplication.set(null);
         }
     } 
 
@@ -264,31 +269,21 @@ public class Servlex
     /**
      * TODO: ...
      */
-    private void invoke(HttpServletRequest req, HttpServletResponse resp)
+    private void invoke(PathInfo info, HttpServletRequest req, HttpServletResponse resp)
             throws IOException
                  , ServlexException
     {
-        String pathinfo = req.getPathInfo();
-        int slash = pathinfo.indexOf('/', 1);
-        String appname;
-        String path;
-        // if no slash in pathinfo, then it is the app name
-        if ( slash < 1 ) {
-            appname = pathinfo.substring(1);
-            path = "/";
-        }
-        else {
-            appname = pathinfo.substring(1, slash);
-            path = pathinfo.substring(slash);
-        }
         // retrieve the application
-        Application app = ourConfig.getApplication(appname);
+        String      appname = info.getAppName();
+        String      path    = info.getPath();
+        Application app     = info.getApplication();
+        Processors  procs   = app.getProcessors();
         req.setAttribute("servlex.webapp", app);
         // resolve the component
-        RequestConnector request = new RequestConnector(req, path, appname);
+        RequestConnector request = new RequestConnector(req, path, appname, procs);
         Invocation invoc = app.resolve(path, req.getMethod(), request);
         // log request and profiling info
-        Auditor auditor = new Auditor(ourConfig);
+        Auditor auditor = new Auditor(ourConfig, procs);
         auditor.begin(request);
         // invoke the component
         Connector result;
@@ -300,7 +295,7 @@ public class Servlex
             throw new ServlexException(500, "Internal error", ex);
         }
         // connect the result to the client
-        result.connectToResponse(resp, ourConfig);
+        result.connectToResponse(resp, ourConfig, procs);
         // end the audit
         auditor.end();
     }
@@ -320,6 +315,9 @@ public class Servlex
     /** The HTTP request currently handled (thread-local storage). */
     private static final ThreadLocal<HttpServletRequest> myCurrentRequest
             = new ThreadLocal<HttpServletRequest>();
+    /** The webapp serving the HTTP request currently handled (thread-local storage). */
+    private static final ThreadLocal<Application> myCurrentApplication
+            = new ThreadLocal<Application>();
 
     /**
      * The config of this servlet.
@@ -336,6 +334,57 @@ public class Servlex
      * of this servlet (and anyway the config must always be the same).
      */
     private static ServerConfig ourConfig;
+
+    /**
+     * Very simplistic information about the request path.
+     * 
+     * If the very home of Servlex is reached, both the application name and
+     * the path are null.
+     */
+    private static class PathInfo
+    {
+        public PathInfo(HttpServletRequest req)
+                throws ServlexException
+        {
+            String pathinfo = req.getPathInfo();
+            int slash = pathinfo.indexOf('/', 1);
+            // if no slash in pathinfo, then it is the app name
+            if ( pathinfo.equals("/") ) {
+                myAppName = null;
+                myPath = null;
+                myApplication = null;
+            }
+            else if ( slash < 1 ) {
+                myAppName = pathinfo.substring(1);
+                myPath = "/";
+                myApplication = ourConfig.getApplication(myAppName);
+            }
+            else {
+                myAppName = pathinfo.substring(1, slash);
+                myPath = pathinfo.substring(slash);
+                myApplication = ourConfig.getApplication(myAppName);
+            }
+        }
+
+        public Application getApplication()
+        {
+            return myApplication;
+        }
+
+        public String getAppName()
+        {
+            return myAppName;
+        }
+
+        public String getPath()
+        {
+            return myPath;
+        }
+
+        private String myAppName;
+        private String myPath;
+        private Application myApplication;
+    }
 }
 
 

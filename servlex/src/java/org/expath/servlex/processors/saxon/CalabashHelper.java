@@ -16,10 +16,10 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.log4j.Logger;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
@@ -60,7 +60,7 @@ public class CalabashHelper
      * with name {@code port} on the pipeline {@code pipe}.  A node is written
      * directly, an item is written within a c:data element.
      */
-    public static void writeTo(XPipeline pipe, String port, XdmValue sequence, ServerConfig config)
+    public static void writeTo(XPipeline pipe, String port, XdmValue sequence, Processors procs)
             throws TechnicalException
     {
         // TODO: Generate an error if not?
@@ -82,7 +82,7 @@ public class CalabashHelper
                     }
                     else {
                         String c_ns = "http://www.w3.org/ns/xproc-step";
-                        TreeBuilder b = config.getProcessors().makeTreeBuilder(c_ns, "c");
+                        TreeBuilder b = procs.makeTreeBuilder(c_ns, "c");
                         b.startElem("data");
                         b.attribute("encoding", "base64");
                         b.startContent();

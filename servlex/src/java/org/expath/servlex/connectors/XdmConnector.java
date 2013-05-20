@@ -16,6 +16,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 
 /**
@@ -117,14 +118,14 @@ public class XdmConnector
      * TODO: ...
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException
                  , IOException
     {
         // TODO: FIXME: The artificial, old class Result should be removed, and
         // its content moved to this class, which is really the one responsible
         // to write an XDM sequence to the HTTP servlet response object.
-        Result result = new Result(mySequence, config.getProcessors());
+        Result result = new Result(mySequence, procs);
         result.respond(resp);
     }
 

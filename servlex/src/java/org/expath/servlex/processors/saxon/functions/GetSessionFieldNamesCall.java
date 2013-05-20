@@ -16,8 +16,7 @@ import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SequenceProperties;
 import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
@@ -40,9 +39,9 @@ public class GetSessionFieldNamesCall
         // returning the name of every fields in the session
         try {
             LOG.debug("Get session field names");
-            Properties props = Servlex.getSessionMap();
-            Sequence seq = props.keys();
-            return SaxonHelper.toSequenceIterator(seq);
+            SequenceProperties props = Servlex.getSessionMap();
+            Iterable<String> keys = props.keys();
+            return SaxonHelper.toSequenceIterator(keys);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex session management", ex);

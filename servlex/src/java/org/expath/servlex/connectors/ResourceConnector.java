@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Processors;
 
 /**
  * Connector for a resource, can be connected only to the http servlet response.
@@ -76,7 +77,7 @@ public class ResourceConnector
     }
 
     @Override
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException
                  , IOException
     {

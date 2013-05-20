@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.ComponentInstance;
+import org.expath.servlex.processors.Processors;
 
 /**
  * Encapsulate a connection between two components.
@@ -39,7 +40,7 @@ public interface Connector
     public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
     /** Connect to the final HTTP Servlet response. */
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException, IOException;
 }
 

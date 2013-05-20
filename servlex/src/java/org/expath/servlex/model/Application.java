@@ -16,7 +16,8 @@ import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.SequenceProperties;
 
 
 /**
@@ -28,45 +29,79 @@ import org.expath.servlex.tools.Properties;
 public class Application
 {
     /**
-     * TODO: ...
+     * Create a new application, based on its name, title, package and properties.
      */
-    public Application(String name, String title, Package pkg, Properties props)
+    public Application(String name, String title, Package pkg, Processors procs)
     {
-        myName  = name;
-        myTitle = title;
-        myPkg   = pkg;
-        myProps = props;
+        myName       = name;
+        myTitle      = title;
+        myPkg        = pkg;
+        myProcessors = procs;
+        myProperties = new SequenceProperties("web:", procs);
     }
 
+    /**
+     * Return the application name (the {@code @abbrev} from {@code expath-web.xml}).
+     */
     public String getName()
     {
         return myName;
     }
 
+    /**
+     * Return the application title (the {@code title} element from {@code expath-web.xml}).
+     */
     public String getTitle()
     {
         return myTitle;
     }
 
+    /**
+     * Return the package used for the webapp.
+     */
     public Package getPackage()
     {
         return myPkg;
     }
 
+    /**
+     * Return the application handlers (the resources and servlets).
+     */
     public List<AddressHandler> getHandlers()
     {
         return myHandlers;
     }
 
+    /**
+     * Add one handler to the application (either a resource or a servlet).
+     * 
+     * The order they are added to the application is relevant.  When resolving
+     * a path, the code tries each in sequence, until it finds a match.  So the
+     * first handler added is the first one tries to match a path.
+     */
     public void addHandler(AddressHandler h)
     {
         h.setApplication(this);
         myHandlers.add(h);
     }
 
-    public Properties getProperties()
+    /**
+     * Return the application processors object.
+     */
+    public Processors getProcessors()
     {
-        return myProps;
+        return myProcessors;
+    }
+
+    /**
+     * Return the application properties object.
+     * 
+     * This object is used to store (and retrieve) properties at the level of
+     * a specific application.
+     */
+    public SequenceProperties getProperties()
+    {
+        return myProperties;
     }
 
     /**
@@ -95,7 +130,8 @@ public class Application
     private String myName;
     private String myTitle;
     private Package myPkg;
-    private Properties myProps;
+    private Processors myProcessors;
+    private SequenceProperties myProperties;
     private List<AddressHandler> myHandlers = new ArrayList<AddressHandler>();
 }
 

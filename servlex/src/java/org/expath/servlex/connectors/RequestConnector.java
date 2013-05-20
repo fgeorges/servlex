@@ -55,11 +55,12 @@ import org.xml.sax.SAXException;
 public class RequestConnector
         implements Connector
 {
-    public RequestConnector(HttpServletRequest request, String path, String appname)
+    public RequestConnector(HttpServletRequest request, String path, String appname, Processors procs)
     {
         myRequest = request;
         myPath = path;
         myAppName = appname;
+        myProcs = procs;
     }
 
     public void setMatcher(Matcher matcher)
@@ -88,14 +89,13 @@ public class RequestConnector
         if ( myInput == null ) {
             try {
                 // where to put the web:request element
-                Processors procs = config.getProcessors();
-                TreeBuilder builder = procs.makeTreeBuilder(NS_URI, NS_PREFIX);
+                TreeBuilder builder = myProcs.makeTreeBuilder(NS_URI, NS_PREFIX);
                 // parse the request (to web:request + sequence of bodies)
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
                 List<Item> input = new ArrayList<Item>();
                 myWebRequest = parseRequest(config, builder, input);
-                myInput = config.getProcessors().buildSequence(input);
+                myInput = myProcs.buildSequence(input);
             }
             catch ( TechnicalException ex ) {
                 error(500, "Internal error", ex);
@@ -171,7 +171,7 @@ public class RequestConnector
      * Throws an error, as a request cannot be connected directly to the response.
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException
                  , IOException
     {
@@ -561,7 +561,7 @@ public class RequestConnector
                     return parseBodyText(config, input, charset);
                 }
                 case BINARY: {
-                    return parseBodyBinary(config, input);
+                    return parseBodyBinary(input);
                 }
             }
         }
@@ -595,7 +595,7 @@ public class RequestConnector
         else {
             src = new StreamSource(input, sys_id);
         }
-        Document doc = config.getProcessors().buildDocument(src);
+        Document doc = myProcs.buildDocument(src);
         if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
             LOG.trace("Content parsed as document node: " + doc);
         }
@@ -623,13 +623,13 @@ public class RequestConnector
         if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
             LOG.trace("Content parsed as text: " + str);
         }
-        return config.getProcessors().buildString(str);
+        return myProcs.buildString(str);
     }
 
     /**
      * Parse content as binary.
      */
-    private Item parseBodyBinary(ServerConfig config, InputStream input)
+    private Item parseBodyBinary(InputStream input)
             throws IOException
                  , TechnicalException
     {
@@ -640,7 +640,7 @@ public class RequestConnector
             out.write(buf, 0, read);
         }
         byte[] bytes = out.toByteArray();
-        return config.getProcessors().buildBinary(bytes);
+        return myProcs.buildBinary(bytes);
     }
 
     // TODO: Error management!
@@ -671,6 +671,8 @@ public class RequestConnector
     private final String myPath;
     /** The name of the webapp (used in the URL). */
     private final String myAppName;
+    /** The processors to use. */
+    private Processors myProcs;
     /** The servlet to serve this request. */
     private Servlet myServlet = null;
     /** The regex matcher to get the groups out of the URI. */

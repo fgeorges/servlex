@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SequenceProperties;
 import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
@@ -54,7 +54,7 @@ public class GetWebappFieldCall
         // getting the sequence in the webapp
         try {
             LOG.debug("Get webapp field: '" + name + "'");
-            Properties props = Servlex.getWebappMap();
+            SequenceProperties props = Servlex.getWebappMap();
             Sequence seq = props.get(name);
             return SaxonHelper.toSequenceIterator(seq);
         }

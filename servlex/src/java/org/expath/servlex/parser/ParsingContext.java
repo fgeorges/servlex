@@ -14,6 +14,7 @@ import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
 import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Wrapper;
+import org.expath.servlex.processors.Processors;
 
 /**
  * The context while parsing a webapp descriptor (aka expath-web.xml).
@@ -23,6 +24,13 @@ import org.expath.servlex.model.Wrapper;
  */
 class ParsingContext
 {
+    public void setProcessors(Processors procs) {
+        myProcs = procs;
+    }
+    public Processors getProcessors() {
+        return myProcs;
+    }
+
     public void setAbbrev(String a) {
         myAbbrev = a;
     }
@@ -113,6 +121,7 @@ class ParsingContext
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ParsingContext.class);
 
+    private Processors           myProcs         = null;
     private String               myAbbrev        = null;
     private String               myTitle         = null;
     private ParsingApp           myApp           = null;

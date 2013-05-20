@@ -53,7 +53,7 @@ public class SaxonCalabash
             mySaxon = SaxonHelper.makeSaxon(myRepo, this);
             myXslt = new SaxonXSLT(mySaxon);
             myXQuery = new SaxonXQuery(mySaxon, repo);
-            myXProc = new CalabashXProc(mySaxon, myRepo, config);
+            myXProc = new CalabashXProc(mySaxon, myRepo, config, this);
         }
         catch ( PackageException ex ) {
             throw new TechnicalException("Error initializing the saxon and calabash processors", ex);

@@ -41,6 +41,7 @@ import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
@@ -57,11 +58,12 @@ import org.expath.servlex.processors.saxon.model.SaxonDocument;
  */
 public class CalabashPipeline
 {
-    public CalabashPipeline(CalabashXProc calabash, ServerConfig config, Auditor auditor)
+    public CalabashPipeline(CalabashXProc calabash, ServerConfig config, Auditor auditor, Processors procs)
     {
         myCalabash = calabash;
         myConfig = config;
         myAuditor = auditor;
+        myProcs = procs;
     }
 
     /**
@@ -163,7 +165,7 @@ public class CalabashPipeline
             throws ComponentError
                  , ServlexException
     {
-        ComponentInstance instance = new MyInstance(myCompiled, myConfig);
+        ComponentInstance instance = new MyInstance(myCompiled, myProcs);
         connector.connectToPipeline(instance, myConfig);
         if ( LOG.isDebugEnabled() ) {
             LOG.debug("Existing output ports: " + myCompiled.getOutputs());
@@ -348,6 +350,8 @@ public class CalabashPipeline
     private ServerConfig myConfig;
     /** The audit trail object. */
     private Auditor myAuditor;
+    /** The processors object. */
+    private Processors myProcs;
 
     /**
      * An instance of an XProc component.
@@ -355,10 +359,10 @@ public class CalabashPipeline
     private static class MyInstance
             implements ComponentInstance
     {
-        public MyInstance(XPipeline pipe, ServerConfig config)
+        public MyInstance(XPipeline pipe, Processors procs)
         {
             myPipe = pipe;
-            myConfig = config;
+            myProcs = procs;
         }
 
         public void connect(Sequence input)
@@ -368,7 +372,7 @@ public class CalabashPipeline
                 throw new IllegalStateException("Not a Saxon sequence: " + input);
             }
             SaxonSequence seq = (SaxonSequence) input;
-            CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myConfig);
+            CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myProcs);
         }
 
         public void error(ComponentError error, Document request)
@@ -408,7 +412,7 @@ public class CalabashPipeline
             SaxonDocument doc = (SaxonDocument) request;
             XdmNode node = doc.getSaxonNode();
             // connect the web request to the source port
-            CalabashHelper.writeTo(myPipe, NAME, node, myConfig);
+            CalabashHelper.writeTo(myPipe, NAME, node, myProcs);
         }
 
         private void writeErrorData(ComponentError error)
@@ -418,7 +422,7 @@ public class CalabashPipeline
             Sequence sequence = error.getSequence();
             XdmValue userdata = SaxonHelper.toXdmValue(sequence);
             if ( userdata != null ) {
-                CalabashHelper.writeTo(myPipe, ERROR, userdata, myConfig);
+                CalabashHelper.writeTo(myPipe, ERROR, userdata, myProcs);
             }
         }
 
@@ -430,7 +434,7 @@ public class CalabashPipeline
         private static final QName  CODE_NS   = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NS);
         private static final QName  MESSAGE   = new QName(PREFIX, NS, ServlexConstants.OPTION_MESSAGE);
         private XPipeline myPipe;
-        private ServerConfig myConfig;
+        private Processors myProcs;
     }
 }
 

@@ -72,19 +72,58 @@ public class ServerConfig
     }
 
     /**
-     * Initialize the webapp list from the repository got from the parameter.
+     * Initialize the webapp list from the repository constructed over the storage.
      */
     protected ServerConfig(Storage storage)
             throws TechnicalException
     {
-        LOG.info("ServerConfig with storage: " + storage);
+        this(storage, initRepo(storage));
+    }
+
+    /**
+     * Initialize the webapp list from the repository.
+     * 
+     * TODO: This constructor should only take a repository, not both a repository
+     * and a storage.  Once I update the pkg-repo.jar, I can use the new getStorage()
+     * method on Repository...
+     */
+    protected ServerConfig(Storage storage, Repository repo)
+            throws TechnicalException
+    {
+        LOG.info("ServerConfig with storage: " + storage + ", and repository: " + repo);
         myStorage = storage;
-        myRepo = initRepo(myStorage);
-        myProcessors = initProcessors(myRepo, this);
+        myRepo = repo;
+        String class_name = System.getProperty(PROCESSORS_PROPERTY);
+        if ( class_name == null ) {
+            class_name = DEFAULT_PROCESSORS;
+        }
+        init(getProcessors(class_name));
+    }
+
+    /**
+     * Initialize the webapp list from the repository and the processors implementation.
+     * 
+     * TODO: This constructor should only take a repository, not both a repository
+     * and a storage.  Once I update the pkg-repo.jar, I can use the new getStorage()
+     * method on Repository...
+     */
+    protected ServerConfig(Storage storage, Repository repo, Processors procs)
+            throws TechnicalException
+    {
+        LOG.info("ServerConfig with storage: " + storage + ", and repository: " + repo + ", and processors: " + procs);
+        myStorage = storage;
+        myRepo = repo;
+        init(procs);
+    }
+
+    private void init(Processors procs)
+            throws TechnicalException
+    {
+        myProcessors = procs;
         myProfileDir = initProfiling();
         myTraceContent = initTracing();
         myDefaultCharset = initCharset();
-        myApps = initApplications(myProcessors, myRepo);
+        myApps = initApplications(myRepo, this);
     }
 
     private static Repository initRepo(Storage storage)
@@ -98,13 +137,15 @@ public class ServerConfig
         }
     }
 
-    private static Processors initProcessors(Repository repo, ServerConfig config)
+    public synchronized Processors getProcessors(String class_name)
             throws TechnicalException
     {
-        String class_name = System.getProperty(PROCESSORS_PROPERTY);
-        if ( class_name == null ) {
-            class_name = DEFAULT_PROCESSORS;
+        // if in the map, return it
+        Processors procs = myProcessorsMap.get(class_name);
+        if ( procs != null ) {
+            return procs;
         }
+        // if not, instantiate it
         try {
             // get the raw class object
             ClassLoader loader = ServerConfig.class.getClassLoader();
@@ -118,7 +159,9 @@ public class ServerConfig
             Class<Processors> clazz = (Class<Processors>) class_raw;
             Constructor<Processors> ctor = clazz.getConstructor(Repository.class, ServerConfig.class);
             // instantiate
-            return ctor.newInstance(repo, config);
+            procs = ctor.newInstance(myRepo, this);
+            myProcessorsMap.put(class_name, procs);
+            return procs;
         }
         catch ( ClassNotFoundException ex ) {
             String msg = "The processors implementation class not found: ";
@@ -190,11 +233,11 @@ public class ServerConfig
         return System.getProperty(DEFAULT_CHARSET_PROPERTY);
     }
 
-    private static Map<String, Application> initApplications(Processors procs, Repository repo)
+    private static Map<String, Application> initApplications(Repository repo, ServerConfig config)
             throws TechnicalException
     {
         // the parser
-        EXPathWebParser parser = new EXPathWebParser(procs);
+        EXPathWebParser parser = new EXPathWebParser(config);
         // the application map
         Map<String, Application> applications = new HashMap<String, Application>();
         // parse and save the result in the map
@@ -361,7 +404,7 @@ public class ServerConfig
     /**
      * Return the processors.
      */
-    public Processors getProcessors()
+    public Processors getDefaultProcessors()
     {
         return myProcessors;
     }
@@ -401,7 +444,7 @@ public class ServerConfig
     private String doInstall(Package pkg)
             throws TechnicalException
     {
-        EXPathWebParser parser = new EXPathWebParser(myProcessors);
+        EXPathWebParser parser = new EXPathWebParser(this);
         Application app = parser.loadPackage(pkg);
         if ( app == null ) {
             // not a webapp
@@ -440,7 +483,9 @@ public class ServerConfig
     private Repository myRepo;
     /** The storage used by the repository. */
     private Storage myStorage;
-    /** The XSLT processor. */
+    /** The map with all processors implementations. */
+    private Map<String, Processors> myProcessorsMap = new HashMap<String, Processors>();
+    /** The processors. */
     private Processors myProcessors;
     /** The application map. */
     private Map<String, Application> myApps;

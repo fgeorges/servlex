@@ -19,8 +19,8 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.SequenceProperties;
 
 /**
  * TODO: Doc...
@@ -54,7 +54,7 @@ public class GetRequestFieldCall
         // getting the sequence in the request
         try {
             LOG.debug("Get request field: '" + name + "'");
-            Properties props = Servlex.getRequestMap();
+            SequenceProperties props = Servlex.getRequestMap();
             Sequence seq = props.get(name);
             return SaxonHelper.toSequenceIterator(seq);
         }

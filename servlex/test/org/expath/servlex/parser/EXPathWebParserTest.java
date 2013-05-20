@@ -15,6 +15,7 @@ import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
@@ -48,9 +49,9 @@ public class EXPathWebParserTest
         File repo_dir = new File(System.getProperty("user.home"), "tmp/servlex/repo");
         Storage storage = new FileSystemStorage(repo_dir);
         Repository repo = new Repository(storage);
-        Processors procs = new SaxonCalabash(repo, null);
+        ServerConfig fake = new FakeConfig(storage, repo);
         // the System Under Test
-        EXPathWebParser sut = new EXPathWebParser(procs);
+        EXPathWebParser sut = new EXPathWebParser(fake);
         Set<Application> result = sut.parseDescriptors(repo.listPackages());
         System.err.println("RESULT: " + result);
         for ( Application app : result ) {
@@ -65,6 +66,24 @@ public class EXPathWebParserTest
                     }
                 }
             }
+        }
+    }
+
+    private static class FakeConfig
+            extends ServerConfig
+    {
+        public FakeConfig(Storage storage, Repository repo)
+                throws TechnicalException
+                     , PackageException
+        {
+            super(storage, repo, new SaxonCalabash(repo, null));
+        }
+
+        @Override
+        public Processors getProcessors(String clazz)
+                throws TechnicalException
+        {
+            throw new TechnicalException("Must not be called in test...!");
         }
     }
 }

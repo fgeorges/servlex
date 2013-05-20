@@ -26,6 +26,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Serializer;
 
 /**
@@ -36,10 +37,11 @@ import org.expath.servlex.processors.Serializer;
  */
 public class Auditor
 {
-    public Auditor(ServerConfig config)
+    public Auditor(ServerConfig config, Processors procs)
             throws ServlexException
     {
         myConfig = config;
+        myProcs = procs;
         try {
             myFile = config.getProfileFile("servlex-audit");
         }
@@ -75,7 +77,7 @@ public class Auditor
                 myWriter.append(format(myStart));
                 myWriter.append("\"/>\n");
                 myWriter.flush();
-                Serializer serial = myConfig.getProcessors().makeSerializer();
+                Serializer serial = myProcs.makeSerializer();
                 serial.setMethod("xml");
                 serial.setIndent("yes");
                 serial.setOmitXmlDeclaration("yes");
@@ -180,6 +182,7 @@ public class Auditor
     }
 
     private ServerConfig myConfig;
+    private Processors myProcs;
     private File myFile;
     private Writer myWriter;
     private OutputStream myOutput;

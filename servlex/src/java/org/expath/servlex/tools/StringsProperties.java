@@ -1,55 +1,50 @@
 /****************************************************************************/
-/*  File:       GetServerFieldNamesCall.java                                */
+/*  File:       StringsProperties.java                                      */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2010-11-22                                                  */
+/*  Date:       2013-05-19                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon.functions;
+package org.expath.servlex.tools;
 
-import net.sf.saxon.expr.XPathContext;
-import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
-import org.expath.servlex.Servlex;
+import java.util.ArrayList;
+import java.util.List;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.tools.StringsProperties;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
- * TODO: Doc...
+ * A {@link Properties} implementation for lists of {@link String} values.
  *
  * @author Florent Georges
- * @date   2010-11-22
+ * @date   2013-05-19
  */
-public class GetServerFieldNamesCall
-        extends ExtensionFunctionCall
+public class StringsProperties
+        extends Properties<String>
 {
-    @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
-            throws XPathException
+    /**
+     * Constructs a new Properties object with a private property name prefix.
+     */
+    public StringsProperties(String private_prefix)
     {
-        // num of params
-        if ( params.length != 0 ) {
-            throw new XPathException("There are actual params: " + params.length);
-        }
-        // returning the name of every fields in the server
-        try {
-            LOG.debug("Get server field names");
-            StringsProperties props = Servlex.getServerMap();
-            Iterable<String> keys = props.keys();
-            return SaxonHelper.toSequenceIterator(keys);
-        }
-        catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex server management", ex);
-        }
+        super(private_prefix);
     }
 
-    /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetServerFieldCall.class);
+    @Override
+    protected String valueAsString(String key, String value)
+            throws TechnicalException
+    {
+        return value;
+    }
+
+    @Override
+    protected Iterable<String> valueFromString(String value)
+            throws TechnicalException
+    {
+        List<String> list = new ArrayList<String>(1);
+        list.add(value);
+        return list;
+    }
 }
 
 

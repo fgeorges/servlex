@@ -16,6 +16,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.runtime.ComponentError;
 
 /**
@@ -105,7 +106,7 @@ public class ErrorConnector
      * TODO: Mapping to define, then implement.
      */
     @Override
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config)
+    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException
                  , IOException
     {

@@ -16,6 +16,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.SaxonRepository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.tools.Auditor;
 
@@ -38,12 +39,13 @@ public class CalabashXProc
      * (but this is not an error).  If the property does not exist, profiling is
      * not enabled.
      */
-    public CalabashXProc(Processor saxon, SaxonRepository repo, ServerConfig config)
+    public CalabashXProc(Processor saxon, SaxonRepository repo, ServerConfig config, Processors procs)
             throws PackageException
     {
         mySaxon = saxon;
         myRepo = repo;
         myConfig = config;
+        myProcs = procs;
     }
 
     public Component makePipeline(String uri)
@@ -61,7 +63,7 @@ public class CalabashXProc
      */
     public CalabashPipeline prepare(Auditor auditor)
     {
-        return new CalabashPipeline(this, myConfig, auditor);
+        return new CalabashPipeline(this, myConfig, auditor, myProcs);
     }
 
     public Processor getSaxon()
@@ -80,6 +82,8 @@ public class CalabashXProc
     private ServerConfig myConfig;
     /** The Saxon instance. */
     private Processor mySaxon;
+    /** The processors object. */
+    private Processors myProcs;
 }
 
 

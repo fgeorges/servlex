@@ -9,16 +9,13 @@
 
 package org.expath.servlex.tools;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Item;
-import org.expath.servlex.processors.Processors;
-import org.expath.servlex.processors.Sequence;
 
 /**
  * Properties (either server, webapp, session or request properties).
@@ -26,38 +23,24 @@ import org.expath.servlex.processors.Sequence;
  * @author Florent Georges
  * @date   2013-02-26
  */
-public class Properties
+public abstract class Properties<Value>
 {
-    /**
-     * Constructs a new Properties object without any private property name prefix.
-     */
-    public Properties(Processors procs)
-    {
-        this(null, procs);
-    }
-
     /**
      * Constructs a new Properties object with a private property name prefix.
      */
-    public Properties(String private_prefix, Processors procs)
+    public Properties(String private_prefix)
     {
         myPrivatePrefix = private_prefix;
-        myProcs = procs;
-        myMap = new HashMap<String, Sequence>();
+        myMap = new HashMap<String, Iterable<Value>>();
     }
 
     /**
      * Get a property value.
-     * 
-     * Never return null.
      */
-    public Sequence get(String key)
+    public Iterable<Value> get(String key)
             throws TechnicalException
     {
-        Sequence value = myMap.get(key);
-        if ( value == null ) {
-            value = myProcs.emptySequence();
-        }
+        Iterable<Value> value = myMap.get(key);
         if ( LOG.isDebugEnabled() ) {
             logGetValue(key, value);
         }
@@ -81,25 +64,31 @@ public class Properties
         if ( ! key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
         }
-        Sequence sequence = get(key);
-        Item item = sequence.itemAt(0);
-        if ( item == null ) {
+        Iterable<Value> value = get(key);
+        Iterator<Value> iter = value.iterator();
+        if ( ! iter.hasNext() ) {
             return null;
         }
-        if ( sequence.itemAt(1) != null ) {
-            throw new TechnicalException("The value of " + key + " contains more than one item.");
+        Value first = iter.next();
+        if ( iter.hasNext() ) {
+            throw new TechnicalException("The value of " + key + " contains more than one item (second is: " + iter.next() + ".");
         }
-        // TODO: Check if the item actually is a string item?
-        return item.stringValue();
+        return valueAsString(key, first);
     }
 
-    private void logGetValue(String key, Sequence value)
+    protected abstract String valueAsString(String key, Value value)
+            throws TechnicalException;
+
+    protected abstract Iterable<Value> valueFromString(String value)
+            throws TechnicalException;
+
+    private void logGetValue(String key, Iterable<Value> value)
             throws TechnicalException
     {
         LOG.debug("Properties.get: " + key + ", " + value);
         if ( LOG.isTraceEnabled() ) {
-            for ( Item i : value ) {
-                LOG.trace("          .get: " + i);
+            for ( Value v : value ) {
+                LOG.trace("          .get: " + v);
             }
         }
     }
@@ -107,7 +96,7 @@ public class Properties
     /**
      * Set a property value (it is an error if the property name starts with the private prefix).
      */
-    public Sequence set(String key, Sequence value)
+    public Iterable<Value> set(String key, Iterable<Value> value)
             throws TechnicalException
     {
         if ( LOG.isDebugEnabled() ) {
@@ -125,7 +114,7 @@ public class Properties
     /**
      * Set a private value (the property name must start with the private prefix).
      */
-    public Sequence setPrivate(String key, String value)
+    public Iterable<Value> setPrivate(String key, String value)
             throws TechnicalException
     {
         if ( LOG.isDebugEnabled() ) {
@@ -140,8 +129,8 @@ public class Properties
         if ( ! key.startsWith(myPrivatePrefix) ) {
             throw new TechnicalException("Key does not start with the private prefix (" + myPrivatePrefix + "): " + key);
         }
-        Item string = myProcs.buildString(value);
-        return myMap.put(key, string.asSequence());
+        Iterable<Value> v = valueFromString(value);
+        return myMap.put(key, v);
     }
 
     /**
@@ -155,28 +144,18 @@ public class Properties
     /**
      * Return all the property names, as a set.
      */
-    public Sequence keys()
+    public Set<String> keys()
             throws TechnicalException
     {
-        if ( size() == 0 ) {
-            return myProcs.emptySequence();
-        }
-        List items = new ArrayList<Item>(size());
-        for ( String name : myMap.keySet() ) {
-            Item i = myProcs.buildString(name);
-            items.add(i);
-        }
-        return myProcs.buildSequence(items);
+        return myMap.keySet();
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(Servlex.class);
+    protected static final Logger LOG = Logger.getLogger(Servlex.class);
     /** The private property name prefix, if any. */
     private String myPrivatePrefix;
     /** The store map. */
-    private Map<String, Sequence> myMap;
-    /** The processors to use. */
-    private Processors myProcs;
+    private Map<String, Iterable<Value>> myMap;
 }
 
 

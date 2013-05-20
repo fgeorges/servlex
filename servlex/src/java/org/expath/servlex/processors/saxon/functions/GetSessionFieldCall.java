@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.tools.Properties;
+import org.expath.servlex.tools.SequenceProperties;
 import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
@@ -54,7 +54,7 @@ public class GetSessionFieldCall
         // getting the sequence in the session
         try {
             LOG.debug("Get session field: '" + name + "'");
-            Properties props = Servlex.getSessionMap();
+            SequenceProperties props = Servlex.getSessionMap();
             Sequence seq = props.get(name);
             return SaxonHelper.toSequenceIterator(seq);
         }
