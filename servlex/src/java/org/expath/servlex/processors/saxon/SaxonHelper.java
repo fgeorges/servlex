@@ -156,6 +156,15 @@ public class SaxonHelper
         }
     }
 
+    public static SequenceIterator toSequenceIterator(String string)
+            throws TechnicalException
+    {
+        List<StringValue> items = new ArrayList<StringValue>();
+        StringValue v = new StringValue(string);
+        items.add(v);
+        return new ShareableSequence(items).iterate();
+    }
+
     public static SequenceIterator toSequenceIterator(Iterable<String> strings)
             throws TechnicalException
     {

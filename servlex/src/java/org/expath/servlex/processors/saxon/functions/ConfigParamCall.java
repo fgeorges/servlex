@@ -15,6 +15,7 @@ import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * Implements web:config-param().
@@ -43,14 +44,21 @@ public class ConfigParamCall
         if ( params.number() == 2 ) {
             dflt = params.asString(1, true);
         }
-        // getting the sequence in the request
+        // do it
+        LOG.debug(params.format("web:config-param").param(name).param(dflt).value());
+        String value = doit(name, dflt);
         try {
-            LOG.debug("web:config-param('" + name + "')");
-            throw new TechnicalException("Not implemented yet, getting config param: " + name);
+            return SaxonHelper.toSequenceIterator(value);
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex request management", ex);
+            throw new XPathException("Error in the data model", ex);
         }
+    }
+
+    private String doit(String name, String dflt)
+            throws XPathException
+    {
+        throw new XPathException("Not implemented yet, getting config param: " + name);
     }
 
     /** The logger. */

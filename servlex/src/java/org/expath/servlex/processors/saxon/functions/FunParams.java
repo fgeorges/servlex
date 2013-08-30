@@ -41,6 +41,7 @@ class FunParams
             }
         }
         myParams = params;
+        myMax = max;
     }
 
     /**
@@ -104,7 +105,69 @@ class FunParams
         }
     }
 
+    public Formatter format(String name)
+    {
+        return new Formatter(name, myParams.length, myMax);
+    }
+
+    public class Formatter
+    {
+        public Formatter(String name, int num, int max)
+        {
+            myNum = num;
+            myMax = max;
+            myI   = 0;
+            myBuf = new StringBuilder(name);
+            myBuf.append("(");
+        }
+
+        public Formatter param(String value)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                if ( value == null ) {
+                    myBuf.append("()");
+                }
+                else {
+                    myBuf.append("'");
+                    myBuf.append(value.replace("'", "''"));
+                    myBuf.append("'");
+                }
+            }
+            return this;
+        }
+
+        public String value()
+        {
+            myBuf.append(")");
+            return myBuf.toString();
+        }
+
+        /**
+         * Return true if the value must be output.
+         */
+        private boolean checkPos()
+            throws XPathException
+        {
+            ++myI;
+            if ( myI > myMax ) {
+                throw new XPathException("too much params: " + ordinal(myI) + ", max: " + myMax);
+            }
+            boolean doit = myI <= myNum;
+            if ( doit && myI > 1 ) {
+                myBuf.append(", ");
+            }
+            return doit;
+        }
+
+        private StringBuilder myBuf;
+        private int myNum;
+        private int myMax;
+        private int myI;
+    }
+
     private SequenceIterator[] myParams;
+    private int myMax;
 }
 
 
