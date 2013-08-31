@@ -83,28 +83,41 @@ public class DeployWebapp
     {
         View view = new View(resp, "deploy", "Deploy");
         if ( myConfig.canInstall() ) {
-            view.println("<p>Deploy a webapp from a local XAW file:</p>");
+            view.println("<p>Deploy a webapp, either from a local XAW file, or directly from CXAN.");
+            view.println("If you deploy directly from CXAN, you can use either a CXAN ID <b>or</b>");
+            view.println("a full package name.  The version number is optional (if not set, the");
+            view.println("latest one is picked).</p>");
+            view.println("<p><b>Local file:</b></p>");
             view.println("<form action='deploy' method='post' enctype='multipart/form-data'>");
             view.println("   <input type='file' name='xawfile' size='40'>");
             view.println("   <input type='submit' value='Deploy file'>");
             view.println("</form>");
-            view.println("<p>Deploy a webapp from CXAN:</p>");
+            view.println("<p><b>From CXAN:</b></p>");
             view.println("<form action='deploy-cxan' method='post' enctype='application/x-www-form-urlencoded'>");
-            view.println("   <span>ID:</span>");
-            view.println("   <input type='text' name='id'  size='25'>");
-            view.println("   <span> or name:</span>");
-            view.println("   <input type='text' name='name' size='50'>");
-            view.println("   <br />");
-            view.println("   <span>Version (optional):</span>");
-            view.println("   <input type='text' name='version'  size='15'>");
-            view.println("   <br />");
-            view.println("   <span>From CXAN on:</span>");
-            view.println("   <select name='server'>");
-            view.println("      <option value='prod'>Production - http://cxan.org/</option>");
-            view.println("      <option value='sandbox'>Sandbox - http://test.cxan.org/</option>");
-            view.println("   </select>");
-            view.println("   <br />");
-            view.println("   <input type='submit' value='Install from CXAN'>");
+            view.println("   <table>");
+            view.println("      <tr>");
+            view.println("         <td class='right'>ID:</td>");
+            view.println("         <td><input name='id' size='50' type='text' /></td>");
+            view.println("      </tr>");
+            view.println("      <tr>");
+            view.println("         <td class='right'>Name:</td>");
+            view.println("         <td><input name='name' size='50' type='text' /></td>");
+            view.println("      </tr>");
+            view.println("      <tr>");
+            view.println("         <td class='right'>Version:</td>");
+            view.println("         <td><input name='version' size='50' type='text' /></td>");
+            view.println("      </tr>");
+            view.println("      <tr>");
+            view.println("         <td class='right'>From:</td>");
+            view.println("         <td>");
+            view.println("            <select name='server'>");
+            view.println("               <option selected='selected' value='prod'>Production - http://cxan.org/</option>");
+            view.println("               <option value='sandbox'>Sandbox - http://test.cxan.org/</option>");
+            view.println("            </select>");
+            view.println("         </td>");
+            view.println("      </tr>");
+            view.println("   </table>");
+            view.println("   <p><input value='Deploy' type='submit'></p>");
             view.println("</form>");
         }
         else {
