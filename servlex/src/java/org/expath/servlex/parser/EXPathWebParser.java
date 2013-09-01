@@ -56,6 +56,7 @@ public class EXPathWebParser
      * of {@link Repository#resolve(String,URISpace)} about that (versionning
      * scheme is not always SemVer -- or could we impose it for webapps?)
      */
+    @Deprecated
     public Set<Application> parseDescriptors(Collection<Packages> packages)
             throws ParseException
                  , TechnicalException
@@ -70,6 +71,25 @@ public class EXPathWebParser
                 apps.add(app);
             }
         }
+        // return the application maps
+        return apps;
+    }
+
+    /**
+     * Parse the webapps configuration file.
+     *
+     * The webapps configuration is in the repo at .expath-web/webapps.xml.
+     */
+    public Set<Application> parseWebapps(StreamSource webapps)
+            throws ParseException
+                 , TechnicalException
+    {
+        // the result
+        Set<Application> apps = new HashSet<Application>();
+        //
+        // TODO: Parse .expath-web/webapps.xml and the corresponding
+        // xxx/expath-web.xml descriptors...
+        //
         // return the application maps
         return apps;
     }
@@ -103,7 +123,7 @@ public class EXPathWebParser
             return source.getInputStream();
         }
         catch ( Storage.NotExistException ex ) {
-                String msg = "No descriptor '" + name + "' in " + pkg.getName();
+                String msg = "No web descriptor '" + name + "' in " + pkg.getName();
                 LOG.debug(msg + " (" + ex + ")");
                 return null;
         }
@@ -132,9 +152,11 @@ public class EXPathWebParser
         // try servlex.xml
         InputStream extensions = getDescriptor(pkg, SERVLEX_FILENAME);
         if ( extensions == null ) {
-            LOG.debug("Package does not have Servlex extension descriptor: " + pkg.getName());
+            LOG.info("Package does not have Servlex extension descriptor: " + pkg.getName());
             return ctxt;
         }
+
+        LOG.info("Parse Servlex extension descriptor for app " + pkg.getName());
 
         // parser on servlex.xml, and position on the root 'webapp' element
         StreamParser parser = new StreamParser(extensions, SERVLEX_NS);

@@ -40,7 +40,7 @@ public class StreamParser
             myParser = factory.createXMLStreamReader(input);
         }
         catch ( XMLStreamException ex ) {
-            throw new ParseException("Error opening the webapp descriptor", ex);
+            throw new ParseException("Error opening the input stream", ex);
         }
         // check the first event ia a start document event
         int event = myParser.getEventType();
