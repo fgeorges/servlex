@@ -9,13 +9,13 @@
 
 package org.expath.servlex.parser;
 
-import java.io.InputStream;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.Source;
 import org.apache.log4j.Logger;
 
 /**
@@ -30,7 +30,7 @@ public class StreamParser
      * TODO: Is it possible to validate on-the-fly with an XMLStreamReader?
      * That would be handy!
      */
-    public StreamParser(InputStream input, String target_ns)
+    public StreamParser(Source input, String target_ns)
             throws ParseException
     {
         myTargetNs = target_ns;

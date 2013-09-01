@@ -9,7 +9,6 @@
 
 package org.expath.servlex.parser;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +17,7 @@ import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
@@ -103,7 +103,7 @@ public class EXPathWebParser
             throws ParseException
                  , TechnicalException
     {
-        InputStream descriptor = getDescriptor(pkg, DESC_FILENAME);
+        Source descriptor = getDescriptor(pkg, DESC_FILENAME);
         if ( descriptor == null ) {
             LOG.debug("Package does not have any web descriptor, must be a library, ignore it: " + pkg.getName());
             return null;
@@ -114,13 +114,12 @@ public class EXPathWebParser
     /**
      * Return a descriptor from the package, like {@code expath-web.xml} or {@code servlex.xml}.
      */
-    private InputStream getDescriptor(Package pkg, String name)
+    private Source getDescriptor(Package pkg, String name)
             throws ParseException
     {
         try {
             PackageResolver resolver = pkg.getResolver();
-            StreamSource    source   = resolver.resolveResource(name);
-            return source.getInputStream();
+            return resolver.resolveResource(name);
         }
         catch ( Storage.NotExistException ex ) {
                 String msg = "No web descriptor '" + name + "' in " + pkg.getName();
@@ -150,7 +149,7 @@ public class EXPathWebParser
         ctxt.setProcessors(myConfig.getDefaultProcessors());
 
         // try servlex.xml
-        InputStream extensions = getDescriptor(pkg, SERVLEX_FILENAME);
+        Source extensions = getDescriptor(pkg, SERVLEX_FILENAME);
         if ( extensions == null ) {
             LOG.info("Package does not have Servlex extension descriptor: " + pkg.getName());
             return ctxt;
@@ -201,7 +200,7 @@ public class EXPathWebParser
      * 
      * TODO: Plug schema validation of expath-web.xml.
      */
-    private Application parseDescriptorFile(InputStream descriptor, Package pkg)
+    private Application parseDescriptorFile(Source descriptor, Package pkg)
             throws ParseException
                  , TechnicalException
     {

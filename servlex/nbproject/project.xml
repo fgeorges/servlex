@@ -8,11 +8,11 @@
             <explicit-platform explicit-source-supported="true"/>
             <web-module-libraries>
                 <library dirs="200">
-                    <file>${file.reference.pkg-calabash.jar}</file>
+                    <file>${file.reference.pkg-java.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.pkg-repo.jar}</file>
+                    <file>${file.reference.pkg-calabash.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">

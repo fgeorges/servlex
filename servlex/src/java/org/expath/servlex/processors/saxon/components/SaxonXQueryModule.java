@@ -10,6 +10,7 @@
 package org.expath.servlex.processors.saxon.components;
 
 import java.io.IOException;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -115,7 +116,7 @@ public class SaxonXQueryModule
     private StreamSource resolve()
             throws ServlexException
     {
-        StreamSource src = null;
+        Source src = null;
         try {
             src = myRepo.resolve(myUri, URISpace.XQUERY);
         }
@@ -125,7 +126,14 @@ public class SaxonXQueryModule
         if ( src == null ) {
             error("Query URI does not resolve in repo");
         }
-        return src;
+        StreamSource stream = null;
+        if ( src instanceof StreamSource ) {
+            stream = (StreamSource) src;
+        }
+        else {
+            error("The resource is not a StreamSource: " + src.getClass());
+        }
+        return stream;
     }
 
     private void error(String msg)

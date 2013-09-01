@@ -11,6 +11,7 @@ package org.expath.servlex.runtime;
 
 import org.expath.servlex.model.Resource;
 import java.io.InputStream;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
@@ -50,12 +51,19 @@ public class ResourceInvocation
         try {
             String path = RegexHelper.replaceMatches(orig_path, myJavaRegex, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
-            StreamSource rsrc = pkg.getResolver().resolveComponent(path);
+            Source src = pkg.getResolver().resolveComponent(path);
             // return a 404 if the resource does not exist
-            if ( rsrc == null ) {
+            if ( src == null ) {
                 throw new ServlexException(404, "Page not found");
             }
-            InputStream in = rsrc.getInputStream();
+            StreamSource stream = null;
+            if ( src instanceof StreamSource ) {
+                stream = (StreamSource) src;
+            }
+            else {
+                throw new ServlexException(500, "The resource is not a StreamSource: " + src.getClass());
+            }
+            InputStream in = stream.getInputStream();
             return new ResourceConnector(in, 200, myRsrc.getType());
         }
         catch ( Storage.NotExistException ex ) {
