@@ -79,22 +79,18 @@ public class ServerConfig
     protected ServerConfig(Storage storage)
             throws TechnicalException
     {
-        this(storage, initRepo(storage));
+        this(initRepo(storage));
     }
 
     /**
      * Initialize the webapp list from the repository.
-     * 
-     * TODO: This constructor should only take a repository, not both a repository
-     * and a storage.  Once I update the pkg-repo.jar, I can use the new getStorage()
-     * method on Repository...
      */
-    protected ServerConfig(Storage storage, Repository repo)
+    protected ServerConfig(Repository repo)
             throws TechnicalException
     {
-        LOG.info("ServerConfig with storage: " + storage + ", and repository: " + repo);
-        myStorage = storage;
+        myStorage = repo.getStorage();
         myRepo = repo;
+        LOG.info("ServerConfig with storage: " + myStorage + ", and repository: " + myRepo);
         String class_name = System.getProperty(PROCESSORS_PROPERTY);
         if ( class_name == null ) {
             class_name = DEFAULT_PROCESSORS;
@@ -104,17 +100,13 @@ public class ServerConfig
 
     /**
      * Initialize the webapp list from the repository and the processors implementation.
-     * 
-     * TODO: This constructor should only take a repository, not both a repository
-     * and a storage.  Once I update the pkg-repo.jar, I can use the new getStorage()
-     * method on Repository...
      */
-    protected ServerConfig(Storage storage, Repository repo, Processors procs)
+    protected ServerConfig(Repository repo, Processors procs)
             throws TechnicalException
     {
-        LOG.info("ServerConfig with storage: " + storage + ", and repository: " + repo + ", and processors: " + procs);
-        myStorage = storage;
+        myStorage = repo.getStorage();
         myRepo = repo;
+        LOG.info("ServerConfig with storage: " + myStorage + ", and repository: " + myRepo + ", and processors: " + procs);
         init(procs);
     }
 

@@ -49,7 +49,7 @@ public class EXPathWebParserTest
         File repo_dir = new File(System.getProperty("user.home"), "tmp/servlex/repo");
         Storage storage = new FileSystemStorage(repo_dir);
         Repository repo = new Repository(storage);
-        ServerConfig fake = new FakeConfig(storage, repo);
+        ServerConfig fake = new FakeConfig(repo);
         // the System Under Test
         EXPathWebParser sut = new EXPathWebParser(fake);
         Set<Application> result = sut.parseDescriptors(repo.listPackages());
@@ -72,11 +72,11 @@ public class EXPathWebParserTest
     private static class FakeConfig
             extends ServerConfig
     {
-        public FakeConfig(Storage storage, Repository repo)
+        public FakeConfig(Repository repo)
                 throws TechnicalException
                      , PackageException
         {
-            super(storage, repo, new SaxonCalabash(repo, null));
+            super(repo, new SaxonCalabash(repo, null));
         }
 
         @Override
