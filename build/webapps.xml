@@ -1,0 +1,11 @@
+<webapps xmlns="http://expath.org/ns/webapp">
+
+   <!--
+       Contains elements like:
+
+       <webapp root="myapp" enabled="true">
+          <package name="http://example.org/my/webapp"/>
+       </webapp>
+   -->
+
+</webapps>

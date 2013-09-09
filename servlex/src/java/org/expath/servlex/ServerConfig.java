@@ -24,12 +24,14 @@ import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Packages;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.ParseException;
+import org.expath.servlex.parser.WebappsParser;
 import org.expath.servlex.processors.Processors;
 
 import static org.expath.servlex.ServlexConstants.DEFAULT_CHARSET_PROPERTY;
@@ -236,14 +238,31 @@ public class ServerConfig
     private static Map<String, Application> initApplications(Repository repo, ServerConfig config)
             throws TechnicalException
     {
-        // the parser
-        EXPathWebParser parser = new EXPathWebParser(config);
+        // the webapps.xml parser
+        WebappsParser webapps_parser = new WebappsParser(repo);
+        // the application URI names mapping to context roots
+        Map<URI, String> roots = webapps_parser.parse();
+        // the .expath-web.xml's parser
+        EXPathWebParser expath_parser = new EXPathWebParser(config);
         // the application map
         Map<String, Application> applications = new HashMap<String, Application>();
         // parse and save the result in the map
-        for ( Application app : parser.parseDescriptors(repo.listPackages()) ) {
-            applications.put(app.getName(), app);
-            LOG.info("Add the application to the store: " + app.getName());
+        for ( URI app_name : roots.keySet() ) {
+            String root = roots.get(app_name);
+            Packages packages = repo.getPackages(app_name.toString());
+            if ( packages == null ) {
+                // TODO: Maybe log it as an error instead, but not fatal (webapps.xml
+                // is corrupted, but that does not prevent to continue with other
+                // applications).
+                throw new TechnicalException("Package " + app_name + " not installed (but in .expath-web/webapps.xml).");
+            }
+            Package pkg = packages.latest();
+            Application app = expath_parser.loadPackage(pkg);
+            if ( app == null ) {
+                throw new TechnicalException("Not an application: " + app_name + " / " + pkg);
+            }
+            LOG.info("Add the application to the store: " + root + " / " + app.getName());
+            applications.put(root, app);
         }
         return applications;
     }
@@ -415,14 +434,14 @@ public class ServerConfig
      * Return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * TODO: The param 'force' is set to 'true', make it configurable.
+     * @param ctxt_root The context where to make the webapp available.
      */
-    public synchronized String install(File archive)
+    public synchronized String install(File archive, String ctxt_root, boolean force)
             throws TechnicalException
                  , PackageException
     {
-        Package pkg = myRepo.installPackage(archive, true, new LoggingUserInteraction());
-        return doInstall(pkg);
+        Package pkg = myRepo.installPackage(archive, force, new LoggingUserInteraction());
+        return doInstall(pkg, ctxt_root);
     }
 
     /**
@@ -431,17 +450,17 @@ public class ServerConfig
      * Return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * TODO: The param 'force' is set to 'true', make it configurable.
+     * @param ctxt_root The context where to make the webapp available.
      */
-    public synchronized String install(URI uri)
+    public synchronized String install(URI uri, String ctxt_root, boolean force)
             throws TechnicalException
                  , PackageException
     {
-        Package pkg = myRepo.installPackage(uri, true, new LoggingUserInteraction());
-        return doInstall(pkg);
+        Package pkg = myRepo.installPackage(uri, force, new LoggingUserInteraction());
+        return doInstall(pkg, ctxt_root);
     }
 
-    private String doInstall(Package pkg)
+    private String doInstall(Package pkg, String ctxt_root)
             throws TechnicalException
     {
         EXPathWebParser parser = new EXPathWebParser(this);
@@ -451,9 +470,10 @@ public class ServerConfig
             return null;
         }
         else {
+            String name = ctxt_root == null ? app.getName() : ctxt_root;
             // package is a webapp
-            myApps.put(app.getName(), app);
-            return app.getName();
+            myApps.put(name, app);
+            return name;
         }
     }
 

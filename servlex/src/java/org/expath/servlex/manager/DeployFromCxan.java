@@ -154,7 +154,10 @@ public class DeployFromCxan
         }
 
         try {
-            return myConfig.install(new URI(uri));
+            // TODO: Set the context root (instead of null) and whether to
+            // override an existing package (instead of false), form a form
+            // filled by the user...
+            return myConfig.install(new URI(uri), null, false);
         }
         catch ( URISyntaxException ex ) {
             error(500, "Error constructing the package URI on CXAN: " + uri, ex);

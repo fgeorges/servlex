@@ -74,7 +74,7 @@ public class DeployWebapp
     }
 
     /** 
-     * GET is not supported.
+     * GET display the web form.
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -90,7 +90,8 @@ public class DeployWebapp
             view.println("<p><b>Local file:</b></p>");
             view.println("<form action='deploy' method='post' enctype='multipart/form-data'>");
             view.println("   <input type='file' name='xawfile' size='40'>");
-            view.println("   <input type='submit' value='Deploy file'>");
+            view.println("   <br/><br/>");
+            view.println("   <input type='submit' value='Deploy'>");
             view.println("</form>");
             view.println("<p><b>From CXAN:</b></p>");
             view.println("<form action='deploy-cxan' method='post' enctype='application/x-www-form-urlencoded'>");
@@ -201,7 +202,10 @@ public class DeployWebapp
         }
 
         try {
-            return myConfig.install(archive);
+            // TODO: Set the context root (instead of null) and whether to
+            // override an existing package (instead of false), form a form
+            // filled by the user...
+            return myConfig.install(archive, null, false);
         }
         catch ( PackageException ex ) {
             error(500, "Error installing the webapp", ex);

@@ -47,9 +47,14 @@ TOMCAT=${BASEDIR}/${TOMCAT_NAME}
 rm -r "${TOMCAT}"
 ( cd "${BASEDIR}"; tar zxf "${TOMCAT_NAME}.tar.gz" )
 
-# creating the repo and adding the repo property to conf/catalina.properties
+# creating the repo and the profiling directory
 mkdir "${TOMCAT}/repo"
+mkdir "${TOMCAT}/repo/.expath-web"
 mkdir "${TOMCAT}/profiling"
+
+cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
+
+# adding properties to conf/catalina.properties
 PROPS="${TOMCAT}/conf/catalina.properties"
 echo >> "${PROPS}"
 echo >> "${PROPS}"
