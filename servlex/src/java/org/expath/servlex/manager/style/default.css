@@ -37,13 +37,13 @@ body {
     padding: 35px 0px 35px 0px;
 }
 
-body,input {
+body, input {
     font-size: 10pt;
     font-family: "georgia", "times new roman", serif;
     color: #333333;
 }
 
-p,form {
+p, form {
     line-height: 1.5em;
     margin-bottom: 1.0em;
     text-align: justify;
@@ -66,7 +66,7 @@ h3 span {
     font-weight: normal;
 }
 
-h3,h4 {
+h3, h4 {
     display: inline;
     font-weight: bold;
     background-repeat: no-repeat;
@@ -362,7 +362,8 @@ div.formRow {
 }
 
 table {
-    border: solid 1pt;
+    /* border: solid 1pt; */
+    border: none;
     border-collapse:collapse;
 }
 
@@ -372,10 +373,15 @@ thead {
 }
 
 td {
+    font-size: 10pt;
     padding: 3pt;
-    border: solid 1pt;
+    /* border: solid 1pt; */
+    border: none;
 }
 
+td.right {
+    text-align: right;
+}
 
 label.inputLabel {
     float: left;
