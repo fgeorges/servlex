@@ -1,8 +1,8 @@
 # Servlex
 
 Servlex, an implementation of the EXPath [Webapp
-framework](http://expath.org/modules/webapp/) (see also the [editor
-draft](http://expath.org/spec/webapp/editor) of the spec).
+framework](http://expath.org/modules/webapp/) (see also the
+[current draft](http://expath.org/spec/webapp) of the spec).
 
 
 ## Installation
