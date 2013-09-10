@@ -10,6 +10,12 @@
 package org.expath.servlex;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -19,6 +25,14 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.xml.transform.Source;
+import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
@@ -462,10 +476,107 @@ public class ServerConfig
             return null;
         }
         else {
-            String name = ctxt_root == null ? app.getName() : ctxt_root;
+            // by default use the webapp's own abbrev
+            String root = ctxt_root == null ? app.getName() : ctxt_root;
             // package is a webapp
-            myApps.put(name, app);
-            return name;
+            myApps.put(root, app);
+            // update [repo]/.expath-web/webapps.xml
+            addToWebappsXml(root, pkg.getName());
+            return root;
+        }
+    }
+
+    /**
+     * Use a stylesheet to add a webapp to .expath-web/webapps.xml.
+     */
+    private void addToWebappsXml(String root, String pkg)
+            throws TechnicalException
+    {
+        // the stylesheet and the parameters
+        Transformer trans = compileStylesheet(WEBAPPS_ADD_XSL);
+        trans.setParameter("root", root);
+        trans.setParameter("pkg", pkg);
+        // transform it
+        transformWebappsXml(trans);
+    }
+
+    /**
+     * Use a stylesheet to remove a webapp from .expath-web/webapps.xml.
+     */
+    private void removeFromWebappsXml(String root)
+            throws TechnicalException
+    {
+        // the stylesheet and the parameters
+        Transformer trans = compileStylesheet(WEBAPPS_REMOVE_XSL);
+        trans.setParameter("root", root);
+        // transform it
+        transformWebappsXml(trans);
+    }
+
+    private File getWebappsXml()
+            throws TechnicalException
+    {
+        if ( ! (myStorage instanceof FileSystemStorage) ) {
+            throw new TechnicalException("Installing and removing webapps only supported on File System Storage: " + myStorage.getClass());
+        }
+        FileSystemStorage storage = (FileSystemStorage) myStorage;
+        File dir = storage.getRootDirectory();
+        return new File(dir, ".expath-web/webapps.xml");
+    }
+
+    /**
+     * Transform a file with a stylesheet and replace it with the result of the transform.
+     * 
+     * Because we want to write the result back to the same file as the input,
+     * we want to be sure we won't delete it first to read it.  So we buffer
+     * the output.  In order to avoid creating a temporary file, we buffer the
+     * result in memory, by serializing it to a string.  This is ok for such a
+     * small file.
+     */
+    private void transformWebappsXml(Transformer trans)
+            throws TechnicalException
+    {
+        File file = getWebappsXml();
+        try {
+            Source src = new StreamSource(file);
+            StringWriter res_out = new StringWriter();
+            StreamResult res = new StreamResult(res_out);
+            trans.transform(src, res);
+            OutputStream out = new FileOutputStream(file);
+            out.write(res_out.getBuffer().toString().getBytes());
+            out.close();
+        }
+        catch ( TransformerException ex ) {
+            throw new TechnicalException("Error transforming packages.xml", ex);
+        }
+        catch ( FileNotFoundException ex ) {
+            throw new TechnicalException("File not found (wtf? - I just transformed it): " + file, ex);
+        }
+        catch ( IOException ex ) {
+            throw new TechnicalException("Error writing the file: " + file, ex);
+        }
+    }
+
+    private Transformer compileStylesheet(String rsrc_name)
+            throws TechnicalException
+    {
+        try {
+            // cache the compiled stylesheet?
+            ClassLoader loader = FileSystemStorage.class.getClassLoader();
+            InputStream style_in = loader.getResourceAsStream(rsrc_name);
+            if ( style_in == null ) {
+                throw new TechnicalException("Resource not found: " + rsrc_name);
+            }
+            Source style_src = new StreamSource(style_in);
+            style_src.setSystemId(rsrc_name);
+            Templates style = TransformerFactory.newInstance().newTemplates(style_src);
+            return style.newTransformer();
+        }
+        catch ( TransformerConfigurationException ex ) {
+            throw new TechnicalException("Impossible to compile the stylesheet: " + rsrc_name, ex);
+        }
+        catch ( TransformerException ex ) {
+            throw new TechnicalException("Error transforming packages.xml", ex);
         }
     }
 
@@ -474,7 +585,7 @@ public class ServerConfig
      */
     public synchronized void remove(String appname)
             throws PackageException
-                 , ParseException
+                 , TechnicalException
     {
         Application app = myApps.get(appname);
         if ( app == null ) {
@@ -483,10 +594,16 @@ public class ServerConfig
         Package pkg = app.getPackage();
         myRepo.removePackage(pkg.getName(), true, new LoggingUserInteraction());
         myApps.remove(appname);
+        // Update [repo]/.expath-web/webapps.xml.
+        removeFromWebappsXml(appname);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ServerConfig.class);
+    /** The stylesheet to add a new webapp to .expath-web/webapps.xml. */
+    private static final String WEBAPPS_ADD_XSL = "org/expath/servlex/rsrc/webapps-add.xsl";
+    /** The stylesheet to remove a webapp from .expath-web/webapps.xml. */
+    private static final String WEBAPPS_REMOVE_XSL = "org/expath/servlex/rsrc/webapps-remove.xsl";
 
     /** The singleton instance. */
     private static ServerConfig INSTANCE;

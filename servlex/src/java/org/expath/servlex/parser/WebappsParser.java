@@ -129,7 +129,7 @@ public class WebappsParser
         // @enabled
         String enabled = parser.getAttribute("enabled");
         // TODO: Parse the boolean value properly...
-        if ( ! ("true".equals(enabled) || "1".equals(enabled)) ) {
+        if ( enabled != null && ! ("true".equals(enabled) || "1".equals(enabled)) ) {
             parser.parseError("/webapps/webapp/@enabled is not 1 or true, disabled is not supported: " + ctxt_root);
         }
 

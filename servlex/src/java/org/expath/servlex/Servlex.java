@@ -151,11 +151,11 @@ public class Servlex
                         + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
                 props.setPrivate(PROP_PRODUCT_HTML, product_html);
-                String vendor = "Florent Georges, from H2O Consulting, for EXPath";
+                String vendor = "Florent Georges, H2O Consulting, for EXPath";
                 props.setPrivate(PROP_VENDOR, vendor);
                 String vendor_html
                         = "<a href='http://fgeorges.org/'>Florent Georges</a>,"
-                        + " from <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
+                        + " <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
                         + " for <a href='http://expath.org/'>EXPath</a>";
                 props.setPrivate(PROP_VENDOR_HTML, vendor_html);
             }
