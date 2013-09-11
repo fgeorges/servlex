@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
@@ -161,6 +162,9 @@ public class DeployFromCxan
         }
         catch ( URISyntaxException ex ) {
             error(500, "Error constructing the package URI on CXAN: " + uri, ex);
+        }
+        catch ( Repository.AlreadyInstalledException ex ) {
+            error(400, "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
         }
         catch ( PackageException ex ) {
             if ( ex.getCause() != null && ex.getCause() instanceof FileNotFoundException ) {
