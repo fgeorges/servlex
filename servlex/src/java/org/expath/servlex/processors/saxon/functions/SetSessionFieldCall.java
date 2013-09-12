@@ -12,10 +12,8 @@ package org.expath.servlex.processors.saxon.functions;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
@@ -33,30 +31,17 @@ public class SetSessionFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
             throws XPathException
     {
-        // num of params
-        if ( params.length != 2 ) {
-            throw new XPathException("There is not exactly 2 params: " + params.length);
-        }
-        // the first param
-        Item first = params[0].next();
-        if ( first == null ) {
-            throw new XPathException("The 1st param is an empty sequence");
-        }
-        if ( params[0].next() != null ) {
-            throw new XPathException("The 1st param sequence has more than one item");
-        }
-        if ( ! ( first instanceof StringValue ) ) {
-            throw new XPathException("The 1st param is not a string");
-        }
-        String name = first.getStringValue();
-        // the second param
-        SequenceIterator value = params[1];
+        // the params
+        FunParams params = new FunParams(orig_params, 2, 2);
+        String name = params.asString(0, false);
+        SequenceIterator value = orig_params[1];
+        // log it
+        LOG.debug(params.format(SetSessionFieldFunction.LOCAL_NAME).param(name).param(value).value());
         // setting the sequence in the session
         try {
-            LOG.debug("Set session field: '" + name + "'");
             Properties props = Servlex.getSessionMap();
             Sequence seq = new SaxonSequence(value);
             props.set(name, seq);

@@ -198,6 +198,22 @@ class FunParams
             return this;
         }
 
+        public Formatter param(SequenceIterator value)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                if ( value == null ) {
+                    myBuf.append("()");
+                }
+                else {
+                    myBuf.append("#<TODO: sequence: ");
+                    myBuf.append(value);
+                    myBuf.append(">");
+                }
+            }
+            return this;
+        }
+
         public String value()
         {
             myBuf.append(")");

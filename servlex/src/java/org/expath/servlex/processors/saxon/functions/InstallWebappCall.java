@@ -14,7 +14,6 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
 import org.expath.servlex.processors.saxon.SaxonHelper;

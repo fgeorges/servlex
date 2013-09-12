@@ -29,16 +29,15 @@ public class GetWebappFieldNamesCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
             throws XPathException
     {
-        // num of params
-        if ( params.length != 0 ) {
-            throw new XPathException("There are actual params: " + params.length);
-        }
+        // the params
+        FunParams params = new FunParams(orig_params, 0, 0);
+        // log it
+        LOG.debug(params.format(GetWebappFieldNamesFunction.LOCAL_NAME).value());
         // returning the name of every fields in the webapp
         try {
-            LOG.debug("Get webapp field names");
             SequenceProperties props = Servlex.getWebappMap();
             Iterable<String> keys = props.keys();
             return SaxonHelper.toSequenceIterator(keys);
