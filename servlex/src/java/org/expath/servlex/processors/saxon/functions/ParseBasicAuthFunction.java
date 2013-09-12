@@ -62,7 +62,8 @@ public class ParseBasicAuthFunction
         return new ParseBasicAuthCall(myProcs);
     }
 
-    private static final String LOCAL_NAME   = "parse-basic-auth";
+    static final String LOCAL_NAME = "parse-basic-auth";
+
     private static final String ELEMENT_NAME = "basic-auth";
     private Processors myProcs;
     private Processor mySaxon;

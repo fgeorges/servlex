@@ -54,7 +54,7 @@ public class GetSessionFieldFunction
         return new GetSessionFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-session-field";
+    static final String LOCAL_NAME = "get-session-field";
 }
 
 

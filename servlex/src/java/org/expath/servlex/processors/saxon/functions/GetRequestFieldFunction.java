@@ -54,7 +54,7 @@ public class GetRequestFieldFunction
         return new GetRequestFieldCall();
     }
 
-    private static final String LOCAL_NAME = "get-request-field";
+    static final String LOCAL_NAME = "get-request-field";
 }
 
 

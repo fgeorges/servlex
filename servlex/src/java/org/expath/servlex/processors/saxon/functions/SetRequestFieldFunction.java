@@ -58,7 +58,7 @@ public class SetRequestFieldFunction
         return new SetRequestFieldCall();
     }
 
-    private static final String LOCAL_NAME = "set-request-field";
+    static final String LOCAL_NAME = "set-request-field";
 }
 
 

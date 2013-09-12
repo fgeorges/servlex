@@ -58,7 +58,7 @@ public class SetWebappFieldFunction
         return new SetWebappFieldCall();
     }
 
-    private static final String LOCAL_NAME = "set-webapp-field";
+    static final String LOCAL_NAME = "set-webapp-field";
 }
 
 

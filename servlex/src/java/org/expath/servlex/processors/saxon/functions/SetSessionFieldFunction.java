@@ -58,7 +58,7 @@ public class SetSessionFieldFunction
         return new SetSessionFieldCall();
     }
 
-    private static final String LOCAL_NAME = "set-session-field";
+    static final String LOCAL_NAME = "set-session-field";
 }
 
 

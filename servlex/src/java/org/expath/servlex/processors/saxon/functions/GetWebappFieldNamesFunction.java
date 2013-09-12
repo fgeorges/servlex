@@ -49,7 +49,7 @@ public class GetWebappFieldNamesFunction
         return new GetWebappFieldNamesCall();
     }
 
-    private static final String LOCAL_NAME = "get-webapp-field-names";
+    static final String LOCAL_NAME = "get-webapp-field-names";
 }
 
 

@@ -70,7 +70,8 @@ public class ParseHeaderValueFunction
         return new ParseHeaderValueCall(myProcs);
     }
 
-    private static final String LOCAL_NAME = "parse-header-value";
+    static final String LOCAL_NAME = "parse-header-value";
+
     private static final String ELEMENT_NAME = "header";
     private Processors myProcs;
     private Processor mySaxon;

@@ -49,7 +49,7 @@ public class GetRequestFieldNamesFunction
         return new GetRequestFieldNamesCall();
     }
 
-    private static final String LOCAL_NAME = "get-request-field-names";
+    static final String LOCAL_NAME = "get-request-field-names";
 }
 
 
