@@ -10,43 +10,19 @@
 package org.expath.servlex;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.xml.transform.Source;
-import javax.xml.transform.Templates;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
-import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
-import org.expath.pkg.repo.Packages;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
-import org.expath.pkg.repo.UserInteractionStrategy;
 import org.expath.servlex.model.Application;
-import org.expath.servlex.parser.EXPathWebParser;
-import org.expath.servlex.parser.ParseException;
-import org.expath.servlex.parser.WebappsParser;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.ProcessorsMap;
 
 import static org.expath.servlex.ServlexConstants.DEFAULT_CHARSET_PROPERTY;
 import static org.expath.servlex.ServlexConstants.DEFAULT_PROCESSORS;
@@ -76,6 +52,7 @@ public class ServerConfig
             throws TechnicalException
     {
         this(System.getProperty(REPO_DIR_PROPERTY), System.getProperty(REPO_CP_PROPERTY));
+        LOG.info("ServerConfig by default");
     }
 
     /**
@@ -85,6 +62,7 @@ public class ServerConfig
             throws TechnicalException
     {
         this(getStorage(repo_dir, repo_classpath));
+        LOG.info("ServerConfig with dir: " + repo_dir + ", and classpath: " + repo_classpath);
     }
 
     /**
@@ -94,6 +72,7 @@ public class ServerConfig
             throws TechnicalException
     {
         this(initRepo(storage));
+        LOG.info("ServerConfig with storage: " + storage);
     }
 
     /**
@@ -102,14 +81,14 @@ public class ServerConfig
     protected ServerConfig(Repository repo)
             throws TechnicalException
     {
-        myStorage = repo.getStorage();
-        myRepo = repo;
-        LOG.info("ServerConfig with storage: " + myStorage + ", and repository: " + myRepo);
-        String class_name = System.getProperty(PROCESSORS_PROPERTY);
-        if ( class_name == null ) {
-            class_name = DEFAULT_PROCESSORS;
+        LOG.info("ServerConfig with repository: " + repo);
+        String clazz = System.getProperty(PROCESSORS_PROPERTY);
+        if ( clazz == null ) {
+            clazz = DEFAULT_PROCESSORS;
         }
-        init(getProcessors(class_name));
+        myProcessors = new ProcessorsMap(clazz, repo, this);
+        myRepo = new WebRepository(repo, myProcessors);
+        init();
     }
 
     /**
@@ -118,159 +97,18 @@ public class ServerConfig
     protected ServerConfig(Repository repo, Processors procs)
             throws TechnicalException
     {
-        myStorage = repo.getStorage();
-        myRepo = repo;
-        LOG.info("ServerConfig with storage: " + myStorage + ", and repository: " + myRepo + ", and processors: " + procs);
-        init(procs);
+        LOG.info("ServerConfig with repository: " + repo + ", and processors: " + procs);
+        myProcessors = new ProcessorsMap(procs, repo, this);
+        myRepo = new WebRepository(repo, myProcessors);
+        init();
     }
 
-    private void init(Processors procs)
-            throws TechnicalException
+    /**
+     * Return the web repository.
+     */
+    public WebRepository getRepository()
     {
-        myProcessors = procs;
-        myProfileDir = initProfiling();
-        myTraceContent = initTracing();
-        myDefaultCharset = initCharset();
-        myApps = initApplications(myRepo, this);
-    }
-
-    private static Repository initRepo(Storage storage)
-            throws TechnicalException
-    {
-        try {
-            return new Repository(storage);
-        }
-        catch ( PackageException ex ) {
-            throw new TechnicalException("Error initializing the repository", ex);
-        }
-    }
-
-    public synchronized Processors getProcessors(String class_name)
-            throws TechnicalException
-    {
-        // if in the map, return it
-        Processors procs = myProcessorsMap.get(class_name);
-        if ( procs != null ) {
-            return procs;
-        }
-        // if not, instantiate it
-        try {
-            // get the raw class object
-            ClassLoader loader = ServerConfig.class.getClassLoader();
-            Class<?> class_raw = loader.loadClass(class_name);
-            // check it implements Processors
-            if ( ! Processors.class.isAssignableFrom(class_raw) ) {
-                String msg = "The processors implementation must implement Processors: ";
-                throw new TechnicalException(msg + class_name);
-            }
-            // get the ctor
-            Class<Processors> clazz = (Class<Processors>) class_raw;
-            Constructor<Processors> ctor = clazz.getConstructor(Repository.class, ServerConfig.class);
-            // instantiate
-            procs = ctor.newInstance(myRepo, this);
-            myProcessorsMap.put(class_name, procs);
-            return procs;
-        }
-        catch ( ClassNotFoundException ex ) {
-            String msg = "The processors implementation class not found: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( NoSuchMethodException ex ) {
-            String msg = "The processors implementation must have a constructor(Repository,ServerConfig): ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( SecurityException ex ) {
-            String msg = "Servlex must have access to the processors implementation: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( InstantiationException ex ) {
-            String msg = "The processors implementation must be instantiable: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( IllegalAccessException ex ) {
-            String msg = "Servlex must have access to the processors implementation: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( IllegalArgumentException ex ) {
-            String msg = "The processors implementation constructor must accept the Repository and ServerConfig: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-        catch ( InvocationTargetException ex ) {
-            String msg = "The processors implementation constructor threw an exception: ";
-            throw new TechnicalException(msg + class_name, ex);
-        }
-    }
-
-    private static File initProfiling()
-            throws TechnicalException
-    {
-        String value = System.getProperty(PROFILE_DIR_PROPERTY);
-        File dir = null;
-        if ( value != null ) {
-            dir = new File(value);
-            if ( ! dir.exists() ) {
-                LOG.error("Calabash profile dir does not exist, disabling profiling (" + dir + ")");
-                dir = null;
-            }
-        }
-        return dir;
-    }
-
-    private static boolean initTracing()
-            throws TechnicalException
-    {
-        String name = TRACE_CONTENT_PROPERTY;
-        String value = System.getProperty(name);
-        if ( value == null ) {
-            return false;
-        }
-        else if ( "true".equals(value) ) {
-            return true;
-        }
-        else if ( "false".equals(value) ) {
-            return false;
-        }
-        else {
-            throw new TechnicalException("Invalid value for the property " + name + ": " + value);
-        }
-    }
-
-    private static String initCharset()
-            throws TechnicalException
-    {
-        return System.getProperty(DEFAULT_CHARSET_PROPERTY);
-    }
-
-    private static Map<String, Application> initApplications(Repository repo, ServerConfig config)
-            throws TechnicalException
-    {
-        // the webapps.xml parser
-        WebappsParser webapps_parser = new WebappsParser(repo);
-        // the application URI names mapping to context roots
-        Map<URI, String> roots = webapps_parser.parse();
-        // the .expath-web.xml's parser
-        EXPathWebParser expath_parser = new EXPathWebParser(config);
-        // the application map
-        Map<String, Application> applications = new HashMap<String, Application>();
-        // parse and save the result in the map
-        for ( URI app_name : roots.keySet() ) {
-            String root = roots.get(app_name);
-            Packages packages = repo.getPackages(app_name.toString());
-            if ( packages == null ) {
-                // TODO: Maybe log it as an error instead, but not fatal (webapps.xml
-                // is corrupted, but that does not prevent to continue with other
-                // applications).
-                throw new TechnicalException("Package " + app_name + " not installed (but in .expath-web/webapps.xml).");
-            }
-            Package pkg = packages.latest();
-            Application app = expath_parser.loadPackage(pkg);
-            if ( app == null ) {
-                throw new TechnicalException("Not an application: " + app_name + " / " + pkg);
-            }
-            LOG.info("Add the application to the store: " + root + " / " + app.getName());
-            applications.put(root, app);
-        }
-        return applications;
+        return myRepo;
     }
 
     /**
@@ -315,43 +153,6 @@ public class ServerConfig
         else {
             return null;
         }
-    }
-
-    private static Storage getStorage(String repo_dir, String repo_classpath)
-            throws TechnicalException
-    {
-        try {
-            if ( repo_dir == null && repo_classpath == null ) {
-                // TODO: DEBUG: Must be set within web.xml...
-                // repo_classpath = "appengine.repo";
-                throw new PackageException("Neither " + REPO_DIR_PROPERTY + " nor " + REPO_CP_PROPERTY + " is set");
-            }
-            if ( repo_dir != null && repo_classpath != null ) {
-                throw new PackageException("Both " + REPO_DIR_PROPERTY + " and " + REPO_CP_PROPERTY + " are set");
-            }
-            // the storage object
-            Storage store;
-            if ( repo_dir != null ) {
-                File f = new File(repo_dir);
-                if ( ! f.exists() ) {
-                    String msg = "The EXPath repository does not exist (" + REPO_DIR_PROPERTY + "=" + repo_dir + "): " + f;
-                    throw new PackageException(msg);
-                }
-                store = new FileSystemStorage(f);
-            }
-            else {
-                store = new ClasspathStorage(repo_classpath);
-            }
-            return store;
-        }
-        catch ( PackageException ex ) {
-            throw new TechnicalException("Error initializing the storage", ex);
-        }
-    }
-
-    public boolean canInstall()
-    {
-        return ! myStorage.isReadOnly();
     }
 
     /**
@@ -410,7 +211,7 @@ public class ServerConfig
     public Application getApplication(String appname)
             throws ServlexException
     {
-        Application app = myApps.get(appname);
+        Application app = myRepo.getApplication(appname);
         if ( app == null ) {
             LOG.error("404: Application not found: " + appname);
             throw new ServlexException(404, "Page not found");
@@ -423,7 +224,7 @@ public class ServerConfig
      */
     public Set<String> getApplicationNames()
     {
-        return myApps.keySet();
+        return myRepo.getContextRoots();
     }
 
     /**
@@ -431,241 +232,116 @@ public class ServerConfig
      */
     public Processors getDefaultProcessors()
     {
-        return myProcessors;
+        return myProcessors.getDefault();
     }
 
-    /**
-     * Install a webapp (or a library) in the repository.
-     *
-     * Return the name of the newly installed webapp, or null if the package
-     * is not a webapp.
-     * 
-     * @param ctxt_root The context where to make the webapp available.
-     */
-    public synchronized String install(File archive, String ctxt_root, boolean force)
+    private void init()
             throws TechnicalException
-                 , PackageException
     {
-        Package pkg = myRepo.installPackage(archive, force, new LoggingUserInteraction());
-        return doInstall(pkg, ctxt_root);
+        myProfileDir = initProfiling();
+        myTraceContent = initTracing();
+        myDefaultCharset = initCharset();
     }
 
-    /**
-     * Install a webapp (or a library) in the repository.
-     *
-     * Return the name of the newly installed webapp, or null if the package
-     * is not a webapp.
-     * 
-     * @param ctxt_root The context where to make the webapp available.
-     */
-    public synchronized String install(URI uri, String ctxt_root, boolean force)
+    private static Repository initRepo(Storage storage)
             throws TechnicalException
-                 , PackageException
     {
-        Package pkg = myRepo.installPackage(uri, force, new LoggingUserInteraction());
-        return doInstall(pkg, ctxt_root);
+        try {
+            return new Repository(storage);
+        }
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error initializing the repository", ex);
+        }
     }
 
-    private String doInstall(Package pkg, String ctxt_root)
+    private static File initProfiling()
             throws TechnicalException
     {
-        EXPathWebParser parser = new EXPathWebParser(this);
-        Application app = parser.loadPackage(pkg);
-        if ( app == null ) {
-            // not a webapp
-            return null;
+        String value = System.getProperty(PROFILE_DIR_PROPERTY);
+        File dir = null;
+        if ( value != null ) {
+            dir = new File(value);
+            if ( ! dir.exists() ) {
+                LOG.error("Calabash profile dir does not exist, disabling profiling (" + dir + ")");
+                dir = null;
+            }
+        }
+        return dir;
+    }
+
+    private static boolean initTracing()
+            throws TechnicalException
+    {
+        String name = TRACE_CONTENT_PROPERTY;
+        String value = System.getProperty(name);
+        if ( value == null ) {
+            return false;
+        }
+        else if ( "true".equals(value) ) {
+            return true;
+        }
+        else if ( "false".equals(value) ) {
+            return false;
         }
         else {
-            // by default use the webapp's own abbrev
-            String root = ctxt_root == null ? app.getName() : ctxt_root;
-            // package is a webapp
-            myApps.put(root, app);
-            // update [repo]/.expath-web/webapps.xml
-            addToWebappsXml(root, pkg.getName());
-            return root;
+            throw new TechnicalException("Invalid value for the property " + name + ": " + value);
         }
     }
 
-    /**
-     * Use a stylesheet to add a webapp to .expath-web/webapps.xml.
-     */
-    private void addToWebappsXml(String root, String pkg)
+    private static String initCharset()
             throws TechnicalException
     {
-        // the stylesheet and the parameters
-        Transformer trans = compileStylesheet(WEBAPPS_ADD_XSL);
-        trans.setParameter("root", root);
-        trans.setParameter("pkg", pkg);
-        // transform it
-        transformWebappsXml(trans);
+        return System.getProperty(DEFAULT_CHARSET_PROPERTY);
     }
 
-    /**
-     * Use a stylesheet to remove a webapp from .expath-web/webapps.xml.
-     */
-    private void removeFromWebappsXml(String root)
-            throws TechnicalException
-    {
-        // the stylesheet and the parameters
-        Transformer trans = compileStylesheet(WEBAPPS_REMOVE_XSL);
-        trans.setParameter("root", root);
-        // transform it
-        transformWebappsXml(trans);
-    }
-
-    private File getWebappsXml()
-            throws TechnicalException
-    {
-        if ( ! (myStorage instanceof FileSystemStorage) ) {
-            throw new TechnicalException("Installing and removing webapps only supported on File System Storage: " + myStorage.getClass());
-        }
-        FileSystemStorage storage = (FileSystemStorage) myStorage;
-        File dir = storage.getRootDirectory();
-        return new File(dir, ".expath-web/webapps.xml");
-    }
-
-    /**
-     * Transform a file with a stylesheet and replace it with the result of the transform.
-     * 
-     * Because we want to write the result back to the same file as the input,
-     * we want to be sure we won't delete it first to read it.  So we buffer
-     * the output.  In order to avoid creating a temporary file, we buffer the
-     * result in memory, by serializing it to a string.  This is ok for such a
-     * small file.
-     */
-    private void transformWebappsXml(Transformer trans)
-            throws TechnicalException
-    {
-        File file = getWebappsXml();
-        try {
-            Source src = new StreamSource(file);
-            StringWriter res_out = new StringWriter();
-            StreamResult res = new StreamResult(res_out);
-            trans.transform(src, res);
-            OutputStream out = new FileOutputStream(file);
-            out.write(res_out.getBuffer().toString().getBytes());
-            out.close();
-        }
-        catch ( TransformerException ex ) {
-            throw new TechnicalException("Error transforming packages.xml", ex);
-        }
-        catch ( FileNotFoundException ex ) {
-            throw new TechnicalException("File not found (wtf? - I just transformed it): " + file, ex);
-        }
-        catch ( IOException ex ) {
-            throw new TechnicalException("Error writing the file: " + file, ex);
-        }
-    }
-
-    private Transformer compileStylesheet(String rsrc_name)
+    private static Storage getStorage(String repo_dir, String repo_classpath)
             throws TechnicalException
     {
         try {
-            // cache the compiled stylesheet?
-            ClassLoader loader = FileSystemStorage.class.getClassLoader();
-            InputStream style_in = loader.getResourceAsStream(rsrc_name);
-            if ( style_in == null ) {
-                throw new TechnicalException("Resource not found: " + rsrc_name);
+            if ( repo_dir == null && repo_classpath == null ) {
+                // TODO: DEBUG: Must be set within web.xml...
+                // repo_classpath = "appengine.repo";
+                throw new PackageException("Neither " + REPO_DIR_PROPERTY + " nor " + REPO_CP_PROPERTY + " is set");
             }
-            Source style_src = new StreamSource(style_in);
-            style_src.setSystemId(rsrc_name);
-            Templates style = TransformerFactory.newInstance().newTemplates(style_src);
-            return style.newTransformer();
+            if ( repo_dir != null && repo_classpath != null ) {
+                throw new PackageException("Both " + REPO_DIR_PROPERTY + " and " + REPO_CP_PROPERTY + " are set");
+            }
+            // the storage object
+            Storage store;
+            if ( repo_dir != null ) {
+                File f = new File(repo_dir);
+                if ( ! f.exists() ) {
+                    String msg = "The EXPath repository does not exist (" + REPO_DIR_PROPERTY + "=" + repo_dir + "): " + f;
+                    throw new PackageException(msg);
+                }
+                store = new FileSystemStorage(f);
+            }
+            else {
+                store = new ClasspathStorage(repo_classpath);
+            }
+            return store;
         }
-        catch ( TransformerConfigurationException ex ) {
-            throw new TechnicalException("Impossible to compile the stylesheet: " + rsrc_name, ex);
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error initializing the storage", ex);
         }
-        catch ( TransformerException ex ) {
-            throw new TechnicalException("Error transforming packages.xml", ex);
-        }
-    }
-
-    /**
-     * Remove a webapp (or a library) in the repository.
-     */
-    public synchronized void remove(String appname)
-            throws PackageException
-                 , TechnicalException
-    {
-        Application app = myApps.get(appname);
-        if ( app == null ) {
-            throw new PackageException("The application is not installed: " + appname);
-        }
-        Package pkg = app.getPackage();
-        myRepo.removePackage(pkg.getName(), true, new LoggingUserInteraction());
-        myApps.remove(appname);
-        // Update [repo]/.expath-web/webapps.xml.
-        removeFromWebappsXml(appname);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ServerConfig.class);
-    /** The stylesheet to add a new webapp to .expath-web/webapps.xml. */
-    private static final String WEBAPPS_ADD_XSL = "org/expath/servlex/rsrc/webapps-add.xsl";
-    /** The stylesheet to remove a webapp from .expath-web/webapps.xml. */
-    private static final String WEBAPPS_REMOVE_XSL = "org/expath/servlex/rsrc/webapps-remove.xsl";
 
     /** The singleton instance. */
     private static ServerConfig INSTANCE;
 
     /** The repository for webapps. */
-    private Repository myRepo;
-    /** The storage used by the repository. */
-    private Storage myStorage;
-    /** The map with all processors implementations. */
-    private Map<String, Processors> myProcessorsMap = new HashMap<String, Processors>();
-    /** The processors. */
-    private Processors myProcessors;
-    /** The application map. */
-    private Map<String, Application> myApps;
+    private WebRepository myRepo;
+    /** The processors implementations. */
+    private ProcessorsMap myProcessors;
     /** Include request and response content in the logs? */
     private boolean myTraceContent = false;
     /** Default charset to use when none is set on the request. */
     private String myDefaultCharset = null;
     /** The profile directory, if profiling is enabled. */
     private File myProfileDir;
-
-    /**
-     * Interaction always return default, and log messages.
-     */
-    private class LoggingUserInteraction
-            implements UserInteractionStrategy
-    {
-        @Override
-        public void messageInfo(String msg)
-                throws PackageException
-        {
-            LOG.info(msg);
-        }
-
-        @Override
-        public void messageError(String msg)
-                throws PackageException
-        {
-            LOG.error(msg);
-        }
-
-        @Override
-        public void logInfo(String msg)
-                throws PackageException
-        {
-            LOG.info(msg);
-        }
-
-        @Override
-        public boolean ask(String prompt, boolean dflt)
-                throws PackageException
-        {
-            return dflt;
-        }
-
-        @Override
-        public String ask(String prompt, String dflt)
-                throws PackageException
-        {
-            return dflt;
-        }
-    }
 }
 
 

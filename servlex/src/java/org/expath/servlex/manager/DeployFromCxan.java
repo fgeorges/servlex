@@ -25,6 +25,7 @@ import org.expath.pkg.repo.Repository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.WebRepository;
 
 /**
  * Servlet used to install a webapp/package from CXAN.
@@ -59,6 +60,7 @@ public class DeployFromCxan
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);
         }
+        myRepo = myConfig.getRepository();
     }
 
     /** 
@@ -83,7 +85,7 @@ public class DeployFromCxan
         View view = new View(resp, "deploy", "Deploy");
         view.print("<p>");
         try {
-            if ( ! myConfig.canInstall() ) {
+            if ( ! myRepo.canInstall() ) {
                 error(501, "Install not supported, storage is read-only");
             }
             String cxanid = getNonEmptyParam(req, "id");
@@ -158,7 +160,7 @@ public class DeployFromCxan
             // TODO: Set the context root (instead of null) and whether to
             // override an existing package (instead of false), form a form
             // filled by the user...
-            return myConfig.install(new URI(uri), null, false);
+            return myRepo.install(new URI(uri), null, false);
         }
         catch ( URISyntaxException ex ) {
             error(500, "Error constructing the package URI on CXAN: " + uri, ex);
@@ -217,6 +219,8 @@ public class DeployFromCxan
 
     /** The server configuration. */
     private ServerConfig myConfig;
+    /** The web repository. */
+    private WebRepository myRepo;
 }
 
 

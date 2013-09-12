@@ -27,6 +27,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.WebRepository;
 
 /**
  * Servlet used to deploy a XAW file.
@@ -71,6 +72,7 @@ public class DeployWebapp
             LOG.info(msg, ex);
             throw new ServletException(msg, ex);
         }
+        myRepo = myConfig.getRepository();
     }
 
     /** 
@@ -82,7 +84,7 @@ public class DeployWebapp
                  , ServletException
     {
         View view = new View(resp, "deploy", "Deploy");
-        if ( myConfig.canInstall() ) {
+        if ( myRepo.canInstall() ) {
             view.println("<p>Deploy a webapp, either from a local XAW file, or directly from CXAN.");
             view.println("If you deploy directly from CXAN, you can use either a CXAN ID <b>or</b>");
             view.println("a full package name.  The version number is optional (if not set, the");
@@ -138,7 +140,7 @@ public class DeployWebapp
         View view = new View(resp, "deploy", "Deploy");
         view.print("<p>");
         try {
-            if ( ! myConfig.canInstall() ) {
+            if ( ! myRepo.canInstall() ) {
                 error(501, "Install not supported, storage is read-only");
             }
             // name will be null if the package is not a webapp
@@ -205,7 +207,7 @@ public class DeployWebapp
             // TODO: Set the context root (instead of null) and whether to
             // override an existing package (instead of false), form a form
             // filled by the user...
-            return myConfig.install(archive, null, false);
+            return myRepo.install(archive, null, false);
         }
         catch ( PackageException ex ) {
             error(500, "Error installing the webapp", ex);
@@ -289,6 +291,8 @@ public class DeployWebapp
 
     /** The server configuration. */
     private ServerConfig myConfig;
+    /** The web repository. */
+    private WebRepository myRepo;
 }
 
 

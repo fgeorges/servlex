@@ -15,7 +15,6 @@ import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
@@ -23,6 +22,7 @@ import org.expath.servlex.model.Servlet;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.saxon.SaxonCalabash;
+import org.expath.servlex.tools.ProcessorsMap;
 import org.junit.Test;
 //import static org.junit.Assert.*;
 
@@ -49,7 +49,7 @@ public class EXPathWebParserTest
         File repo_dir = new File(System.getProperty("user.home"), "tmp/servlex/repo");
         Storage storage = new FileSystemStorage(repo_dir);
         Repository repo = new Repository(storage);
-        ServerConfig fake = new FakeConfig(repo);
+        ProcessorsMap fake = new FakeProcessorsMap(repo);
         // the System Under Test
         EXPathWebParser sut = new EXPathWebParser(fake);
         Set<Application> result = sut.parseDescriptors(repo.listPackages());
@@ -69,14 +69,14 @@ public class EXPathWebParserTest
         }
     }
 
-    private static class FakeConfig
-            extends ServerConfig
+    private static class FakeProcessorsMap
+            extends ProcessorsMap
     {
-        public FakeConfig(Repository repo)
+        public FakeProcessorsMap(Repository repo)
                 throws TechnicalException
                      , PackageException
         {
-            super(repo, new SaxonCalabash(repo, null));
+            super(new SaxonCalabash(repo, null), repo, null);
         }
 
         @Override

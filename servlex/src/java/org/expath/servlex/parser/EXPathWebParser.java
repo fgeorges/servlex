@@ -24,14 +24,17 @@ import org.expath.pkg.repo.Packages;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.Storage.PackageResolver;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.Application;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.model.Application;
+import org.expath.servlex.model.Chain;
+import org.expath.servlex.model.ErrorHandler;
+import org.expath.servlex.model.Filter;
 import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Servlet;
-import org.expath.servlex.model.*;
+import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.ProcessorsMap;
 import org.expath.servlex.tools.RegexHelper;
 
 /**
@@ -42,9 +45,9 @@ import org.expath.servlex.tools.RegexHelper;
  */
 public class EXPathWebParser
 {
-    public EXPathWebParser(ServerConfig config)
+    public EXPathWebParser(ProcessorsMap procs)
     {
-        myConfig = config;
+        myProcs = procs;
     }
 
     /**
@@ -125,7 +128,7 @@ public class EXPathWebParser
     {
         // the parsing context, with the default processors
         ParsingContext ctxt = new ParsingContext();
-        ctxt.setProcessors(myConfig.getDefaultProcessors());
+        ctxt.setProcessors(myProcs.getDefault());
 
         // try servlex.xml
         Source extensions = getDescriptor(pkg, SERVLEX_FILENAME);
@@ -151,7 +154,7 @@ public class EXPathWebParser
             if ( elem.equals("processors") ) {
                 String clazz = parser.getAttribute("class");
                 try {
-                    Processors procs = myConfig.getProcessors(clazz);
+                    Processors procs = myProcs.getProcessors(clazz);
                     ctxt.setProcessors(procs);
                 }
                 catch ( TechnicalException ex ) {
@@ -725,8 +728,8 @@ public class EXPathWebParser
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
 
-    /** The config object. */
-    private ServerConfig myConfig;
+    /** The map of Processors objects. */
+    private ProcessorsMap myProcs;
 }
 
 

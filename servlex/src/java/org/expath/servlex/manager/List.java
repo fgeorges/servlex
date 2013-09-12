@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.WebRepository;
 
 /**
  * List the installed webapps.
@@ -73,7 +74,8 @@ public class List
             for ( String app : names ) {
                 view.startln();
                 view.print("   <li>");
-                if ( myConfig.canInstall() ) {
+                WebRepository repo = myConfig.getRepository();
+                if ( repo.canInstall() ) {
                     view.print("(<a href='remove?webapp=");
                     view.print(app);
                     view.print("'>x</a>) ");

@@ -20,6 +20,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.WebRepository;
 import org.expath.servlex.parser.ParseException;
 
 /**
@@ -74,7 +75,8 @@ public class RemoveWebapp
             if ( name == null ) {
                 throw new ServlexException(400, "Parameter 'webapp' mandatory");
             }
-            myConfig.remove(name);
+            WebRepository repo = myConfig.getRepository();
+            repo.remove(name);
             view.println("Webapp removed: " + name + ".");
         }
         catch ( PackageException ex ) {
@@ -82,6 +84,10 @@ public class RemoveWebapp
             resp.setStatus(500);
         }
         catch ( ParseException ex ) {
+            view.print("<b>Error</b> removing the webapp: " + ex.getMessage());
+            resp.setStatus(500);
+        }
+        catch ( TechnicalException ex ) {
             view.print("<b>Error</b> removing the webapp: " + ex.getMessage());
             resp.setStatus(500);
         }
