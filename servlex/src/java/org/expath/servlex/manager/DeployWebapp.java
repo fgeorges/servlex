@@ -24,6 +24,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
@@ -208,6 +209,9 @@ public class DeployWebapp
             // override an existing package (instead of false), form a form
             // filled by the user...
             return myRepo.install(archive, null, false);
+        }
+        catch ( Repository.AlreadyInstalledException ex ) {
+            error(400, "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
         }
         catch ( PackageException ex ) {
             error(500, "Error installing the webapp", ex);
