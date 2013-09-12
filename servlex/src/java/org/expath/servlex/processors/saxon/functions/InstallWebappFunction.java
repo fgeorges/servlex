@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       ConfigParamFunction.java                                    */
+/*  File:       InstallWebappFunction.java                                  */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-08-22                                                  */
+/*  Date:       2013-09-11                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,77 +9,58 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
+import org.expath.servlex.WebRepository;
 
 /**
- * Implements web:config-param().
+ * Implements web:install-webapp().
  * 
- * Two different arities exist:
+ * The XPath signature:
  *
- *     web:config-param($name as xs:string) as xs:string?
- * 
- *     web:config-param($name    as xs:string,
- *                      $default as xs:string?) as xs:string?
+ *     web:install-webapp($pkg  as xs:base64Binary,
+ *                        $root as xs:string) as xs:boolean
  *
  * @author Florent Georges
- * @date   2013-08-22
+ * @date   2013-09-11
  */
-public class ConfigParamFunction
+public class InstallWebappFunction
         extends ExtensionFunctionDefinition
 {
+    public InstallWebappFunction(WebRepository repo)
+    {
+        myRepo = repo;
+    }
+
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
-    }
-
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 1;
-    }
-
-    @Override
-    public int getMaximumNumberOfArguments()
-    {
-        return 2;
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      required = StaticProperty.EXACTLY_ONE;
-        final int      optional = StaticProperty.ALLOWS_ZERO_OR_ONE;
-        final ItemType string   = BuiltInAtomicType.STRING;
-        SequenceType   first    = SequenceType.makeSequenceType(string, required);
-        SequenceType   second   = SequenceType.makeSequenceType(string, optional);
-        return new SequenceType[]{ first, second };
+        return FunTypes.types(FunTypes.SINGLE_BASE64, FunTypes.SINGLE_STRING);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(atomic, any);
+        return FunTypes.SINGLE_BOOLEAN;
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new ConfigParamCall();
+        return new InstallWebappCall(myRepo);
     }
 
-    private static final String LOCAL_NAME = "config-param";
+    static final String LOCAL_NAME = "install-webapp";
+
+    private WebRepository myRepo;
 }
 
 

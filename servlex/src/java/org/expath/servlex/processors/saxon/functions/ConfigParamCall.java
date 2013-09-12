@@ -44,8 +44,9 @@ public class ConfigParamCall
         if ( params.number() == 2 ) {
             dflt = params.asString(1, true);
         }
+        // log it
+        LOG.debug(params.format(ConfigParamFunction.LOCAL_NAME).param(name).param(dflt).value());
         // do it
-        LOG.debug(params.format("web:config-param").param(name).param(dflt).value());
         String value = doit(name, dflt);
         try {
             return SaxonHelper.toSequenceIterator(value);

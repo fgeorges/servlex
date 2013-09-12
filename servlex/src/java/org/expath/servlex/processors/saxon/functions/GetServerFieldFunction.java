@@ -9,14 +9,10 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
 
 /**
  * TODO: Doc...
@@ -37,32 +33,19 @@ public class GetServerFieldFunction
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
-    }
-
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 1;
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
-        return new SequenceType[]{ stype };
+        return FunTypes.types(FunTypes.SINGLE_STRING);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(itype, any);
+        return FunTypes.ANY_ITEM;
     }
 
     @Override

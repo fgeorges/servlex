@@ -24,6 +24,7 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.ShareableSequence;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.Value;
@@ -161,6 +162,15 @@ public class SaxonHelper
     {
         List<StringValue> items = new ArrayList<StringValue>();
         StringValue v = new StringValue(string);
+        items.add(v);
+        return new ShareableSequence(items).iterate();
+    }
+
+    public static SequenceIterator toSequenceIterator(boolean bool)
+            throws TechnicalException
+    {
+        List<BooleanValue> items = new ArrayList<BooleanValue>();
+        BooleanValue v = BooleanValue.get(bool);
         items.add(v);
         return new ShareableSequence(items).iterate();
     }

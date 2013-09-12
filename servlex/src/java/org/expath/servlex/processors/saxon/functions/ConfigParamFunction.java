@@ -9,14 +9,10 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
 
 /**
  * Implements web:config-param().
@@ -37,9 +33,7 @@ public class ConfigParamFunction
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
@@ -57,20 +51,13 @@ public class ConfigParamFunction
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      required = StaticProperty.EXACTLY_ONE;
-        final int      optional = StaticProperty.ALLOWS_ZERO_OR_ONE;
-        final ItemType string   = BuiltInAtomicType.STRING;
-        SequenceType   first    = SequenceType.makeSequenceType(string, required);
-        SequenceType   second   = SequenceType.makeSequenceType(string, optional);
-        return new SequenceType[]{ first, second };
+        return FunTypes.types(FunTypes.SINGLE_STRING, FunTypes.OPTIONAL_STRING);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
-        return SequenceType.makeSequenceType(atomic, any);
+        return FunTypes.OPTIONAL_STRING;
     }
 
     @Override
@@ -79,7 +66,7 @@ public class ConfigParamFunction
         return new ConfigParamCall();
     }
 
-    private static final String LOCAL_NAME = "config-param";
+    static final String LOCAL_NAME = "config-param";
 }
 
 

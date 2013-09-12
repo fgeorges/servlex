@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       FunParams.java                                              */
+/*  File:       FunUtils.java                                               */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-08-22                                                  */
+/*  Date:       2013-09-11                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,165 +9,183 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
+import net.sf.saxon.expr.StaticProperty;
+import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.pattern.NameTest;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.ItemType;
+import net.sf.saxon.type.Type;
+import net.sf.saxon.value.SequenceType;
+import org.expath.servlex.ServlexConstants;
 
 /**
- * Utils for extension functions parameters for Saxon.
+ * Utils for extension functions types for Saxon.
  *
  * @author Florent Georges
- * @date   2013-08-22
+ * @date   2013-09-11
  */
-class FunParams
+class FunTypes
 {
-    /**
-     * Check the number of parameters in params, and throw an error if not OK.
-     * 
-     * @param params The parameter list.
-     * @param min The minimal number of parameters.
-     * @param max The maximum number of parameters.
-     */
-    public FunParams(SequenceIterator[] params, int min, int max)
-            throws XPathException
-    {
-        if ( params.length < min || params.length > max ) {
-            if ( min == max ) {
-                throw new XPathException("There is not exactly " + min + " params: " + params.length);
-            }
-            else {
-                throw new XPathException("There is not between " + min + " and " + max + " params: " + params.length);
-            }
-        }
-        myParams = params;
-        myMax = max;
-    }
+    // exactly one (no type podifier in XPath)
+    private static final int SINGLE   = StaticProperty.EXACTLY_ONE;
+    // zero or one ("?" in XPath)
+    private static final int OPTIONAL = StaticProperty.ALLOWS_ZERO_OR_ONE;
+    // zero or more ("*" in XPath)
+    private static final int ANY      = StaticProperty.ALLOWS_ZERO_OR_MORE;
+    // one or more ("+" in XPath)
+    private static final int SEVERAL  = StaticProperty.ALLOWS_ONE_OR_MORE;
+
+    // built-in atomic types
+    private static final ItemType BASE64   = BuiltInAtomicType.BASE64_BINARY;
+    private static final ItemType BOOLEAN  = BuiltInAtomicType.BOOLEAN;
+    private static final ItemType BYTE     = BuiltInAtomicType.BYTE;
+    private static final ItemType DATE     = BuiltInAtomicType.DATE;
+    private static final ItemType DATETIME = BuiltInAtomicType.DATE_TIME;
+    private static final ItemType DECIMAL  = BuiltInAtomicType.DECIMAL;
+    private static final ItemType DOUBLE   = BuiltInAtomicType.DOUBLE;
+    private static final ItemType FLOAT    = BuiltInAtomicType.FLOAT;
+    private static final ItemType INT      = BuiltInAtomicType.INT;
+    private static final ItemType INTEGER  = BuiltInAtomicType.INTEGER;
+    private static final ItemType LONG     = BuiltInAtomicType.LONG;
+    private static final ItemType SHORT    = BuiltInAtomicType.SHORT;
+    private static final ItemType STRING   = BuiltInAtomicType.STRING;
+
+    // the empty sequence
+    public static final SequenceType EMPTY_SEQUENCE = SequenceType.EMPTY_SEQUENCE;
+
+    // singles
+    public static final SequenceType SINGLE_ITEM     = SequenceType.SINGLE_ITEM;
+    // atomic types
+    public static final SequenceType SINGLE_BASE64   = make(SINGLE, BASE64);
+    public static final SequenceType SINGLE_BOOLEAN  = SequenceType.SINGLE_BOOLEAN;
+    public static final SequenceType SINGLE_BYTE     = SequenceType.SINGLE_BYTE;
+    public static final SequenceType SINGLE_DATE     = make(SINGLE, DATE);
+    public static final SequenceType SINGLE_DATETIME = make(SINGLE, DATETIME);
+    public static final SequenceType SINGLE_DECIMAL  = make(SINGLE, DECIMAL);
+    public static final SequenceType SINGLE_DOUBLE   = SequenceType.SINGLE_DOUBLE;
+    public static final SequenceType SINGLE_FLOAT    = SequenceType.SINGLE_FLOAT;
+    public static final SequenceType SINGLE_INT      = SequenceType.SINGLE_INT;
+    public static final SequenceType SINGLE_INTEGER  = SequenceType.SINGLE_INTEGER;
+    public static final SequenceType SINGLE_LONG     = SequenceType.SINGLE_LONG;
+    public static final SequenceType SINGLE_SHORT    = SequenceType.SINGLE_SHORT;
+    public static final SequenceType SINGLE_STRING   = SequenceType.SINGLE_STRING;
+
+    // optionals
+    public static final SequenceType OPTIONAL_ITEM     = SequenceType.OPTIONAL_ITEM;
+    // atomic types
+    public static final SequenceType OPTIONAL_BASE64   = make(OPTIONAL, BASE64);
+    public static final SequenceType OPTIONAL_BOOLEAN  = SequenceType.OPTIONAL_BOOLEAN;
+    public static final SequenceType OPTIONAL_BYTE     = SequenceType.OPTIONAL_BYTE;
+    public static final SequenceType OPTIONAL_DATE     = make(OPTIONAL, DATE);
+    public static final SequenceType OPTIONAL_DATETIME = SequenceType.OPTIONAL_DATE_TIME;
+    public static final SequenceType OPTIONAL_DECIMAL  = SequenceType.OPTIONAL_DECIMAL;
+    public static final SequenceType OPTIONAL_DOUBLE   = SequenceType.OPTIONAL_DOUBLE;
+    public static final SequenceType OPTIONAL_FLOAT    = SequenceType.OPTIONAL_FLOAT;
+    public static final SequenceType OPTIONAL_INT      = SequenceType.OPTIONAL_INT;
+    public static final SequenceType OPTIONAL_INTEGER  = SequenceType.OPTIONAL_INTEGER;
+    public static final SequenceType OPTIONAL_LONG     = SequenceType.OPTIONAL_LONG;
+    public static final SequenceType OPTIONAL_SHORT    = SequenceType.OPTIONAL_SHORT;
+    public static final SequenceType OPTIONAL_STRING   = SequenceType.OPTIONAL_STRING;
+
+    // anys
+    public static final SequenceType ANY_ITEM     = make(ANY, BASE64);
+    // atomic types
+    public static final SequenceType ANY_BASE64   = make(ANY, BASE64);
+    public static final SequenceType ANY_BOOLEAN  = make(ANY, BOOLEAN);
+    public static final SequenceType ANY_BYTE     = make(ANY, BYTE);
+    public static final SequenceType ANY_DATE     = make(ANY, DATE);
+    public static final SequenceType ANY_DATETIME = make(ANY, DATETIME);
+    public static final SequenceType ANY_DECIMAL  = make(ANY, DECIMAL);
+    public static final SequenceType ANY_DOUBLE   = make(ANY, DOUBLE);
+    public static final SequenceType ANY_FLOAT    = make(ANY, FLOAT);
+    public static final SequenceType ANY_INT      = make(ANY, INT);
+    public static final SequenceType ANY_INTEGER  = make(ANY, INTEGER);
+    public static final SequenceType ANY_LONG     = make(ANY, LONG);
+    public static final SequenceType ANY_SHORT    = make(ANY, SHORT);
+    public static final SequenceType ANY_STRING   = make(ANY, STRING);
+
+    // severals
+    public static final SequenceType SEVERAL_ITEM     = make(SEVERAL, BASE64);
+    // atomic types
+    public static final SequenceType SEVERAL_BASE64   = make(SEVERAL, BASE64);
+    public static final SequenceType SEVERAL_BOOLEAN  = make(SEVERAL, BOOLEAN);
+    public static final SequenceType SEVERAL_BYTE     = make(SEVERAL, BYTE);
+    public static final SequenceType SEVERAL_DATE     = make(SEVERAL, DATE);
+    public static final SequenceType SEVERAL_DATETIME = make(SEVERAL, DATETIME);
+    public static final SequenceType SEVERAL_DECIMAL  = make(SEVERAL, DECIMAL);
+    public static final SequenceType SEVERAL_DOUBLE   = make(SEVERAL, DOUBLE);
+    public static final SequenceType SEVERAL_FLOAT    = make(SEVERAL, FLOAT);
+    public static final SequenceType SEVERAL_INT      = make(SEVERAL, INT);
+    public static final SequenceType SEVERAL_INTEGER  = make(SEVERAL, INTEGER);
+    public static final SequenceType SEVERAL_LONG     = make(SEVERAL, LONG);
+    public static final SequenceType SEVERAL_SHORT    = make(SEVERAL, SHORT);
+    public static final SequenceType SEVERAL_STRING   = make(SEVERAL, STRING);
 
     /**
-     * Return the number of parameters.
+     * Create a list of types.
      */
-    public int number()
+    public static SequenceType[] types(SequenceType... args)
     {
-        return myParams.length;
+        return args;
     }
 
     /**
-     * Return the pos-th parameter, checking it is a string.
-     * 
-     * If optional is false and the parameter is the empty sequence, an
-     * {@code XPathException} is thrown.
-     * 
-     * @param params The list of parameters, as passed by Saxon.
-     * @param pos The position of the parameter to analyze, 0-based.
-     * @param optional Can the parameter be the empty sequence?
+     * Create a QName in the web:* namespace.
      */
-    public String asString(int pos, boolean optional)
-            throws XPathException
+    public static StructuredQName qname(String local)
     {
-        if ( pos < 0 || pos >= number() ) {
-            throw new XPathException("Asked for the " + ordinal(pos) + " param of " + number());
-        }
-        SequenceIterator param = myParams[pos];
-        Item item = param.next();
-        if ( item == null ) {
-            if ( optional ) {
-                return null;
-            }
-            throw new XPathException("The " + ordinal(pos) + " param is an empty sequence");
-        }
-        if ( param.next() != null ) {
-            throw new XPathException("The " + ordinal(pos) + " param sequence has more than one item");
-        }
-        if ( ! ( item instanceof StringValue ) ) {
-            throw new XPathException("The " + ordinal(pos) + " param is not a string");
-        }
-        return item.getStringValue();
+        final String uri    = ServlexConstants.WEBAPP_NS;
+        final String prefix = ServlexConstants.WEBAPP_PREFIX;
+        return new StructuredQName(prefix, uri, local);
     }
 
-    private String ordinal(int pos)
-            throws XPathException
+    /**
+     * Create an "element(web:xxx)" type, in the web:* namespace.
+     */
+    public static SequenceType single_element(String local, Processor saxon)
     {
-        if ( pos == 0 ) {
-            return "1st";
-        }
-        else if ( pos == 1 ) {
-            return "2d";
-        }
-        else if ( pos == 2 ) {
-            return "3d";
-        }
-        else if ( pos > 2 ) {
-            return (pos + 1) + "th";
-        }
-        else {
-            throw new XPathException("pos must be 0 or above, and is: " + pos);
-        }
+        return element(SINGLE, local, saxon);
     }
 
-    public Formatter format(String name)
+    /**
+     * Create an "element(web:xxx)?" type, in the web:* namespace.
+     */
+    public static SequenceType optional_element(String local, Processor saxon)
     {
-        return new Formatter(name, myParams.length, myMax);
+        return element(OPTIONAL, local, saxon);
     }
 
-    public class Formatter
+    /**
+     * Create an "element(web:xxx)*" type, in the web:* namespace.
+     */
+    public static SequenceType any_element(String local, Processor saxon)
     {
-        public Formatter(String name, int num, int max)
-        {
-            myNum = num;
-            myMax = max;
-            myI   = 0;
-            myBuf = new StringBuilder(name);
-            myBuf.append("(");
-        }
-
-        public Formatter param(String value)
-            throws XPathException
-        {
-            if ( checkPos() ) {
-                if ( value == null ) {
-                    myBuf.append("()");
-                }
-                else {
-                    myBuf.append("'");
-                    myBuf.append(value.replace("'", "''"));
-                    myBuf.append("'");
-                }
-            }
-            return this;
-        }
-
-        public String value()
-        {
-            myBuf.append(")");
-            return myBuf.toString();
-        }
-
-        /**
-         * Return true if the value must be output.
-         */
-        private boolean checkPos()
-            throws XPathException
-        {
-            ++myI;
-            if ( myI > myMax ) {
-                throw new XPathException("too much params: " + ordinal(myI) + ", max: " + myMax);
-            }
-            boolean doit = myI <= myNum;
-            if ( doit && myI > 1 ) {
-                myBuf.append(", ");
-            }
-            return doit;
-        }
-
-        private StringBuilder myBuf;
-        private int myNum;
-        private int myMax;
-        private int myI;
+        return element(ANY, local, saxon);
     }
 
-    private SequenceIterator[] myParams;
-    private int myMax;
+    /**
+     * Create an "element(web:xxx)+" type, in the web:* namespace.
+     */
+    public static SequenceType several_element(String local, Processor saxon)
+    {
+        return element(SEVERAL, local, saxon);
+    }
+
+    private static SequenceType element(int occurrence, String local, Processor saxon)
+    {
+        final int      kind   = Type.ELEMENT;
+        final String   uri    = ServlexConstants.WEBAPP_NS;
+        final NamePool pool   = saxon.getUnderlyingConfiguration().getNamePool();
+        final ItemType itype  = new NameTest(kind, uri, local, pool);
+        return SequenceType.makeSequenceType(itype, occurrence);
+    }
+
+    private static SequenceType make(int occurrence, ItemType type)
+    {
+        return SequenceType.makeSequenceType(type, occurrence);
+    }
 }
 
 

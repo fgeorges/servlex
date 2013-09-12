@@ -9,14 +9,10 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
 
 /**
  * TODO: Doc...
@@ -35,36 +31,25 @@ public class SetRequestFieldFunction
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
-    }
-
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 2;
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        // xs:string
-        final int      one    = StaticProperty.EXACTLY_ONE;
-        final ItemType itype  = BuiltInAtomicType.STRING;
-        SequenceType   string = SequenceType.makeSequenceType(itype, one);
-        // item()*
-        final int      any    = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType atomic = BuiltInAtomicType.ANY_ATOMIC;
-        SequenceType   items  = SequenceType.makeSequenceType(atomic, any);
-        // xs:string, item()*
-        return new SequenceType[]{ string, items };
+        return FunTypes.types(FunTypes.SINGLE_STRING, FunTypes.ANY_ITEM);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        return SequenceType.EMPTY_SEQUENCE;
+        return FunTypes.EMPTY_SEQUENCE;
+    }
+
+    @Override
+    public boolean hasSideEffects()
+    {
+        return true;
     }
 
     @Override

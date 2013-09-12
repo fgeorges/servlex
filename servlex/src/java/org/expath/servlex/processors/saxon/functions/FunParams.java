@@ -12,7 +12,9 @@ package org.expath.servlex.processors.saxon.functions;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.Base64BinaryValue;
 import net.sf.saxon.value.StringValue;
+import org.expath.servlex.ServlexConstants;
 
 /**
  * Utils for extension functions parameters for Saxon.
@@ -56,13 +58,57 @@ class FunParams
      * Return the pos-th parameter, checking it is a string.
      * 
      * If optional is false and the parameter is the empty sequence, an
-     * {@code XPathException} is thrown.
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item.
      * 
      * @param params The list of parameters, as passed by Saxon.
      * @param pos The position of the parameter to analyze, 0-based.
      * @param optional Can the parameter be the empty sequence?
      */
     public String asString(int pos, boolean optional)
+            throws XPathException
+    {
+        Item item = asItem(pos, optional);
+        if ( ! ( item instanceof StringValue ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a string");
+        }
+        return item.getStringValue();
+    }
+
+    /**
+     * Return the pos-th parameter, checking it is a base64 binary.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item.
+     * 
+     * @param params The list of parameters, as passed by Saxon.
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public byte[] asBinary(int pos, boolean optional)
+            throws XPathException
+    {
+        Item item = asItem(pos, optional);
+        if ( ! ( item instanceof Base64BinaryValue ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a base64 binary");
+        }
+        Base64BinaryValue bin = (Base64BinaryValue) item;
+        return bin.getBinaryValue();
+    }
+
+    /**
+     * Return the pos-th parameter, checking its arity.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item.
+     * 
+     * @param params The list of parameters, as passed by Saxon.
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    private Item asItem(int pos, boolean optional)
             throws XPathException
     {
         if ( pos < 0 || pos >= number() ) {
@@ -79,10 +125,7 @@ class FunParams
         if ( param.next() != null ) {
             throw new XPathException("The " + ordinal(pos) + " param sequence has more than one item");
         }
-        if ( ! ( item instanceof StringValue ) ) {
-            throw new XPathException("The " + ordinal(pos) + " param is not a string");
-        }
-        return item.getStringValue();
+        return item;
     }
 
     private String ordinal(int pos)
@@ -117,7 +160,9 @@ class FunParams
             myNum = num;
             myMax = max;
             myI   = 0;
-            myBuf = new StringBuilder(name);
+            myBuf = new StringBuilder(ServlexConstants.WEBAPP_PREFIX);
+            myBuf.append(":");
+            myBuf.append(name);
             myBuf.append("(");
         }
 
@@ -132,6 +177,22 @@ class FunParams
                     myBuf.append("'");
                     myBuf.append(value.replace("'", "''"));
                     myBuf.append("'");
+                }
+            }
+            return this;
+        }
+
+        public Formatter param(byte[] value)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                if ( value == null ) {
+                    myBuf.append("()");
+                }
+                else {
+                    myBuf.append("#<TODO: binary: ");
+                    myBuf.append(value);
+                    myBuf.append(">");
                 }
             }
             return this;
