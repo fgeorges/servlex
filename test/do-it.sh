@@ -62,6 +62,8 @@ if [[ -d "${REPO}" ]]; then
 fi
 echo "Create repo dir"
 mkdir "${REPO}"
+mkdir "${REPO}/.expath-web"
+echo '<webapps xmlns="http://expath.org/ns/webapp"/>' > "${REPO}/.expath-web/webapps.xml"
 
 # the context config (specific to Tomcat, contains the context root and the repo dir)
 CTXT=$1
