@@ -288,7 +288,7 @@ public class Servlex
         // invoke the component
         Connector result;
         try {
-            result = invoc.invoke(request, ourConfig, auditor);
+            result = invoc.invoke(request, app, ourConfig, auditor);
         }
         catch ( ComponentError ex ) {
             // TODO: Shouldn't we set the result even in this case...?
