@@ -10,11 +10,6 @@
 package org.expath.servlex.tools;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,7 +22,6 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
-import org.expath.servlex.processors.Serializer;
 
 /**
  * Log audit information.
@@ -41,7 +35,6 @@ public class Auditor
             throws ServlexException
     {
         myConfig = config;
-        myProcs = procs;
         try {
             myFile = config.getProfileFile("servlex-audit");
         }
@@ -49,13 +42,11 @@ public class Auditor
             String msg = "Internal error, opening the audit file";
             throw new ServlexException(500, msg, ex);
         }
-        myWriter = null;
         if ( myFile != null ) {
             try {
-                myOutput = new FileOutputStream(myFile);
-                myWriter = new OutputStreamWriter(myOutput, "utf-8");
+                myWriter = new XmlWriter(myFile, procs);
             }
-            catch ( IOException ex ) {
+            catch ( TechnicalException ex ) {
                 String msg = "Internal error, opening the audit file: " + myFile;
                 throw new ServlexException(500, msg, ex);
             }
@@ -67,28 +58,34 @@ public class Auditor
     {
         myStart = new Date();
         if ( myWriter != null ) {
+            // getting the request id
+            String id = null;
             try {
-                String  id  = Servlex.getRequestMap().getPrivate("web:request-id");
-                Document doc = request.getWebRequest(myConfig);
-                myWriter.append("<profile request-id=\"");
-                myWriter.append(id);
-                myWriter.append("\">\n");
-                myWriter.append("   <begin date=\"");
-                myWriter.append(format(myStart));
-                myWriter.append("\"/>\n");
-                myWriter.flush();
-                Serializer serial = myProcs.makeSerializer();
-                serial.setMethod("xml");
-                serial.setIndent("yes");
-                serial.setOmitXmlDeclaration("yes");
-                serial.serialize(doc, myOutput);
+                id = Servlex.getRequestMap().getPrivate("web:request-id");
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, getting the request-id.";
                 throw new ServlexException(500, msg, ex);
             }
-            catch ( IOException ex ) {
+            // opening the profile element
+            try {
+                myWriter.openElement("profile", 0, a("request-id", id));
+                myWriter.ln();
+                myWriter.emptyElement("begin", 1, a("date", format(myStart)));
+                myWriter.ln();
+                myWriter.flush();
+            }
+            catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
+                throw new ServlexException(500, msg, ex);
+            }
+            // the web request
+            try {
+                Document doc = request.getWebRequest(myConfig);
+                myWriter.write(doc);
+            }
+            catch ( TechnicalException ex ) {
+                String msg = "Internal error, writing the web request to the audit file: " + myFile;
                 throw new ServlexException(500, msg, ex);
             }
         }
@@ -101,17 +98,17 @@ public class Auditor
         long ms = myStop.getTime() - myStart.getTime();
         if ( myWriter != null ) {
             try {
-                myWriter.append("   <end date=\"");
-                myWriter.append(format(myStop));
-                myWriter.append("\" ms=\"");
-                myWriter.append(Long.toString(ms));
-                myWriter.append("\">");
-                myWriter.append(duration(ms));
-                myWriter.append("</end>\n");
-                myWriter.append("</profile>\n");
+                String d = format(myStop);
+                String m = Long.toString(ms);
+                myWriter.openElement("end", 1, a("date", d), a("ms", m));
+                myWriter.text(duration(ms));
+                myWriter.closeElement("end", 0);
+                myWriter.ln();
+                myWriter.closeElement("profile", 0);
+                myWriter.ln();
                 myWriter.close();
             }
-            catch ( IOException ex ) {
+            catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
                 throw new ServlexException(500, msg, ex);
             }
@@ -125,15 +122,12 @@ public class Auditor
         long ms = now.getTime() - myStart.getTime();
         if ( myWriter != null ) {
             try {
-                myWriter.append("   <start-compilation date=\"");
-                myWriter.append(format(now));
-                myWriter.append("\" after-ms=\"");
-                myWriter.append(Long.toString(ms));
-                myWriter.append("\" type=\"");
-                myWriter.append(type);
-                myWriter.append("\"/>\n");
+                String d = format(now);
+                String m = Long.toString(ms);
+                myWriter.emptyElement("start-compilation", 1, a("date", d), a("ms", m), a("type", type));
+                myWriter.ln();
             }
-            catch ( IOException ex ) {
+            catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
                 throw new ServlexException(500, msg, ex);
             }
@@ -147,13 +141,12 @@ public class Auditor
         long ms = now.getTime() - myStart.getTime();
         if ( myWriter != null ) {
             try {
-                myWriter.append("   <stop-compilation date=\"");
-                myWriter.append(format(now));
-                myWriter.append("\" after-ms=\"");
-                myWriter.append(Long.toString(ms));
-                myWriter.append("\"/>\n");
+                String d = format(now);
+                String m = Long.toString(ms);
+                myWriter.emptyElement("stop-compilation", 1, a("date", d), a("ms", m));
+                myWriter.ln();
             }
-            catch ( IOException ex ) {
+            catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
                 throw new ServlexException(500, msg, ex);
             }
@@ -163,6 +156,11 @@ public class Auditor
     private String format(Date date)
     {
         return ISO_FORMAT.format(date);
+    }
+
+    private XmlWriter.Attribute a(String name, String value)
+    {
+        return new XmlWriter.Attribute(name, value);
     }
 
     /**
@@ -182,10 +180,8 @@ public class Auditor
     }
 
     private ServerConfig myConfig;
-    private Processors myProcs;
     private File myFile;
-    private Writer myWriter;
-    private OutputStream myOutput;
+    private XmlWriter myWriter;
     private Date myStart;
     private Date myStop;
     /** The ISO 8601 date formatter. */
