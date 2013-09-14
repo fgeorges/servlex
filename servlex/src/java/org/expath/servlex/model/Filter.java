@@ -10,6 +10,7 @@
 package org.expath.servlex.model;
 
 import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.FilterInvocation;
@@ -29,6 +30,20 @@ public class Filter
         super(name);
         myIn = in;
         myOut = out;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Filter");
+        log.debug("         in : " + myIn);
+        log.debug("         out: " + myOut);
+        if ( myIn != null ) {
+            myIn.logApplication(log);
+        }
+        if ( myOut != null ) {
+            myOut.logApplication(log);
+        }
     }
 
     @Override

@@ -16,10 +16,7 @@ import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
-import org.expath.servlex.model.Servlet;
-import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.saxon.SaxonCalabash;
 import org.expath.servlex.tools.ProcessorsMap;
@@ -55,17 +52,7 @@ public class EXPathWebParserTest
         Set<Application> result = sut.parseDescriptors(repo.listPackages());
         System.err.println("RESULT: " + result);
         for ( Application app : result ) {
-            System.err.println("  APP: " + app.getName());
-            for ( AddressHandler h : app.getHandlers() ) {
-                System.err.println("    AddressHandler: " + h);
-                if ( h instanceof Servlet ) {
-                    Servlet s =  (Servlet) h;
-                    Wrapper w = s.getWrapper();
-                    if ( w != null ) {
-                        System.err.println("      Wrapper: " + w);
-                    }
-                }
-            }
+            app.logApplication();
         }
     }
 

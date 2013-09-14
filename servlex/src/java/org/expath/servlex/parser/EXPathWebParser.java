@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.transform.Source;
@@ -26,16 +25,14 @@ import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.Storage.PackageResolver;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
+import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.model.Chain;
 import org.expath.servlex.model.ErrorHandler;
 import org.expath.servlex.model.Filter;
-import org.expath.servlex.model.Resource;
-import org.expath.servlex.model.Servlet;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.tools.ProcessorsMap;
-import org.expath.servlex.tools.RegexHelper;
 
 /**
  * Facade class for this package, to parse EXPath Webapp descriptors.
@@ -90,7 +87,9 @@ public class EXPathWebParser
             LOG.debug("Package does not have any web descriptor, must be a library, ignore it: " + pkg.getName());
             return null;
         }
-        return parseDescriptorFile(descriptor, pkg);
+        Application app = parseDescriptorFile(descriptor, pkg);
+        app.logApplication();
+        return app;
     }
 
     /**
@@ -237,11 +236,11 @@ public class EXPathWebParser
             }
             else if ( elem.equals("servlet") ) {
                 ParsingServlet s = handleServlet(parser, ctxt);
-                ctxt.addServlet(s);
+                ctxt.addHandler(s);
             }
             else if ( elem.equals("resource") ) {
-                Resource rsrc = handleResource(parser);
-                ctxt.addResource(rsrc);
+                ParsingResource rsrc = handleResource(parser, ctxt);
+                ctxt.addHandler(rsrc);
             }
             else {
                 String msg = "Unkown element in the descriptor for webapp ";
@@ -268,29 +267,9 @@ public class EXPathWebParser
         Processors  procs  = ctxt.getProcessors();
         Application app    = new Application(abbrev, title, pkg, procs);
         // build the servlets
-        for ( ParsingServlet s : ctxt.getServlets() ) {
-            try {
-                String    name    = s.getName();
-                Component implem  = s.getImplem();
-                String    pattern = s.getPattern();
-                String    java_re = RegexHelper.xpathToJava(pattern, LOG);
-                Pattern   regex   = Pattern.compile(java_re);
-                String[]  groups  = s.getMatchGroups();
-                Servlet   servlet = new Servlet(name, implem, regex, groups);
-                Wrapper   wrapper = s.makeWrapper(ctxt);
-                servlet.setWrapper(wrapper);
-                app.addHandler(servlet);
-            }
-            catch ( TechnicalException ex ) {
-                throw new ParseException("The pattern is not a valid XPath regex", ex);
-            }
-        }
-        // TODO: FIXME: If I am right, all the servlets are added first, then
-        // all the resources.  But they should preserve the order from the 
-        // descriptor, because of the regex precedence...
-        // add the resources
-        for ( Resource rsrc : ctxt.getResources() ) {
-            app.addHandler(rsrc);
+        for ( ParsingHandler h : ctxt.getHandlers()) {
+            AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
+            app.addHandler(handler);
         }
         return app;
     }
@@ -370,28 +349,50 @@ public class EXPathWebParser
     }
 
     /**
+     * Handle common attributes on elements 'resource' or 'servlet'.
+     *
+     * Unlike other handleXXX() functions, this one does not consume any new
+     * events in the parsing event stream.  It only looks at attributes.
+     */
+    private void handleAdressHandler(ParsingHandler handler, StreamParser parser, ParsingContext ctxt)
+            throws ParseException
+    {
+        // the current group
+        ParsingGroup group = ctxt.getCurrentGroup();
+        handler.setGroup(group);
+        // the filters
+        String[] filters = handleFiltersAttr(parser);
+        for ( String filter : filters ) {
+            QName f = parser.parseLiteralQName(filter);
+            handler.addFilter(f);
+        }
+    }
+
+    /**
      * Handle an element 'resource' in the webapp descriptor.
      *
      * Like other handleXXX() functions, the current event must be 'end tag'
      * at the end of the function (the end tag 'resource' corresponding to the
      * open tag 'resource' when the function is called).
      */
-    private Resource handleResource(StreamParser parser)
+    private ParsingResource handleResource(StreamParser parser, ParsingContext ctxt)
             throws ParseException
     {
         parser.ensureStartTag("resource");
+        ParsingResource rsrc = new ParsingResource();
+        handleAdressHandler(rsrc, parser, ctxt);
+        // the pattern
         String pattern = parser.getAttribute("pattern");
+        rsrc.setPattern(pattern);
+        // the rewrite rule
         String rewrite = parser.getAttribute("rewrite");
-        String type    = parser.getAttribute("media-type");
+        rsrc.setRewrite(rewrite);
+        // the media type
+        String type = parser.getAttribute("media-type");
+        rsrc.setMediaType(type);
         parser.nextTag();
         parser.ensureEndTag();
-        try {
-            String java_regex = RegexHelper.xpathToJava(pattern, LOG);
-            return new Resource(Pattern.compile(java_regex), java_regex, rewrite, type);
-        }
-        catch ( TechnicalException ex ) {
-            throw new ParseException("The pattern is not a valid XPath regex", ex);
-        }
+        return rsrc;
     }
 
     /**
@@ -478,13 +479,8 @@ public class EXPathWebParser
         parser.ensureStartTag("servlet");
         String name = parser.getAttribute("name");
         LOG.debug("expath-web parser: servlet: " + name);
-        ParsingGroup   group   = ctxt.getCurrentGroup();
-        ParsingServlet servlet = new ParsingServlet(name, group);
-        String[]       filters = handleFiltersAttr(parser);
-        for ( String filter : filters ) {
-            QName f = parser.parseLiteralQName(filter);
-            servlet.addFilter(f);
-        }
+        ParsingServlet servlet = new ParsingServlet(name);
+        handleAdressHandler(servlet, parser, ctxt);
         parser.nextTag();
         parser.ensureNamespace();
         Component implem = handleComponent(parser, ctxt);
@@ -521,6 +517,7 @@ public class EXPathWebParser
         while ( XMLStreamConstants.START_ELEMENT == parser.nextTag() ) {
             parser.ensureStartTag("param");
             // FIXME: ignore for now
+            LOG.error("FIXME: Element PARAM ignored in expath-web.xml...");
             parser.debug_skipElement();
         }
         return servlet;

@@ -10,6 +10,7 @@
 package org.expath.servlex.model;
 
 import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.Invocation;
 
@@ -26,6 +27,18 @@ public class Chain
     {
         super(name);
         myWrappers = wrappers;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Chain");
+        log.debug("         wrappers: " + myWrappers);
+        if ( myWrappers != null ) {
+            for ( Wrapper w : myWrappers ) {
+                w.logApplication(log);
+            }
+        }
     }
 
     @Override

@@ -47,6 +47,14 @@ public class SaxonXQueryFunction
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XQuery Function");
+        log.debug("         ns   : " + myNS);
+        log.debug("         local: " + myLocal);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError

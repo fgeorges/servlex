@@ -9,10 +9,13 @@
 
 package org.expath.servlex.parser;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
-import org.expath.servlex.model.Resource;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
 
@@ -58,18 +61,11 @@ class ParsingContext
         return myApp;
     }
 
-    public void addResource(Resource r) {
-        myResources.add(r);
+    public void addHandler(ParsingHandler h) {
+        myHandlers.add(h);
     }
-    public List<Resource> getResources() {
-        return myResources;
-    }
-
-    public void addServlet(ParsingServlet s) {
-        myServlets.add(s);
-    }
-    public List<ParsingServlet> getServlets() {
-        return myServlets;
+    public List<ParsingHandler> getHandlers() {
+        return myHandlers;
     }
 
     public void addWrapper(Wrapper w) throws ParseException {
@@ -125,8 +121,7 @@ class ParsingContext
     private String               myAbbrev        = null;
     private String               myTitle         = null;
     private ParsingApp           myApp           = null;
-    private List<Resource>       myResources     = new ArrayList<Resource>();
-    private List<ParsingServlet> myServlets      = new ArrayList<ParsingServlet>();
+    private List<ParsingHandler> myHandlers      = new ArrayList<ParsingHandler>();
     private List<ParsingChain>   myChains        = new ArrayList<ParsingChain>();
     private Stack<ParsingGroup>  myInScopeGroups = new Stack<ParsingGroup>();
     private Map<QName, Wrapper>  myWrappers      = new HashMap<QName, Wrapper>();

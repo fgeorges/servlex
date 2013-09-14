@@ -56,6 +56,15 @@ public class SaxonXSLTTemplate
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XSLT Template");
+        log.debug("         uri  : " + myImportUri);
+        log.debug("         ns   : " + myNS);
+        log.debug("         local: " + myLocal);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError

@@ -9,6 +9,7 @@
 
 package org.expath.servlex.components;
 
+import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
@@ -23,6 +24,8 @@ import org.expath.servlex.tools.Auditor;
  */
 public interface Component
 {
+    public abstract void logApplication(Logger log);
+
     /**
      * Implement an entry point invocation.
      *

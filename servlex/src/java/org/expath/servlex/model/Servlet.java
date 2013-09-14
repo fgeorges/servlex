@@ -11,6 +11,7 @@ package org.expath.servlex.model;
 
 import org.expath.servlex.components.Component;
 import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ServletInvocation;
 import org.expath.servlex.connectors.RequestConnector;
@@ -43,42 +44,34 @@ public class Servlet
         return myImpl;
     }
 
-    /**
-     * Set a wrapper (filter, error handler, etc.)
-     * 
-     * If more than one filter has to be set on this servlet, you can wrap them
-     * all within a chain, then set this one single chain as the wrapper.
-     */
-    public void setWrapper(Wrapper w)
-    {
-        myWrapper = w;
-    }
-
-    public Wrapper getWrapper()
-    {
-        return myWrapper;
-    }
-
     public String[] getGroupNames()
     {
         return myGroups;
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        super.logApplication(log);
+        log.debug("   (is a Servlet):");
+        log.debug("      name   : " + myName);
+        log.debug("      groups : " + myGroups);
+        log.debug("      impl   : " + myImpl);
+        if ( myImpl != null ) {
+            myImpl.logApplication(log);
+        }
+    }
+
+    @Override
     protected Invocation makeInvocation(String path, String method, RequestConnector connector)
     {
         connector.setServlet(this);
-        Invocation invoc = new ServletInvocation(myImpl, path, connector);
-        if ( myWrapper != null ) {
-            invoc = myWrapper.makeInvocation(path, connector, invoc);
-        }
-        return invoc;
+        return new ServletInvocation(myImpl, path, connector);
     }
 
     private String myName;
     private Component myImpl;
-    private Wrapper myWrapper = null;
-    // match group names (null if group[i] not set)
+    /** Match group names (group[i] is null if it is not set). */
     private String[] myGroups;
 }
 

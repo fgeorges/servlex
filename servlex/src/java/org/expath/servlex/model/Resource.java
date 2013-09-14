@@ -29,6 +29,7 @@ public class Resource
     public Resource(Pattern url_pattern, String java_regex, String rewrite, String type)
     {
         super(url_pattern);
+LOG.error("Resource: MEDIA-TYPE: " + type);
         myType = type;
         myJavaRegex = java_regex;
         myRewrite = rewrite;
@@ -37,6 +38,16 @@ public class Resource
     public String getType()
     {
         return myType;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        super.logApplication(log);
+        log.debug("   (is a Resource):");
+        log.debug("      type   : " + myType);
+        log.debug("      regex  : " + myJavaRegex);
+        log.debug("      rewrite: " + myRewrite);
     }
 
     @Override

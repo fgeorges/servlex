@@ -59,6 +59,13 @@ public class SaxonXSLTTransform
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XSLT Transform");
+        log.debug("         style: " + myStyle);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError

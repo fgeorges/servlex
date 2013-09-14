@@ -10,6 +10,7 @@
 package org.expath.servlex.model;
 
 import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.ErrorHandlerInvocation;
@@ -65,6 +66,20 @@ public class ErrorHandler
         myCode  = code;
         myNs    = namespace;
         myLocal = local;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Error Handler");
+        log.debug("         every: " + myEvery);
+        log.debug("         code : " + myCode);
+        log.debug("         ns   : " + myNs);
+        log.debug("         local: " + myLocal);
+        log.debug("         impl : " + myImpl);
+        if ( myImpl != null ) {
+            myImpl.logApplication(log);
+        }
     }
 
     @Override

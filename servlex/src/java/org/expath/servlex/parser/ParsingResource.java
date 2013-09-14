@@ -1,45 +1,46 @@
 /****************************************************************************/
-/*  File:       Wrapper.java                                                */
+/*  File:       ParsingResource.java                                        */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-02-07                                                  */
+/*  Date:       2013-09-13                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.model;
+package org.expath.servlex.parser;
 
-import javax.xml.namespace.QName;
-import org.apache.log4j.Logger;
-import org.expath.servlex.connectors.RequestConnector;
-import org.expath.servlex.runtime.Invocation;
+import java.util.regex.Pattern;
+import org.expath.servlex.model.AddressHandler;
+import org.expath.servlex.model.Resource;
 
 /**
- * Servlet wrapper (can wrap a servlet, a filter, an error handler or a chain).
+ * Represent an address handler while parsing.
  *
  * @author Florent Georges
- * @date   2011-02-07
+ * @date   2013-09-13
  */
-public abstract class Wrapper
+class ParsingResource
+        extends ParsingHandler
 {
-    public Wrapper(QName name)
+    public void setRewrite(String rewrite)
     {
-        myName = name;
+        myRewrite = rewrite;
     }
 
-    /**
-     * Return the name of the wrapper, which can be null.
-     */
-    public QName getName()
+    public void setMediaType(String type)
     {
-        return myName;
+        myMediaType = type;
     }
 
-    public abstract void logApplication(Logger log);
+    @Override
+    protected AddressHandler makeIt(Pattern regex, String java_regex)
+    {
+        Resource rsrc = new Resource(regex, java_regex, myRewrite, myMediaType);
+        return rsrc;
+    }
 
-    public abstract Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped);
-
-    private QName myName;
+    private String myRewrite;
+    private String myMediaType;
 }
 
 

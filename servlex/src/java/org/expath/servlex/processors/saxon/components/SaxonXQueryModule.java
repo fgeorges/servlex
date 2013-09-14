@@ -56,6 +56,13 @@ public class SaxonXQueryModule
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XQuery Module");
+        log.debug("         uri: " + myUri);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError

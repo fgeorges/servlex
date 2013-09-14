@@ -11,11 +11,8 @@ package org.expath.servlex.processors.saxon.components;
 
 import com.xmlcalabash.core.XProcException;
 import javax.xml.transform.SourceLocator;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
@@ -24,7 +21,6 @@ import org.expath.servlex.processors.saxon.CalabashXProc;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.CalabashHelper;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * ...
@@ -59,6 +55,13 @@ public class CalabashXProcPipeline
     {
         myCalabash = calabash;
         myPipe = pipe;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XProc Pipeline:");
+        log.debug("         pipe: " + myPipe);
     }
 
     /**

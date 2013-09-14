@@ -124,6 +124,17 @@ public class Application
         throw new ServlexException(404, "Page not found");
     }
 
+    public void logApplication()
+    {
+        // TODO: Create a property to control logging the applicaiton structure
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("*** Application: " + myName);
+            for ( AddressHandler h : myHandlers ) {
+                h.logApplication(LOG);
+            }
+        }
+    }
+
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(Application.class);
 
