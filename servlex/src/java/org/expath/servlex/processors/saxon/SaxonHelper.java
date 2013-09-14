@@ -84,8 +84,7 @@ public class SaxonHelper
     public static SaxonElement toSaxonElement(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        XdmItem xdm = sitem.getSaxonItem();
+        XdmItem xdm = SaxonItem.getXdmItem(item);
         if ( ! (xdm instanceof XdmNode) ) {
             throw new TechnicalException("Not a node: " + xdm);
         }
@@ -105,8 +104,7 @@ public class SaxonHelper
     public static SaxonDocument toSaxonDocument(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        XdmItem xdm = sitem.getSaxonItem();
+        XdmItem xdm = SaxonItem.getXdmItem(item);
         if ( ! (xdm instanceof XdmNode) ) {
             throw new TechnicalException("Not a node: " + xdm);
         }
@@ -126,8 +124,7 @@ public class SaxonHelper
     public static XdmValue toXdmValue(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        return sitem.getSaxonItem();
+        return SaxonItem.getXdmItem(item);
     }
 
     public static XdmValue toXdmValue(Document doc)

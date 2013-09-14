@@ -51,11 +51,27 @@ public class SaxonItem
     }
 
     // TODO: Should be package visible, but is used in ParseBasicAuthCall
-    // (which should use instead a method on SaxonHelper which should be move
+    // (which should use instead a method on SaxonHelper which should be moved
     // here...)
-    public XdmItem getSaxonItem()
+    public XdmItem getXdmItem()
     {
         return myItem;
+    }
+
+    static SaxonItem asSaxonItem(Item item)
+    {
+        if ( ! (item instanceof SaxonItem) ) {
+            throw new IllegalStateException("Not a Saxon item: " + item);
+        }
+        return (SaxonItem) item;
+    }
+
+    // TODO: Should be package visible, but is used in SaxonHelper (which
+    // should be moved here...)
+    public static XdmItem getXdmItem(Item item)
+    {
+        SaxonItem sitem = asSaxonItem(item);
+        return sitem.getXdmItem();
     }
 
     private XdmItem myItem;
