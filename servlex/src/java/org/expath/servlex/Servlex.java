@@ -279,11 +279,11 @@ public class Servlex
         Application app     = info.getApplication();
         Processors  procs   = app.getProcessors();
         req.setAttribute("servlex.webapp", app);
+        Auditor auditor = new Auditor(ourConfig, procs);
         // resolve the component
-        RequestConnector request = new RequestConnector(req, path, appname, procs);
+        RequestConnector request = new RequestConnector(req, path, appname, procs, auditor);
         Invocation invoc = app.resolve(path, req.getMethod(), request);
         // log request and profiling info
-        Auditor auditor = new Auditor(ourConfig, procs);
         auditor.begin(request);
         // invoke the component
         Connector result;

@@ -59,6 +59,7 @@ public class CalabashXProcStep
         throws ServlexException
              , ComponentError
     {
+        auditor.run("step");
         try {
             CalabashPipeline pipeline = myCalabash.prepare(auditor);
             XdmNode pipe = makeCallPipe();

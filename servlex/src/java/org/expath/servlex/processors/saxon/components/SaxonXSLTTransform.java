@@ -70,6 +70,7 @@ public class SaxonXSLTTransform
         throws ServlexException
              , ComponentError
     {
+        auditor.run("style");
         try {
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
@@ -83,7 +84,8 @@ public class SaxonXSLTTransform
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            return new XdmConnector(new SaxonSequence(it));
+            Sequence seq = new SaxonSequence(it);
+            return new XdmConnector(seq, auditor);
         }
         catch ( PackageException ex ) {
             LOG.error("Internal error", ex);

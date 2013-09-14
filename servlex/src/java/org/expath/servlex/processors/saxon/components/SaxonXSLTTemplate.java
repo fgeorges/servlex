@@ -69,6 +69,7 @@ public class SaxonXSLTTemplate
         throws ServlexException
              , ComponentError
     {
+        auditor.run("template");
         try {
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
@@ -83,7 +84,8 @@ public class SaxonXSLTTemplate
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            return new XdmConnector(new SaxonSequence(it));
+            Sequence seq = new SaxonSequence(it);
+            return new XdmConnector(seq, auditor);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);

@@ -69,6 +69,7 @@ public class SaxonXSLTFunction
         throws ServlexException
              , ComponentError
     {
+        auditor.run("xslt function");
         try {
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
@@ -83,7 +84,8 @@ public class SaxonXSLTFunction
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            return new XdmConnector(new SaxonSequence(it));
+            Sequence seq = new SaxonSequence(it);
+            return new XdmConnector(seq, auditor);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);

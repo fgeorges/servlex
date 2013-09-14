@@ -48,6 +48,7 @@ public class ResourceInvocation
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
     {
+        auditor.invoke("resource");
         String orig_path = getPath();
         try {
             String path = RegexHelper.replaceMatches(orig_path, myJavaRegex, myRewrite);
@@ -66,7 +67,7 @@ public class ResourceInvocation
             }
             InputStream in = stream.getInputStream();
             String type = myRsrc.getType();
-            return new ResourceConnector(in, 200, type, app.getProcessors());
+            return new ResourceConnector(in, 200, type, app.getProcessors(), auditor);
         }
         catch ( Storage.NotExistException ex ) {
             LOG.error("Page not found: " + orig_path, ex);

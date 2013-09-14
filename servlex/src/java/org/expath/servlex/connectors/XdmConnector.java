@@ -18,6 +18,7 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Connector to an XDM sequence.
@@ -37,9 +38,16 @@ import org.expath.servlex.processors.Sequence;
 public class XdmConnector
         implements Connector
 {
-    public XdmConnector(Sequence sequence)
+    public XdmConnector(Sequence sequence, Auditor auditor)
     {
         mySequence = sequence;
+        myAuditor = auditor;
+    }
+
+    @Override
+    public Auditor getAuditor()
+    {
+        return myAuditor;
     }
 
     /**
@@ -49,6 +57,7 @@ public class XdmConnector
     public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("sequence", "xquery function");
         try {
             comp.connect(mySequence);
         }
@@ -64,6 +73,7 @@ public class XdmConnector
     public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("sequence", "query");
         try {
             comp.connect(mySequence);
         }
@@ -79,6 +89,7 @@ public class XdmConnector
     public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("sequence", "xslt component");
         try {
             comp.connect(mySequence);
         }
@@ -91,6 +102,7 @@ public class XdmConnector
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("sequence", "style");
         try {
             comp.connect(mySequence);
         }
@@ -106,6 +118,7 @@ public class XdmConnector
     public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("sequence", "pipeline");
         try {
             comp.connect(mySequence);
         }
@@ -122,6 +135,7 @@ public class XdmConnector
             throws ServlexException
                  , IOException
     {
+        myAuditor.connect("sequence", "response");
         // TODO: FIXME: The artificial, old class Result should be removed, and
         // its content moved to this class, which is really the one responsible
         // to write an XDM sequence to the HTTP servlet response object.
@@ -130,6 +144,8 @@ public class XdmConnector
     }
 
     private Sequence mySequence;
+    /** The auditor object. */
+    private Auditor myAuditor;
 }
 
 

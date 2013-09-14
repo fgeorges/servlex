@@ -67,6 +67,7 @@ public class SaxonXQueryModule
             throws ServlexException
                  , ComponentError
     {
+        auditor.run("query");
         XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();
         ComponentInstance instance = new MyInstance(eval);
@@ -79,7 +80,8 @@ public class SaxonXQueryModule
             LOG.error("User error in XQuery main module at URI: '" + myUri + "'", ex);
             throw SaxonHelper.makeError(ex);
         }
-        return new XdmConnector(new SaxonSequence(result));
+        Sequence seq = new SaxonSequence(result);
+        return new XdmConnector(seq, auditor);
     }
 
     /**

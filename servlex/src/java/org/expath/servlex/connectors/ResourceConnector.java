@@ -20,6 +20,7 @@ import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.BodyParser;
 import org.expath.servlex.tools.ContentType;
 
@@ -39,12 +40,19 @@ public class ResourceConnector
      * @param status The HTTP status code to set on the response.
      * @param type The MIME content type to set on the response.
      */
-    public ResourceConnector(InputStream in, int status, String type, Processors procs)
+    public ResourceConnector(InputStream in, int status, String type, Processors procs, Auditor auditor)
     {
         myIn = in;
         myStatus = status;
         myType = type;
         myProcs = procs;
+        myAuditor = auditor;
+    }
+
+    @Override
+    public Auditor getAuditor()
+    {
+        return myAuditor;
     }
 
     @Override
@@ -72,6 +80,7 @@ public class ResourceConnector
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("resource", "style");
         try {
             BodyParser parser = new BodyParser(config.isTraceContentEnabled(), myProcs);
             ContentType ctype = new ContentType(myType);
@@ -98,6 +107,7 @@ public class ResourceConnector
             throws ServlexException
                  , IOException
     {
+        myAuditor.connect("resource", "response");
         OutputStream out = null;
         try {
             out = resp.getOutputStream();
@@ -120,6 +130,8 @@ public class ResourceConnector
     private int myStatus;
     private String myType;
     private Processors myProcs;
+    /** The auditor object. */
+    private Auditor myAuditor;
 }
 
 

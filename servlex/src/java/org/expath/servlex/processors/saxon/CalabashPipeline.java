@@ -191,8 +191,10 @@ public class CalabashPipeline
         }
         ReadablePipe response_port = myCompiled.readFrom(OUTPUT_PORT_NAME);
         try {
-            XdmValue result = decodeResponse(response_port);
-            return new XdmConnector(new SaxonSequence(result));
+            XdmValue result  = decodeResponse(response_port);
+            Sequence seq     = new SaxonSequence(result);
+            Auditor  auditor = connector.getAuditor();
+            return new XdmConnector(seq, auditor);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("Error decoding the response whilst evaluating pipeline", ex);

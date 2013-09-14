@@ -59,6 +59,7 @@ public class SaxonXQueryFunction
         throws ServlexException
              , ComponentError
     {
+        auditor.run("xquery function");
         XQueryExecutable exec = getCompiled();
         XQueryEvaluator eval = exec.load();
         ComponentInstance instance = new MyInstance(eval);
@@ -71,7 +72,8 @@ public class SaxonXQueryFunction
             LOG.error(formatMsg("User error in XQuery"), ex);
             throw SaxonHelper.makeError(ex);
         }
-        return new XdmConnector(new SaxonSequence(result));
+        Sequence seq = new SaxonSequence(result);
+        return new XdmConnector(seq, auditor);
     }
 
     /**

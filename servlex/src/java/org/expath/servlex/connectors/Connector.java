@@ -15,6 +15,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Encapsulate a connection between two components.
@@ -24,22 +25,44 @@ import org.expath.servlex.processors.Processors;
  */
 public interface Connector
 {
-    /** Connect to an XQuery function. */
+    /**
+     * Return the auditor object used by this connector.
+     */
+    public Auditor getAuditor();
+
+    /**
+     * Connect to an XQuery function.
+     */
     public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
-    /** Connect to an XQuery main module. */
+
+    /**
+     * Connect to an XQuery main module.
+     */
     public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
-    /** Connect to an XSLT component, either a function or a named template. */
+
+    /**
+     * Connect to an XSLT component, either a function or a named template.
+     */
     public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
-    /** Connect to an XSLT stylesheet. */
+
+    /**
+     * Connect to an XSLT stylesheet.
+     */
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
-    /** Connect to an XProc pipeline. */
+
+    /**
+     * Connect to an XProc pipeline.
+     */
     public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException;
-    /** Connect to the final HTTP Servlet response. */
+
+    /**
+     * Connect to the final HTTP Servlet response.
+     */
     public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
             throws ServlexException, IOException;
 }

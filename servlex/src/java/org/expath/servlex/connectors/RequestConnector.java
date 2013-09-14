@@ -33,6 +33,7 @@ import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
+import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.BodyParser;
 import org.expath.servlex.tools.ContentType;
 import org.expath.servlex.tools.TraceInputStream;
@@ -46,12 +47,19 @@ import org.expath.servlex.tools.TraceInputStream;
 public class RequestConnector
         implements Connector
 {
-    public RequestConnector(HttpServletRequest request, String path, String appname, Processors procs)
+    public RequestConnector(HttpServletRequest request, String path, String appname, Processors procs, Auditor auditor)
     {
         myRequest = request;
         myPath = path;
         myAppName = appname;
         myProcs = procs;
+        myAuditor = auditor;
+    }
+
+    @Override
+    public Auditor getAuditor()
+    {
+        return myAuditor;
     }
 
     public void setMatcher(Matcher matcher)
@@ -99,6 +107,7 @@ public class RequestConnector
     public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("request", "xquery function");
         ensureParsing(config);
         try {
             comp.connect(myInput);
@@ -111,6 +120,7 @@ public class RequestConnector
     public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("request", "query");
         ensureParsing(config);
         try {
             comp.connect(myInput);
@@ -124,6 +134,7 @@ public class RequestConnector
     public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("request", "xslt component");
         ensureParsing(config);
         try {
             comp.connect(myInput);
@@ -137,6 +148,7 @@ public class RequestConnector
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("request", "style");
         ensureParsing(config);
         try {
             comp.connect(myInput);
@@ -150,6 +162,7 @@ public class RequestConnector
     public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("request", "pipeline");
         ensureParsing(config);
         try {
             comp.connect(myInput);
@@ -575,6 +588,8 @@ public class RequestConnector
     private Sequence myInput = null;
     /** The web:request document node, null at beginning, placed here when parsed. */
     private Document myWebRequest = null;
+    /** The auditor object. */
+    private Auditor myAuditor;
 }
 
 

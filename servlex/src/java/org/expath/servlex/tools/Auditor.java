@@ -153,6 +153,55 @@ public class Auditor
         }
     }
 
+    public void connect(String from, String to)
+            throws ServlexException
+    {
+        if ( myWriter != null ) {
+            try {
+                myWriter.emptyElement("connect", 1, a("from", from), a("to", to));
+                myWriter.ln();
+            }
+            catch ( TechnicalException ex ) {
+                String msg = "Internal error, writing to the audit file: " + myFile;
+                throw new ServlexException(500, msg, ex);
+            }
+        }
+    }
+
+    public void run(String what)
+            throws ServlexException
+    {
+        if ( myWriter != null ) {
+            try {
+                myWriter.openElement("run", 1);
+                myWriter.text(what);
+                myWriter.close();
+                myWriter.ln();
+            }
+            catch ( TechnicalException ex ) {
+                String msg = "Internal error, writing to the audit file: " + myFile;
+                throw new ServlexException(500, msg, ex);
+            }
+        }
+    }
+
+    public void invoke(String what)
+            throws ServlexException
+    {
+        if ( myWriter != null ) {
+            try {
+                myWriter.openElement("invoke", 1);
+                myWriter.text(what);
+                myWriter.close();
+                myWriter.ln();
+            }
+            catch ( TechnicalException ex ) {
+                String msg = "Internal error, writing to the audit file: " + myFile;
+                throw new ServlexException(500, msg, ex);
+            }
+        }
+    }
+
     private String format(Date date)
     {
         return ISO_FORMAT.format(date);

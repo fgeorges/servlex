@@ -53,13 +53,14 @@ public class ErrorHandlerInvocation
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke("error handler");
         try {
             return myWrapped.invoke(connector, app, config, auditor);
         }
         catch ( ComponentError ex ) {
             if ( matches(ex.getName()) ) {
                 try {
-                    Connector c = new ErrorConnector(ex, getRequest());
+                    Connector c = new ErrorConnector(ex, getRequest(), auditor);
                     return myImpl.run(c, config, auditor);
                 }
                 catch ( ComponentError ex2 ) {

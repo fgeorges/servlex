@@ -37,6 +37,7 @@ public class ServletInvocation
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke("servlet");
         return myImpl.run(connector, config, auditor);
     }
 

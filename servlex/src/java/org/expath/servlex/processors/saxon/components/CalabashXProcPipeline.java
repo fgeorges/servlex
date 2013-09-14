@@ -85,6 +85,7 @@ public class CalabashXProcPipeline
             throws ServlexException
                  , ComponentError
     {
+        auditor.run("pipeline");
         try {
             CalabashPipeline pipeline = myCalabash.prepare(auditor);
             pipeline.compile(myPipe);

@@ -39,6 +39,7 @@ public class FilterInvocation
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke("filter");
         // inbound filter
         if ( myIn != null ) {
             // TODO: If this returns a web:response, we should return straight
