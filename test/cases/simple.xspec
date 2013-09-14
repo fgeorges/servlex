@@ -69,7 +69,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, me!</h:title>
       </x:expect>
-      <x:expect label="body para xslt" context="$html/h:body/h:p">
+      <x:expect label="body para style count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para style"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, me! (in XSLT)</h:p>
       </x:expect>
    </x:scenario>
@@ -86,7 +87,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, me!</h:title>
       </x:expect>
-      <x:expect label="body para xslt" context="$html/h:body/h:p">
+      <x:expect label="body para template count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para template"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, me! (in XSLT)</h:p>
       </x:expect>
    </x:scenario>
@@ -103,7 +105,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, me!</h:title>
       </x:expect>
-      <x:expect label="body para xslt" context="$html/h:body/h:p">
+      <x:expect label="body para xslt fun count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para xslt fun"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, me! (in XSLT)</h:p>
       </x:expect>
    </x:scenario>
@@ -120,7 +123,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, you!</h:title>
       </x:expect>
-      <x:expect label="body para xquery" context="$html/h:body/h:p">
+      <x:expect label="body para query count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para query"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, you! (in XQuery)</h:p>
       </x:expect>
    </x:scenario>
@@ -137,7 +141,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, you!</h:title>
       </x:expect>
-      <x:expect label="body para xquery" context="$html/h:body/h:p">
+      <x:expect label="body para xquery fun count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para xquery fun"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, you! (in XQuery)</h:p>
       </x:expect>
    </x:scenario>
@@ -153,7 +158,8 @@
       <x:expect label="head title" context="$html/h:head/h:title">
          <h:title>Hello, yo!</h:title>
       </x:expect>
-      <x:expect label="body para xproc" context="$html/h:body/h:p">
+      <x:expect label="body para xproc count" assert="count($html/h:body/h:p) eq 1"/>
+      <x:expect label="body para xproc"       context="($html/h:body/h:p)[1]">
          <h:p>Hello, yo! (in XProc)</h:p>
       </x:expect>
    </x:scenario>
