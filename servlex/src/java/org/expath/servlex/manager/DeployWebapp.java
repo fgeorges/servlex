@@ -162,8 +162,14 @@ public class DeployWebapp
             view.print("<b>Error</b>: " + ex.getMessage());
             ex.setStatus(resp);
         }
+        catch ( RuntimeException ex ) {
+            view.println("<b>UNEXPECTED RUNTIME ERROR</b>: " + ex.getMessage() + "</p>");
+            view.println("<p><b>Please report this</b> to the mailing list, see the");
+            view.println("   logs for additional information about the error.</p>");
+            throw ex;
+        }
         finally {
-            view.print("</p>\n");
+            view.println("</p>");
             view.close();
         }
     }
