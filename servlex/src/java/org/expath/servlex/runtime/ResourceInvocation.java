@@ -23,6 +23,7 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.RegexHelper;
 
@@ -44,7 +45,7 @@ public class ResourceInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
     {
         String orig_path = getPath();
@@ -64,7 +65,8 @@ public class ResourceInvocation
                 throw new ServlexException(500, "The resource is not a StreamSource: " + src.getClass());
             }
             InputStream in = stream.getInputStream();
-            return new ResourceConnector(in, 200, myRsrc.getType());
+            String type = myRsrc.getType();
+            return new ResourceConnector(in, 200, type, app.getProcessors());
         }
         catch ( Storage.NotExistException ex ) {
             LOG.error("Page not found: " + orig_path, ex);

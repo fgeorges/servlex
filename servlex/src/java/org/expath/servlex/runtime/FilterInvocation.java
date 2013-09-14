@@ -14,6 +14,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 
 /**
@@ -34,7 +35,7 @@ public class FilterInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
@@ -47,7 +48,7 @@ public class FilterInvocation
             connector = myIn.run(connector, config, auditor);
         }
         // the filtered component
-        connector = myWrapped.invoke(connector, config, auditor);
+        connector = myWrapped.invoke(connector, app, config, auditor);
         // outbound filter
         if ( myOut != null ) {
             connector = myOut.run(connector, config, auditor);

@@ -14,6 +14,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 
 /**
@@ -32,7 +33,7 @@ public class ServletInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
