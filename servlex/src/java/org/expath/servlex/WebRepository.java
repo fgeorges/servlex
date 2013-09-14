@@ -84,6 +84,12 @@ public class WebRepository
         return myApps.keySet();
     }
 
+    /**
+     * Some repositories do not support installing new webapps.
+     * 
+     * For instance if their storage is read-only.  This method returns true if
+     * it is possible to install new webapps in this repository.
+     */
     public boolean canInstall()
     {
         return ! myUnderlying.getStorage().isReadOnly();
@@ -101,6 +107,7 @@ public class WebRepository
             throws TechnicalException
                  , PackageException
     {
+        installPreconditions(ctxt_root);
         Package pkg = myUnderlying.installPackage(archive, force, new LoggingUserInteraction());
         return doInstall(pkg, ctxt_root);
     }
@@ -117,6 +124,7 @@ public class WebRepository
             throws TechnicalException
                  , PackageException
     {
+        installPreconditions(ctxt_root);
         Package pkg = myUnderlying.installPackage(uri, force, new LoggingUserInteraction());
         return doInstall(pkg, ctxt_root);
     }
@@ -174,6 +182,24 @@ public class WebRepository
             applications.put(root, app);
         }
         return applications;
+    }
+
+    /**
+     * Check preconditions before installing.
+     * 
+     * Checks if this repository supports installing new webapps, and if the
+     * context root provided is syntactically valid (if not null).  If anything
+     * is wrong, an exception is raised.
+     */
+    private void installPreconditions(String ctxt_root)
+            throws TechnicalException
+    {
+        if ( ! canInstall() ) {
+            throw new TechnicalException("Storage read-only, cannot install in this web repository.");
+        }
+        if ( ctxt_root != null && ! WebappsParser.isContextRootValid(ctxt_root) ) {
+            throw new TechnicalException("Syntactically invalid context root: " + ctxt_root);
+        }
     }
 
     /**
