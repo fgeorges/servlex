@@ -9,12 +9,8 @@
 
 package org.expath.servlex.connectors;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -22,15 +18,11 @@ import java.util.regex.Matcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.field.AbstractField;
 import org.apache.james.mime4j.parser.Field;
 import org.apache.james.mime4j.parser.MimeTokenStream;
 import org.apache.log4j.Logger;
-import org.ccil.cowan.tagsoup.Parser;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.ServlexException;
@@ -41,10 +33,9 @@ import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
+import org.expath.servlex.tools.BodyParser;
 import org.expath.servlex.tools.ContentType;
 import org.expath.servlex.tools.TraceInputStream;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * Connector to the HTTP servlet request object.
@@ -94,7 +85,8 @@ public class RequestConnector
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
                 List<Item> input = new ArrayList<Item>();
-                myWebRequest = parseRequest(config, builder, input);
+                boolean trace_content = config.isTraceContentEnabled();
+                myWebRequest = parseRequest(builder, input, trace_content);
                 myInput = myProcs.buildSequence(input);
             }
             catch ( TechnicalException ex ) {
@@ -214,7 +206,7 @@ public class RequestConnector
      * and the bodies, which will end up as the $input sequence of most of the
      * components)
      */
-    private Document parseRequest(ServerConfig config, TreeBuilder b, List<Item> input)
+    private Document parseRequest(TreeBuilder b, List<Item> input, boolean trace_content)
             throws ServlexException
                  , TechnicalException
     {
@@ -259,7 +251,7 @@ public class RequestConnector
         // once it has been built
         input.add(null);
         // parse the bodies
-        makeBodies(config, b, input);
+        makeBodies(b, input, trace_content);
         // end the request element
         b.endElem();
         // return the request document node
@@ -387,7 +379,7 @@ public class RequestConnector
      *
      * TODO: Must add more info on web:multipart and web:body elements.
      */
-    private void makeBodies(ServerConfig config, TreeBuilder builder, List<Item> input)
+    private void makeBodies(TreeBuilder builder, List<Item> input, boolean trace_content)
             throws ServlexException
                  , TechnicalException
     {
@@ -401,7 +393,7 @@ public class RequestConnector
         try {
             // the input stream
             ServletInputStream in = myRequest.getInputStream();
-            if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
+            if ( LOG.isTraceEnabled() && trace_content ) {
                 in = new TraceInputStream(in);
             }
             // either multipart or single part
@@ -415,7 +407,7 @@ public class RequestConnector
                       state != MimeTokenStream.T_END_OF_STREAM;
                       state = parser.next() )
                 {
-                    handleParserState(parser, builder, input, position, config);
+                    handleParserState(parser, builder, input, position, trace_content);
                     if ( parser.getState() == MimeTokenStream.T_BODY ) {
                         ++position;
                     }
@@ -423,7 +415,7 @@ public class RequestConnector
                 builder.endElem();
             }
             else {
-                Item parsed = parseBody(config, in, ctype, 1, builder);
+                Item parsed = parseBody(in, ctype, 1, builder, trace_content);
                 input.add(parsed);
             }
         }
@@ -438,7 +430,7 @@ public class RequestConnector
     /**
      * Do the job for one parser event, in case of a multipart.
      */
-    private void handleParserState(MimeTokenStream parser, TreeBuilder builder, List<Item> items, int position, ServerConfig config)
+    private void handleParserState(MimeTokenStream parser, TreeBuilder builder, List<Item> items, int position, boolean trace_content)
             throws ServlexException
                  , MimeException
                  , TechnicalException
@@ -489,7 +481,7 @@ public class RequestConnector
                 // (that is, always except for binary content).  That needs some
                 // refactoring wrt how input are passed to parseBody().
                 InputStream in = parser.getInputStream();
-                Item part = parseBody(config, in, ctype, position, builder);
+                Item part = parseBody(in, ctype, position, builder, trace_content);
                 items.add(part);
                 break;
             }
@@ -531,119 +523,21 @@ public class RequestConnector
      *
      * TODO: Ensure we use the correct encoding when reading parts...
      */
-    private Item parseBody(ServerConfig config, InputStream input, ContentType ctype, int position, TreeBuilder builder)
+    private Item parseBody(InputStream input, ContentType ctype, int position, TreeBuilder builder, boolean trace_content)
             throws ServlexException
                  , TechnicalException
     {
-        try {
-            // TODO: Add more information on the web:body element (@content-type,
-            // etc., see the HTTP Client module and the XProc p:http-request).
-            builder.startElem("body");
-            builder.attribute("content-type", ctype.getMainType() + "/" + ctype.getSubType());
-            builder.attribute("position", Integer.toString(position));
-            builder.startContent();
-            builder.endElem();
-            switch ( ctype.getMediaType() ) {
-                case HTML: {
-                    // TODO: Pass the charset as well, if it is set explicitly
-                    return parseBodyXml(config, input, true);
-                }
-                case XML: {
-                    // TODO: Pass the charset as well, if it is set explicitly
-                    return parseBodyXml(config, input, false);
-                }
-                case TEXT: {
-                    String charset = ctype.getCharset();
-                    if ( charset == null ) {
-                        // use UTF-8 by default...
-                        charset = "utf-8";
-                    }
-                    return parseBodyText(config, input, charset);
-                }
-                case BINARY: {
-                    return parseBodyBinary(input);
-                }
-            }
-        }
-        catch ( SAXException ex ) {
-            error(500, "Internal error", ex);
-        }
-        catch ( IOException ex ) {
-            error(500, "Internal error", ex);
-        }
-        // cannot happen, because error() always throws an exception
-        throw new ServlexException(500, "Cannot happen (parseBody)");
+        // TODO: Add more information on the web:body element (@content-type,
+        // etc., see the HTTP Client module and the XProc p:http-request).
+        builder.startElem("body");
+        builder.attribute("content-type", ctype.getMainType() + "/" + ctype.getSubType());
+        builder.attribute("position", Integer.toString(position));
+        builder.startContent();
+        builder.endElem();
+        BodyParser parser = new BodyParser(trace_content, myProcs);
+        return parser.parse(input, ctype);
     }
 
-    /**
-     * Parse content as XML (tidied up from HTML if {@code html} is true).
-     */
-    private Document parseBodyXml(ServerConfig config, InputStream input, boolean html)
-            throws TechnicalException
-                 , SAXException
-    {
-        String sys_id = "TODO-find-a-useful-systemId";
-        Source src;
-        if ( html ) {
-            Parser parser = new Parser();
-            parser.setFeature(Parser.namespacesFeature, true);
-            parser.setFeature(Parser.namespacePrefixesFeature, true);
-            InputSource source = new InputSource(input);
-            src = new SAXSource(parser, source);
-            src.setSystemId(sys_id);
-        }
-        else {
-            src = new StreamSource(input, sys_id);
-        }
-        Document doc = myProcs.buildDocument(src);
-        if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
-            LOG.trace("Content parsed as document node: " + doc);
-        }
-        return doc;
-    }
-
-    /**
-     * Parse content as text.
-     */
-    private Item parseBodyText(ServerConfig config, InputStream input, String charset)
-            throws IOException
-                 , TechnicalException
-    {
-        // BufferedReader handles the ends of line (all \n, \r, and \r\n are
-        // treated as end-of-line)
-        StringBuilder builder = new StringBuilder();
-        Reader reader = new InputStreamReader(input, charset);
-        BufferedReader buf_in = new BufferedReader(reader);
-        String buf;
-        while ( (buf = buf_in.readLine()) != null ) {
-            builder.append(buf);
-            builder.append('\n');
-        }
-        String str = builder.toString();
-        if ( LOG.isTraceEnabled() && config.isTraceContentEnabled() ) {
-            LOG.trace("Content parsed as text: " + str);
-        }
-        return myProcs.buildString(str);
-    }
-
-    /**
-     * Parse content as binary.
-     */
-    private Item parseBodyBinary(InputStream input)
-            throws IOException
-                 , TechnicalException
-    {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[4096];
-        int read;
-        while ( (read = input.read(buf)) > 0 ) {
-            out.write(buf, 0, read);
-        }
-        byte[] bytes = out.toByteArray();
-        return myProcs.buildBinary(bytes);
-    }
-
-    // TODO: Error management!
     private void error(int code, String msg)
             throws ServlexException
     {
