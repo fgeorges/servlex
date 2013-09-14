@@ -10,7 +10,7 @@
    <xsl:param name="root" select="/.."/>
    <xsl:param name="pkg"  select="/.."/>
 
-   <xsl:template match="node()">
+   <xsl:template match="node()" priority="-1">
       <xsl:copy>
          <xsl:apply-templates/>
       </xsl:copy>
