@@ -106,6 +106,7 @@ public class Auditor
                 myWriter.ln();
                 myWriter.closeElement("profile", 0);
                 myWriter.ln();
+                myWriter.flush();
                 myWriter.close();
             }
             catch ( TechnicalException ex ) {
@@ -126,6 +127,7 @@ public class Auditor
                 String m = Long.toString(ms);
                 myWriter.emptyElement("start-compilation", 1, a("date", d), a("ms", m), a("type", type));
                 myWriter.ln();
+                myWriter.flush();
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
@@ -145,6 +147,7 @@ public class Auditor
                 String m = Long.toString(ms);
                 myWriter.emptyElement("stop-compilation", 1, a("date", d), a("ms", m));
                 myWriter.ln();
+                myWriter.flush();
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
@@ -160,6 +163,7 @@ public class Auditor
             try {
                 myWriter.emptyElement("connect", 1, a("from", from), a("to", to));
                 myWriter.ln();
+                myWriter.flush();
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
@@ -175,8 +179,9 @@ public class Auditor
             try {
                 myWriter.openElement("run", 1);
                 myWriter.text(what);
-                myWriter.close();
+                myWriter.closeElement("run", 0);
                 myWriter.ln();
+                myWriter.flush();
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
@@ -192,8 +197,9 @@ public class Auditor
             try {
                 myWriter.openElement("invoke", 1);
                 myWriter.text(what);
-                myWriter.close();
+                myWriter.closeElement("invoke", 0);
                 myWriter.ln();
+                myWriter.flush();
             }
             catch ( TechnicalException ex ) {
                 String msg = "Internal error, writing to the audit file: " + myFile;
