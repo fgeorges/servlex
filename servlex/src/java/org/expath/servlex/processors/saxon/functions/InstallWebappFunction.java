@@ -18,10 +18,12 @@ import org.expath.servlex.WebRepository;
 /**
  * Implements web:install-webapp().
  * 
- * The XPath signature:
+ * The XPath signatures:
+ *
+ *     web:install-webapp($pkg as xs:base64Binary) as xs:string
  *
  *     web:install-webapp($pkg  as xs:base64Binary,
- *                        $root as xs:string) as xs:boolean
+ *                        $root as xs:string) as xs:string
  *
  * @author Florent Georges
  * @date   2013-09-11
@@ -41,6 +43,18 @@ public class InstallWebappFunction
     }
 
     @Override
+    public int getMinimumNumberOfArguments()
+    {
+        return 1;
+    }
+
+    @Override
+    public int getMaximumNumberOfArguments()
+    {
+        return 2;
+    }
+
+    @Override
     public SequenceType[] getArgumentTypes()
     {
         return FunTypes.types(FunTypes.SINGLE_BASE64, FunTypes.SINGLE_STRING);
@@ -49,7 +63,7 @@ public class InstallWebappFunction
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        return FunTypes.SINGLE_BOOLEAN;
+        return FunTypes.SINGLE_STRING;
     }
 
     @Override

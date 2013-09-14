@@ -9,11 +9,18 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.expath.pkg.repo.PackageException;
+import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
 import org.expath.servlex.processors.saxon.SaxonHelper;
@@ -21,10 +28,12 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 /**
  * Implements web:install-webapp().
  * 
- * The XPath signature:
+ * The XPath signatures:
+ *
+ *     web:install-webapp($pkg as xs:base64Binary) as xs:string
  *
  *     web:install-webapp($pkg  as xs:base64Binary,
- *                        $root as xs:string) as xs:boolean
+ *                        $root as xs:string) as xs:string
  *
  * @author Florent Georges
  * @date   2013-09-11
@@ -42,28 +51,66 @@ public class InstallWebappCall
             throws XPathException
     {
         // the params
-        FunParams params = new FunParams(orig_params, 2, 2);
+        FunParams params = new FunParams(orig_params, 1, 2);
         byte[] pkg  = params.asBinary(0, false);
-        String root = params.asString(1, false);
+        String root = null;
+        if ( params.number() == 2 ) {
+            root = params.asString(1, false);
+        }
         // log it
         LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME).param(pkg).param(root).value());
         // do it
-        boolean value = doit(pkg, root);
         try {
+            String value = doit(pkg, root);
             return SaxonHelper.toSequenceIterator(value);
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the data model", ex);
+            throw new XPathException("Error installing the webapp", ex);
         }
     }
 
-    private boolean doit(byte[] pkg, String root)
+    private String doit(byte[] pkg, String root)
             throws XPathException
+                 , TechnicalException
     {
         if ( ! myRepo.canInstall() ) {
             throw new XPathException("Installation not supported on repo");
         }
-        throw new XPathException("Not implemented yet, installing webapp at: " + root);
+        File file = save(pkg);
+        try {
+            // TODO: Set whether to override an existing package (instead of false),
+            // from an extra param...?
+            return myRepo.install(file, root, false);
+        }
+        catch ( PackageException ex ) {
+            throw new TechnicalException("Error creating a temporary dir", ex);
+        }
+    }
+
+    private File save(byte[] pkg)
+            throws XPathException
+                 , TechnicalException
+    {
+        String id = Servlex.getRequestMap().getPrivate("web:request-id");
+        File dir = null;
+        try {
+            dir = File.createTempFile("servlex-", id);
+        }
+        catch ( IOException ex ) {
+            throw new TechnicalException("Error creating a temporary dir", ex);
+        }
+        dir.delete();
+        dir.mkdirs();
+        // find a better name for the file?
+        File file = new File(dir, "webapp-to-install.xar");
+        try {
+            OutputStream out = new FileOutputStream(file);
+            IOUtils.write(pkg, out);
+        }
+        catch ( IOException ex ) {
+            throw new TechnicalException("Error writing the package to a temporary file: " + file, ex);
+        }
+        return file;
     }
 
     /** The logger. */
