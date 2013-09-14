@@ -36,6 +36,14 @@ public class WebappsParser
         mySource = getWebappsXml(repo);
     }
 
+    /**
+     * Return true if the parameter is a syntactically valid context root.
+     */
+    public static boolean isContextRootValid(String ctxt_root)
+    {
+        return ROOT_PATTERN.matcher(ctxt_root).matches();
+    }
+
     public Map<URI, String> parse()
             throws TechnicalException
     {
@@ -122,7 +130,7 @@ public class WebappsParser
         if ( ctxt_root == null ) {
             parser.parseError("No @root on /webapps/webapp in " + WEBAPPS_PATH);
         }
-        if ( ! ROOT_PATTERN.matcher(ctxt_root).matches() ) {
+        if ( ! isContextRootValid(ctxt_root) ) {
             parser.parseError("/webapps/webapp/@root in " + WEBAPPS_PATH + " is not valid: " + ctxt_root + ": " + ROOT_RE);
         }
 
@@ -156,7 +164,7 @@ public class WebappsParser
     private static final String  WEBAPPS_FILE    = "webapps.xml";
     private static final String  WEBAPPS_PATH    = WEB_PRIVATE_DIR + "/" + WEBAPPS_FILE;
     private static final String  EXPATH_WEB_NS   = "http://expath.org/ns/webapp";
-    private static final String  ROOT_RE         = "^[a-zA-Z0-9]+$";
+    private static final String  ROOT_RE         = "^[-a-zA-Z0-9]+$";
     private static final Pattern ROOT_PATTERN    = Pattern.compile(ROOT_RE);
 
     private Source mySource;
