@@ -12,9 +12,11 @@ package org.expath.servlex.model;
 import org.expath.servlex.components.Component;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ServletInvocation;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
 
 
 /**
@@ -32,6 +34,15 @@ public class Servlet
         myName = name;
         myImpl = implem;
         myGroups = groups;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        super.cleanup(auditor);
+        auditor.cleanup("servlet " + myName);
+        myImpl.cleanup(auditor);
     }
 
     public String getName()

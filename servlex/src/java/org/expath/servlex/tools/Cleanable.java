@@ -1,72 +1,29 @@
 /****************************************************************************/
-/*  File:       Connector.java                                              */
+/*  File:       Cleanable.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-02-06                                                  */
+/*  Date:       2013-09-20                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.connectors;
+package org.expath.servlex.tools;
 
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
-import org.expath.servlex.components.ComponentInstance;
-import org.expath.servlex.processors.Processors;
-import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.Cleanable;
 
 /**
- * Encapsulate a connection between two components.
+ * A resource that must be clean up when not needed anymore.
  *
  * @author Florent Georges
- * @date   2011-02-06
+ * @date   2013-09-20
  */
-public interface Connector
-        extends Cleanable
+public interface Cleanable
 {
     /**
-     * Return the auditor object used by this connector.
+     * Release all resources.
      */
-    public Auditor getAuditor();
-
-    /**
-     * Connect to an XQuery function.
-     */
-    public void connectToXQueryFunction(ComponentInstance comp, ServerConfig config)
+    public void cleanup(Auditor auditor)
             throws ServlexException;
-
-    /**
-     * Connect to an XQuery main module.
-     */
-    public void connectToQuery(ComponentInstance comp, ServerConfig config)
-            throws ServlexException;
-
-    /**
-     * Connect to an XSLT component, either a function or a named template.
-     */
-    public void connectToXSLTComponent(ComponentInstance comp, ServerConfig config)
-            throws ServlexException;
-
-    /**
-     * Connect to an XSLT stylesheet.
-     */
-    public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
-            throws ServlexException;
-
-    /**
-     * Connect to an XProc pipeline.
-     */
-    public void connectToPipeline(ComponentInstance comp, ServerConfig config)
-            throws ServlexException;
-
-    /**
-     * Connect to the final HTTP Servlet response.
-     */
-    public void connectToResponse(HttpServletResponse resp, ServerConfig config, Processors procs)
-            throws ServlexException, IOException;
 }
 
 

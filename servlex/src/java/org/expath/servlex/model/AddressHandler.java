@@ -15,6 +15,8 @@ import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Abstract class that represents either a servlet or a resource.
@@ -26,10 +28,21 @@ import org.expath.servlex.connectors.RequestConnector;
  * @date   2010-08-17
  */
 public abstract class AddressHandler
+        implements Cleanable
 {
     public AddressHandler(Pattern url_pattern)
     {
         myPattern = url_pattern;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("address handler");
+        if ( myWrapper != null ) {
+            myWrapper.cleanup(auditor);
+        }
     }
 
     public Application getApplication()

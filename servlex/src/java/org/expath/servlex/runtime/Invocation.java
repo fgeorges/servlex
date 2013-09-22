@@ -15,6 +15,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Represent an invocation of either a servlet or a resource.
@@ -27,6 +28,7 @@ import org.expath.servlex.tools.Auditor;
  * @date   2010-08-17
  */
 public abstract class Invocation
+        implements Cleanable
 {
     public Invocation(String path, RequestConnector request)
     {

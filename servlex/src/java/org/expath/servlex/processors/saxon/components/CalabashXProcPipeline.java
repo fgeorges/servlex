@@ -14,6 +14,7 @@ import javax.xml.transform.SourceLocator;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.processors.saxon.CalabashPipeline;
@@ -58,6 +59,16 @@ public class CalabashXProcPipeline
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("calabash xproc pipeline");
+        if ( myPipeline != null ) {
+            myPipeline.cleanup(auditor);
+        }
+    }
+
+    @Override
     public void logApplication(Logger log)
     {
         log.debug("      XProc Pipeline:");
@@ -87,14 +98,19 @@ public class CalabashXProcPipeline
     {
         auditor.run("pipeline");
         try {
-            CalabashPipeline pipeline = myCalabash.prepare(auditor);
-            pipeline.compile(myPipe);
-            return pipeline.evaluate(connector);
+            myPipeline = myCalabash.prepare(auditor);
+            myPipeline.compile(myPipe);
+            return myPipeline.evaluate(connector);
         }
         catch ( XProcException ex ) {
             SourceLocator loc = ex.getLocator();
             LOG.error("User error in pipeline at " + loc.getSystemId() + ":" + loc.getLineNumber(), ex);
-            throw CalabashHelper.makeError(ex);
+            try {
+                throw CalabashHelper.makeError(ex);
+            }
+            catch ( TechnicalException exx ) {
+                throw new ServlexException(500, "Error creating the component error for a Calabash pipeline", exx);
+            }
         }
     }
 
@@ -103,6 +119,7 @@ public class CalabashXProcPipeline
 
     private CalabashXProc myCalabash;
     private String myPipe;
+    private CalabashPipeline myPipeline;
 }
 
 

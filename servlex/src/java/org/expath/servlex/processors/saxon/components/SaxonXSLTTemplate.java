@@ -56,6 +56,13 @@ public class SaxonXSLTTemplate
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xslt template");
+    }
+
+    @Override
     public void logApplication(Logger log)
     {
         log.debug("      XSLT Template");

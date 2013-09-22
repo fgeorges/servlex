@@ -45,6 +45,13 @@ public class XdmConnector
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("sequence");
+    }
+
+    @Override
     public Auditor getAuditor()
     {
         return myAuditor;

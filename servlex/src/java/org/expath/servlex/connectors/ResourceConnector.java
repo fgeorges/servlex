@@ -50,6 +50,13 @@ public class ResourceConnector
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("resource");
+    }
+
+    @Override
     public Auditor getAuditor()
     {
         return myAuditor;

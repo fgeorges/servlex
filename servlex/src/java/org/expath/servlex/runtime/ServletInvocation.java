@@ -33,6 +33,14 @@ public class ServletInvocation
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("servlet invocation");
+        myImpl.cleanup(auditor);
+    }
+
+    @Override
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError

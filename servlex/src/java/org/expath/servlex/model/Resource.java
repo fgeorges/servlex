@@ -15,6 +15,7 @@ import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ResourceInvocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
 
 
 /**
@@ -34,6 +35,15 @@ public class Resource
         myRewrite = rewrite;
     }
 
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        super.cleanup(auditor);
+        auditor.cleanup("resource " + myJavaRegex);
+    }
+
+    
     public String getType()
     {
         return myType;

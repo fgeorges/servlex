@@ -49,6 +49,7 @@ import org.expath.servlex.tools.Auditor;
 
 import static org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Abstract an XProc pipeline.
@@ -57,6 +58,7 @@ import org.expath.servlex.processors.saxon.model.SaxonDocument;
  * @date   2013-02-12
  */
 public class CalabashPipeline
+        implements Cleanable
 {
     public CalabashPipeline(CalabashXProc calabash, ServerConfig config, Auditor auditor, Processors procs)
     {
@@ -64,6 +66,14 @@ public class CalabashPipeline
         myConfig = config;
         myAuditor = auditor;
         myProcs = procs;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("calabash pipleline, close the runtime object");
+        myRuntime.close();
     }
 
     /**
@@ -99,15 +109,15 @@ public class CalabashPipeline
         myAuditor.compilationStarts("xproc");
         try {
             // instantiate the runtime
-            XProcRuntime runtime = getRuntime();
+            myRuntime = getRuntime();
             // compile the pipeline
             if ( node == null ) {
                 LOG.debug("About to href the pipeline: " + href);
-                myCompiled = runtime.load(href);
+                myCompiled = myRuntime.load(href);
             }
             else {
                 LOG.debug("About to compile the pipeline document: " + node.getBaseURI());
-                myCompiled = runtime.use(node);
+                myCompiled = myRuntime.use(node);
             }
         }
         catch ( SaxonApiException ex ) {
@@ -354,7 +364,8 @@ public class CalabashPipeline
     private Auditor myAuditor;
     /** The processors object. */
     private Processors myProcs;
-
+    /** The Calabash runtime object. */
+    private XProcRuntime myRuntime;
     /**
      * An instance of an XProc component.
      */
@@ -377,6 +388,8 @@ public class CalabashPipeline
             CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myProcs);
         }
 
+        // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
+        // and the several constants are mostly duplicated in SaxonXSLTTransform...
         public void error(ComponentError error, Document request)
                 throws TechnicalException
         {

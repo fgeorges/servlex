@@ -57,6 +57,14 @@ public class RequestConnector
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("request");
+        myServlet.cleanup(auditor);
+    }
+
+    @Override
     public Auditor getAuditor()
     {
         return myAuditor;

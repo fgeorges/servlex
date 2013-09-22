@@ -47,6 +47,13 @@ public class SaxonXQueryFunction
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xquery function");
+    }
+
+    @Override
     public void logApplication(Logger log)
     {
         log.debug("      XQuery Function");

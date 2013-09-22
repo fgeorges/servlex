@@ -208,6 +208,24 @@ public class Auditor
         }
     }
 
+    public void cleanup(String what)
+            throws ServlexException
+    {
+        if ( myWriter != null ) {
+            try {
+                myWriter.openElement("cleanup", 1);
+                myWriter.text(what);
+                myWriter.closeElement("cleanup", 0);
+                myWriter.ln();
+                myWriter.flush();
+            }
+            catch ( TechnicalException ex ) {
+                String msg = "Internal error, writing to the audit file: " + myFile;
+                throw new ServlexException(500, msg, ex);
+            }
+        }
+    }
+
     private String format(Date date)
     {
         return ISO_FORMAT.format(date);

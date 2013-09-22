@@ -46,6 +46,16 @@ public class CalabashXProcStep
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("calabash xproc step");
+        if ( myPipeline != null ) {
+            myPipeline.cleanup(auditor);
+        }
+    }
+
+    @Override
     public void logApplication(Logger log)
     {
         log.debug("      XProc Step");
@@ -61,10 +71,10 @@ public class CalabashXProcStep
     {
         auditor.run("step");
         try {
-            CalabashPipeline pipeline = myCalabash.prepare(auditor);
+            myPipeline = myCalabash.prepare(auditor);
             XdmNode pipe = makeCallPipe();
-            pipeline.compile(pipe);
-            return pipeline.evaluate(connector);
+            myPipeline.compile(pipe);
+            return myPipeline.evaluate(connector);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
@@ -110,6 +120,7 @@ public class CalabashXProcStep
     private String myImportUri;
     private String myNS;
     private String myLocal;
+    private CalabashPipeline myPipeline;
 }
 
 

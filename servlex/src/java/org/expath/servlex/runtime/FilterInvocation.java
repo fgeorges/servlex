@@ -35,6 +35,20 @@ public class FilterInvocation
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("filter invocation");
+        myWrapped.cleanup(auditor);
+        if ( myIn != null ) {
+            myIn.cleanup(auditor);
+        }
+        if ( myOut != null ) {
+            myOut.cleanup(auditor);
+        }
+    }
+
+    @Override
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError

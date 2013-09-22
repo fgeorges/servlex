@@ -56,6 +56,13 @@ public class SaxonXSLTFunction
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xslt function");
+    }
+
+    @Override
     public void logApplication(Logger log)
     {
         log.debug("      XSLT Function");

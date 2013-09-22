@@ -45,6 +45,14 @@ public class ResourceInvocation
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("resource invocation: " + myJavaRegex);
+        myRsrc.cleanup(auditor);
+    }
+
+    @Override
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
     {

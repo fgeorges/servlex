@@ -235,8 +235,8 @@ public class Servlex
             ex.sendError(resp);
         }
         finally {
-            myCurrentRequest.set(null);
-            myCurrentApplication.set(null);
+            myCurrentRequest.remove();
+            myCurrentApplication.remove();
         }
     } 
 
@@ -294,14 +294,18 @@ public class Servlex
             // TODO: Shouldn't we set the result even in this case...?
             throw new ServlexException(500, "Internal error", ex);
         }
+        finally {
+            invoc.cleanup(auditor);
+        }
         // connect the result to the client
         result.connectToResponse(resp, ourConfig, procs);
+        // clean everything
+        result.cleanup(auditor);
         // end the audit
         auditor.end();
     }
 
     /** The name of the attributes used in this class (on the requests, sessions, and contexts). */
-    private static final String WEBAPP_ATTR      = "servlex.webapp";
     private static final String REQUEST_MAP_ATTR = "servlex.request.map";
     private static final String SESSION_MAP_ATTR = "servlex.session.map";
     private static final String SERVER_MAP_ATTR  = "servlex.server.map";
