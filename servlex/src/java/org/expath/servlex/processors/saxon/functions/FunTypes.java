@@ -14,6 +14,7 @@ import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.NameTest;
 import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.type.AnyItemType;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ItemType;
 import net.sf.saxon.type.Type;
@@ -37,6 +38,8 @@ class FunTypes
     // one or more ("+" in XPath)
     private static final int SEVERAL  = StaticProperty.ALLOWS_ONE_OR_MORE;
 
+    // item()
+    private static final ItemType ITEM     = AnyItemType.getInstance();
     // built-in atomic types
     private static final ItemType BASE64   = BuiltInAtomicType.BASE64_BINARY;
     private static final ItemType BOOLEAN  = BuiltInAtomicType.BOOLEAN;
@@ -90,7 +93,7 @@ class FunTypes
     public static final SequenceType OPTIONAL_STRING   = SequenceType.OPTIONAL_STRING;
 
     // anys
-    public static final SequenceType ANY_ITEM     = make(ANY, BASE64);
+    public static final SequenceType ANY_ITEM     = make(ANY, ITEM);
     // atomic types
     public static final SequenceType ANY_BASE64   = make(ANY, BASE64);
     public static final SequenceType ANY_BOOLEAN  = make(ANY, BOOLEAN);
@@ -107,7 +110,7 @@ class FunTypes
     public static final SequenceType ANY_STRING   = make(ANY, STRING);
 
     // severals
-    public static final SequenceType SEVERAL_ITEM     = make(SEVERAL, BASE64);
+    public static final SequenceType SEVERAL_ITEM     = make(SEVERAL, ITEM);
     // atomic types
     public static final SequenceType SEVERAL_BASE64   = make(SEVERAL, BASE64);
     public static final SequenceType SEVERAL_BOOLEAN  = make(SEVERAL, BOOLEAN);
