@@ -50,7 +50,7 @@ public class SaxonCalabash
     {
         try {
             myRepo = new SaxonRepository(repo);
-            mySaxon = SaxonHelper.makeSaxon(myRepo, this);
+            mySaxon = SaxonHelper.makeSaxon(myRepo, this, config);
             myXslt = new SaxonXSLT(mySaxon);
             myXQuery = new SaxonXQuery(mySaxon, repo);
             myXProc = new CalabashXProc(mySaxon, myRepo, config, this);
@@ -65,45 +65,53 @@ public class SaxonCalabash
         return myRepo;
     }
 
+    @Override
     public XSLTProcessor getXSLT()
     {
         return myXslt;
     }
 
+    @Override
     public XQueryProcessor getXQuery()
     {
         return myXQuery;
     }
 
+    @Override
     public XProcProcessor getXProc()
     {
         return myXProc;
     }
 
+    @Override
     public Serializer makeSerializer()
             throws TechnicalException
     {
         return new SaxonSerializer(mySaxon);
     }
 
+    @Override
     public TreeBuilder makeTreeBuilder(String uri, String prefix)
             throws TechnicalException
     {
         return new SaxonTreeBuilder(mySaxon, uri, prefix);
     }
 
+    @Override
     public Sequence emptySequence()
             throws TechnicalException
     {
-        return SaxonEmptySequence.getInstance();
+        return makeEmptySequence();
     }
 
+    @Override
     public Sequence buildSequence(Iterable<Item> items)
             throws TechnicalException
     {
         return new SaxonSequence(items);
     }
 
+    @Override
     public Document buildDocument(Source src)
             throws TechnicalException
     {
@@ -117,6 +125,7 @@ public class SaxonCalabash
         }
     }
 
+    @Override
     public Item buildString(String value)
             throws TechnicalException
     {
@@ -124,11 +133,18 @@ public class SaxonCalabash
         return new SaxonItem(item);
     }
 
+    @Override
     public Item buildBinary(byte[] value)
             throws TechnicalException
     {
         XdmItem item = TodoBinaryItem.makeBinaryItem(value);
         return new SaxonItem(item);
+    }
+
+    public static Sequence makeEmptySequence()
+            throws TechnicalException
+    {
+        return SaxonEmptySequence.getInstance();
     }
 
     /**
