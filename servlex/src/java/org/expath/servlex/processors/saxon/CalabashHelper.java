@@ -20,6 +20,7 @@ import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
@@ -35,6 +36,7 @@ public class CalabashHelper
 {
     public static ComponentError makeError(XProcException ex)
             throws ServlexException
+                 , TechnicalException
     {
         // the error name
         net.sf.saxon.s9api.QName code = ex.getErrorCode();
@@ -50,7 +52,10 @@ public class CalabashHelper
         // the error object
         XdmValue sequence = ex.getNode();
         LOG.error("TODO: Cannot get the p:error input out of an XProcException");
-        return new ComponentError(ex, name, msg, new SaxonSequence(sequence));
+        Sequence seq = sequence == null
+                ? SaxonCalabash.makeEmptySequence()
+                : new SaxonSequence(sequence);
+        return new ComponentError(ex, name, msg, seq);
     }
 
     /**
