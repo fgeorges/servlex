@@ -24,13 +24,16 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.BooleanValue;
+import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.ShareableSequence;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.Value;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
@@ -53,13 +56,13 @@ import org.expath.servlex.runtime.ComponentError;
  */
 public class SaxonHelper
 {
-    public static Processor makeSaxon(SaxonRepository repo, Processors procs)
+    public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config)
             throws PackageException
     {
         Processor saxon = new Processor(true);
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
-        WebappFunctions.setup(procs, saxon);
+        WebappFunctions.setup(procs, saxon, config);
         return saxon;
     }
 
@@ -157,19 +160,18 @@ public class SaxonHelper
     public static SequenceIterator toSequenceIterator(String string)
             throws TechnicalException
     {
-        List<StringValue> items = new ArrayList<StringValue>();
+        if ( string == null ) {
+            return EmptySequence.getInstance().iterate();
+        }
         StringValue v = new StringValue(string);
-        items.add(v);
-        return new ShareableSequence(items).iterate();
+        return SingletonIterator.makeIterator(v);
     }
 
     public static SequenceIterator toSequenceIterator(boolean bool)
             throws TechnicalException
     {
-        List<BooleanValue> items = new ArrayList<BooleanValue>();
         BooleanValue v = BooleanValue.get(bool);
-        items.add(v);
-        return new ShareableSequence(items).iterate();
+        return SingletonIterator.makeIterator(v);
     }
 
     public static SequenceIterator toSequenceIterator(Iterable<String> strings)
@@ -245,7 +247,11 @@ public class SaxonHelper
             throw new ServlexException(500, "Internal error", ex);
         }
         XPathException cause = (XPathException) ex.getCause();
-        QName name = cause.getErrorCodeQName().toJaxpQName();
+        // TODO: What to do if the error code name is null?
+        // Is it only possible?
+        QName name = cause.getErrorCodeQName() == null
+                ? null
+                : cause.getErrorCodeQName().toJaxpQName();
         String msg = cause.getMessage();
         XdmValue value = MyValue.wrap(cause.getErrorObject());
         Sequence sequence = value == null
