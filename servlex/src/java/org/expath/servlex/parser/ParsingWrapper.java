@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       ParsingHandler.java                                         */
+/*  File:       ParsingWrapper.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-09-13                                                  */
+/*  Date:       2013-09-16                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -9,48 +9,42 @@
 
 package org.expath.servlex.parser;
 
-import java.util.regex.Pattern;
-import org.apache.log4j.Logger;
-import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Wrapper;
-import org.expath.servlex.tools.RegexHelper;
 
 /**
- * Represent an address handler while parsing.
+ * Represent a wrapper while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-13
+ * @date   2013-09-16
  */
-abstract class ParsingHandler
+abstract class ParsingWrapper
         extends ParsingFiltered
 {
-    public void setPattern(String pattern)
+    public ParsingWrapper(String name)
     {
-        myPattern = pattern;
+        myName = name;
     }
 
-    public AddressHandler makeAddressHandler(ParsingContext ctxt, Logger log)
+    public String getName()
+    {
+        return myName;
+    }
+
+    public Wrapper makeIt(ParsingContext ctxt)
             throws ParseException
     {
-        String  java_regex;
-        Pattern regex;
-        try {
-            java_regex = RegexHelper.xpathToJava(myPattern, log);
-            regex = Pattern.compile(java_regex);
+        Wrapper w = ctxt.getWrapper(this);
+        if ( w == null ) {
+            w = instantiate(ctxt);
+            ctxt.addWrapper(this, w);
         }
-        catch ( TechnicalException ex ) {
-            throw new ParseException("The pattern is not a valid XPath regex", ex);
-        }
-        AddressHandler handler = makeIt(ctxt, regex, java_regex);
-        Wrapper wrapper = makeWrapper(ctxt);
-        handler.setWrapper(wrapper);
-        return handler;
+        return w;
     }
 
-    protected abstract AddressHandler makeIt(ParsingContext ctxt, Pattern regex, String java_regex);
+    public abstract Wrapper instantiate(ParsingContext ctxt)
+            throws ParseException;
 
-    private String myPattern = null;
+    private String myName;
 }
 
 

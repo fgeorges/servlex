@@ -11,8 +11,6 @@ package org.expath.servlex.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.namespace.QName;
-import org.expath.servlex.model.Wrapper;
 
 /**
  * Represent a group while parsing.
@@ -21,23 +19,18 @@ import org.expath.servlex.model.Wrapper;
  * @date   2012-05-07
  */
 class ParsingGroup
+        extends ParsingFiltered
 {
     public ParsingGroup(ParsingGroup parent)
     {
         myParent  = parent;
-        myFilters = new ArrayList<QName>();
         myInScopeFilters = null;
-    }
-
-    public void addFilter(QName name)
-    {
-        myFilters.add(name);
     }
 
     /**
      * Return the filters declared on this group (using @filters).
      */
-    public List<QName> getThisFilters()
+    public List<String> getThisFilters()
     {
         return myFilters;
     }
@@ -50,26 +43,25 @@ class ParsingGroup
      * one of the top-level ancestor, the last filters are the one declared on
      * this group.
      */
-    public synchronized List<Wrapper> getInScopeFilters(ParsingContext ctxt)
+    public synchronized List<ParsingWrapper> getInScopeFilters(ParsingContext ctxt)
             throws ParseException
     {
         if ( myInScopeFilters == null ) {
-            myInScopeFilters = new ArrayList<Wrapper>();
+            myInScopeFilters = new ArrayList<ParsingWrapper>();
             if ( myParent != null ) {
-                List<Wrapper> from_parent = myParent.getInScopeFilters(ctxt);
+                List<ParsingWrapper> from_parent = myParent.getInScopeFilters(ctxt);
                 myInScopeFilters.addAll(from_parent);
             }
-            for ( QName n : myFilters ) {
-                Wrapper w = ctxt.getWrapper(n);
+            for ( String n : myFilters ) {
+                ParsingWrapper w = ctxt.getWrapper(n);
                 myInScopeFilters.add(w);
             }
         }
         return myInScopeFilters;
     }
 
-    private ParsingGroup  myParent;
-    private List<QName>   myFilters;
-    private List<Wrapper> myInScopeFilters;
+    private ParsingGroup         myParent;
+    private List<ParsingWrapper> myInScopeFilters;
 }
 
 

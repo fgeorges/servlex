@@ -10,11 +10,11 @@
 package org.expath.servlex.parser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
@@ -68,8 +68,12 @@ class ParsingContext
         return myHandlers;
     }
 
-    public void addWrapper(Wrapper w) throws ParseException {
-        QName n = w.getName();
+    public Collection<ParsingWrapper> getWrappers() {
+        return myWrappers.values();
+    }
+
+    public void addWrapper(ParsingWrapper w) throws ParseException {
+        String n = w.getName();
         if ( n == null ) {
             parseError("Cannot have an anonymous top-level filter or chain");
         }
@@ -79,19 +83,23 @@ class ParsingContext
         myWrappers.put(n, w);
     }
 
-    public Wrapper getWrapper(QName n) throws ParseException {
-        Wrapper w = myWrappers.get(n);
+    public ParsingWrapper getWrapper(String n) throws ParseException {
+        ParsingWrapper w = myWrappers.get(n);
         if ( w == null ) {
             parseError("Top-level filter or chain dores not exist: " + n);
         }
         return w;
     }
 
-    public void addChain(ParsingChain c) {
-        myChains.add(c);
+    public void addWrapper(ParsingWrapper pw, Wrapper w) throws ParseException {
+        if ( myActualWrappers.containsKey(pw) ) {
+            parseError("Try to create twice the same wrapper");
+        }
+        myActualWrappers.put(pw, w);
     }
-    public List<ParsingChain> getChains() {
-        return myChains;
+
+    public Wrapper getWrapper(ParsingWrapper w) throws ParseException {
+        return myActualWrappers.get(w);
     }
 
     public void pushGroup(ParsingGroup g) {
@@ -117,14 +125,14 @@ class ParsingContext
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ParsingContext.class);
 
-    private Processors           myProcs         = null;
-    private String               myAbbrev        = null;
-    private String               myTitle         = null;
-    private ParsingApp           myApp           = null;
-    private List<ParsingHandler> myHandlers      = new ArrayList<ParsingHandler>();
-    private List<ParsingChain>   myChains        = new ArrayList<ParsingChain>();
-    private Stack<ParsingGroup>  myInScopeGroups = new Stack<ParsingGroup>();
-    private Map<QName, Wrapper>  myWrappers      = new HashMap<QName, Wrapper>();
+    private Processors                   myProcs          = null;
+    private String                       myAbbrev         = null;
+    private String                       myTitle          = null;
+    private ParsingApp                   myApp            = null;
+    private List<ParsingHandler>         myHandlers       = new ArrayList<ParsingHandler>();
+    private Stack<ParsingGroup>          myInScopeGroups  = new Stack<ParsingGroup>();
+    private Map<String, ParsingWrapper>  myWrappers       = new HashMap<String, ParsingWrapper>();
+    private Map<ParsingWrapper, Wrapper> myActualWrappers = new HashMap<ParsingWrapper, Wrapper>();
 }
 
 

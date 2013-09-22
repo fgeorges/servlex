@@ -33,10 +33,9 @@ class ParsingResource
     }
 
     @Override
-    protected AddressHandler makeIt(Pattern regex, String java_regex)
+    protected AddressHandler makeIt(ParsingContext ctxt, Pattern regex, String java_regex)
     {
-        Resource rsrc = new Resource(regex, java_regex, myRewrite, myMediaType);
-        return rsrc;
+        return new Resource(regex, java_regex, myRewrite, myMediaType);
     }
 
     private String myRewrite;
