@@ -13,8 +13,10 @@ import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.Base64BinaryValue;
+import net.sf.saxon.value.ObjectValue;
 import net.sf.saxon.value.StringValue;
 import org.expath.servlex.ServlexConstants;
+import org.expath.servlex.WebRepository;
 
 /**
  * Utils for extension functions parameters for Saxon.
@@ -69,6 +71,9 @@ class FunParams
             throws XPathException
     {
         Item item = asItem(pos, optional);
+        if ( item == null ) {
+            return null;
+        }
         if ( ! ( item instanceof StringValue ) ) {
             throw new XPathException("The " + ordinal(pos) + " param is not a string");
         }
@@ -90,11 +95,43 @@ class FunParams
             throws XPathException
     {
         Item item = asItem(pos, optional);
+        if ( item == null ) {
+            return null;
+        }
         if ( ! ( item instanceof Base64BinaryValue ) ) {
             throw new XPathException("The " + ordinal(pos) + " param is not a base64 binary");
         }
         Base64BinaryValue bin = (Base64BinaryValue) item;
         return bin.getBinaryValue();
+    }
+
+    /**
+     * Return the pos-th parameter, checking it is a repository item.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item.
+     * 
+     * @param params The list of parameters, as passed by Saxon.
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public WebRepository asRepository(int pos, boolean optional)
+            throws XPathException
+    {
+        Item item = asItem(pos, optional);
+        if ( item == null ) {
+            return null;
+        }
+        if ( ! ( item instanceof ObjectValue ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not an object value");
+        }
+        ObjectValue value  = (ObjectValue) item;
+        Object      object = value.getObject();
+        if ( ! ( object instanceof WebRepository ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a web repository");
+        }
+        return (WebRepository) object;
     }
 
     /**
@@ -160,7 +197,8 @@ class FunParams
             myNum = num;
             myMax = max;
             myI   = 0;
-            myBuf = new StringBuilder(ServlexConstants.WEBAPP_PREFIX);
+            myBuf = new StringBuilder("Calling ");
+            myBuf.append(ServlexConstants.WEBAPP_PREFIX);
             myBuf.append(":");
             myBuf.append(name);
             myBuf.append("(");
@@ -177,6 +215,22 @@ class FunParams
                     myBuf.append("'");
                     myBuf.append(value.replace("'", "''"));
                     myBuf.append("'");
+                }
+            }
+            return this;
+        }
+
+        public Formatter param(WebRepository value)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                if ( value == null ) {
+                    myBuf.append("()");
+                }
+                else {
+                    // TODO: Add more info about the repository?  Like its root
+                    // directory or classpath?
+                    myBuf.append("#<repository-item>");
                 }
             }
             return this;
