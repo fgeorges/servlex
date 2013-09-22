@@ -9,10 +9,12 @@
 
 package org.expath.servlex.model;
 
-import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.Invocation;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Servlet wrapper (can wrap a servlet, a filter, an error handler or a chain).
@@ -21,16 +23,24 @@ import org.expath.servlex.runtime.Invocation;
  * @date   2011-02-07
  */
 public abstract class Wrapper
+        implements Cleanable
 {
-    public Wrapper(QName name)
+    public Wrapper(String name)
     {
         myName = name;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("wrapper " + myName);
     }
 
     /**
      * Return the name of the wrapper, which can be null.
      */
-    public QName getName()
+    public String getName()
     {
         return myName;
     }
@@ -39,7 +49,7 @@ public abstract class Wrapper
 
     public abstract Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped);
 
-    private QName myName;
+    private String myName;
 }
 
 

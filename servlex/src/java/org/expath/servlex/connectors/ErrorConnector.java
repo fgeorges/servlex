@@ -40,6 +40,14 @@ public class ErrorConnector
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("error");
+        myRequest.cleanup(auditor);
+    }
+
+    @Override
     public Auditor getAuditor()
     {
         return myAuditor;
@@ -91,7 +99,14 @@ public class ErrorConnector
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        myAuditor.connect("error", "style");
+        try {
+            Document request = myRequest.getWebRequest(config);
+            comp.error(myError, request);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
     /**

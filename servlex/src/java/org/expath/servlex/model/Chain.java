@@ -9,10 +9,11 @@
 
 package org.expath.servlex.model;
 
-import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.Invocation;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * A sequence of wrappers (filters and error handlers).
@@ -23,10 +24,20 @@ import org.expath.servlex.runtime.Invocation;
 public class Chain
         extends Wrapper
 {
-    public Chain(QName name, Wrapper[] wrappers)
+    public Chain(String name, Wrapper[] wrappers)
     {
         super(name);
         myWrappers = wrappers;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("chain");
+        for ( Wrapper w : myWrappers ) {
+            w.cleanup(auditor);
+        }
     }
 
     @Override
@@ -45,8 +56,8 @@ public class Chain
     public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
     {
         // chain all invocations, beginning by wrapped, to the outermost
-        for ( int i = myWrappers.length - 1; i >= 0; --i ) {
-            wrapped = myWrappers[i].makeInvocation(path, request, wrapped);
+        for ( Wrapper w : myWrappers ) {
+            wrapped = w.makeInvocation(path, request, wrapped);
         }
         return wrapped;
     }
