@@ -11,7 +11,6 @@ package org.expath.servlex.parser;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -27,10 +26,6 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
-import org.expath.servlex.model.Chain;
-import org.expath.servlex.model.ErrorHandler;
-import org.expath.servlex.model.Filter;
-import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.tools.ProcessorsMap;
 
@@ -87,7 +82,16 @@ public class EXPathWebParser
             LOG.debug("Package does not have any web descriptor, must be a library, ignore it: " + pkg.getName());
             return null;
         }
-        Application app = parseDescriptorFile(descriptor, pkg);
+        Application app;
+        try {
+            app = parseDescriptorFile(descriptor, pkg, DESC_NS);
+        }
+        catch ( ParseException ex ) {
+            // TODO: For compatibility reason, try to parse using the legacy namespace
+            descriptor = getDescriptor(pkg, DESC_FILENAME);
+            LOG.error("Parsing the web descriptor for " + pkg.getName() + " failed, trying the legacy namespace.");
+            app = parseDescriptorFile(descriptor, pkg, LEGACY_DESC_NS);
+        }
         app.logApplication();
         return app;
     }
@@ -178,17 +182,20 @@ public class EXPathWebParser
      * Parse one webapp descriptor file.
      * 
      * TODO: Plug schema validation of expath-web.xml.
+     * 
+     * @param ns The namespace of the web descriptor.
      */
-    private Application parseDescriptorFile(Source descriptor, Package pkg)
+    private Application parseDescriptorFile(Source descriptor, Package pkg, String ns)
             throws ParseException
                  , TechnicalException
     {
         LOG.info("Parse webapp descriptor for app " + pkg.getName());
 
-        StreamParser parser = new StreamParser(descriptor, DESC_NS);
+        StreamParser parser = new StreamParser(descriptor, ns);
 
         // position the parser on the root 'webapp' element
         parser.ensureNextElement("webapp");
+        validateSpecNumber(parser);
 
         // the values used to build the application object
         ParsingContext ctxt = initContext(pkg);
@@ -219,20 +226,20 @@ public class EXPathWebParser
                 ctxt.setApplication(a);
             }
             else if ( elem.equals("error") ) {
-                ErrorHandler h = handleError(parser, ctxt);
-                ctxt.addWrapper(h);
+                ParsingError e = handleError(parser, ctxt);
+                ctxt.addWrapper(e);
             }
             else if ( elem.equals("group") ) {
                 ParsingGroup g = handleGroup(parser, ctxt);
                 ctxt.pushGroup(g);
             }
             else if ( elem.equals("filter") ) {
-                Filter f = handleFilter(parser, ctxt);
+                ParsingFilter f = handleFilter(parser, ctxt);
                 ctxt.addWrapper(f);
             }
             else if ( elem.equals("chain") ) {
                 ParsingChain c = handleChain(parser);
-                ctxt.addChain(c);
+                ctxt.addWrapper(c);
             }
             else if ( elem.equals("servlet") ) {
                 ParsingServlet s = handleServlet(parser, ctxt);
@@ -256,11 +263,33 @@ public class EXPathWebParser
         return createApplication(pkg, ctxt);
     }
 
+    /**
+     * Validate that /webapp/@spec is the correct number.
+     * 
+     * @throws ParseException If @spec is not exactly "1.0".
+     * 
+     * TODO: For now, for compatibility reason, it accepts webapp descriptors
+     * without the @spec attribute.  That is deprecated and will be removed
+     * once the Webapp Module is published as version 1.0.
+     */
+    private void validateSpecNumber(StreamParser parser)
+            throws ParseException
+    {
+        String spec = parser.getAttribute("spec");
+        if ( spec == null ) {
+            LOG.error("  webapp/@spec is missing! (ignored for now, for compatibility reason)");
+        }
+        else if ( ! spec.equals("1.0") ) {
+            throw new ParseException("webapp/@spec is not exactly 1.0, it is: '" + spec + "'");
+        }
+    }
+
     private Application createApplication(Package pkg, ParsingContext ctxt)
             throws ParseException
     {
-        // create actual chains and push them into wrappers
-        createChains(ctxt);
+        for ( ParsingWrapper w : ctxt.getWrappers() ) {
+            w.makeIt(ctxt);
+        }
         // get values and build the app object
         String      abbrev = ctxt.getAbbrev();
         String      title  = ctxt.getTitle();
@@ -275,32 +304,13 @@ public class EXPathWebParser
     }
 
     /**
-     * Create the chain objects and push them into wrappers.
-     */
-    private void createChains(ParsingContext ctxt)
-            throws ParseException
-    {
-        for ( ParsingChain c : ctxt.getChains() ) {
-            QName         name  = c.getName();
-            List<Wrapper> list  = c.makeFilters(ctxt);
-            Wrapper[]     array = list.toArray(new Wrapper[]{});
-            Chain         chain = new Chain(name, array);
-            ctxt.addWrapper(chain);
-        }
-    }
-
-    /**
      * Handle an element 'application' in the webapp descriptor.
      */
     private ParsingApp handleApplication(StreamParser parser)
             throws ParseException
     {
         ParsingApp app = new ParsingApp();
-        String[] names = handleFiltersAttr(parser);
-        for ( String name : names ) {
-            QName f = parser.parseLiteralQName(name);
-            app.addFilter(f);
-        }
+        handleFiltersAttr(parser, app);
         parser.nextTag();
         return app;
     }
@@ -308,7 +318,7 @@ public class EXPathWebParser
     /**
      * Handle an element 'error' in the webapp descriptor.
      */
-    private ErrorHandler handleError(StreamParser parser, ParsingContext ctxt)
+    private ParsingError handleError(StreamParser parser, ParsingContext ctxt)
             throws ParseException
                  , TechnicalException
     {
@@ -316,36 +326,30 @@ public class EXPathWebParser
         String name = parser.getAttribute("name");
         String catc = parser.getAttribute("catch");
         LOG.debug("expath-web parser: error: " + name + " catching " + catc);
-        QName   qname = parser.parseLiteralQName(name);
-        boolean every = false;
-        QName   code  = null;
-        String  ns    = null;
-        String  local = null;
+        ParsingError error = new ParsingError(name);
+        handleFiltersAttr(parser, error);
         if ( catc.equals("*") ) {
-            every = true;
+            // nothing
         }
         else if ( catc.startsWith("*:") ) {
-            local = catc.substring(2);
+            error.setLocal(catc.substring(2));
         }
         else if ( catc.endsWith(":*") ) {
             String prefix = catc.substring(0, catc.length() - 2);
-            ns = parser.resolvePrefix(prefix);
+            error.setNs(parser.resolvePrefix(prefix));
         }
         else {
-            code  = parser.parseLiteralQName(catc);
-            ns    = code.getNamespaceURI();
-            local = code.getLocalPart();
+            QName code = parser.parseLiteralQName(catc);
+            error.setCode(code);
+            error.setNs(code.getNamespaceURI());
+            error.setLocal(code.getLocalPart());
         }
         parser.nextTag();
         parser.ensureNamespace();
         Component implem = handleComponent(parser, ctxt);
+        error.setImplem(implem);
         parser.nextTag();
-        if ( every ) {
-            return new ErrorHandler(qname, implem);
-        }
-        else {
-            return new ErrorHandler(qname, implem, code, ns, local);
-        }
+        return error;
     }
 
     /**
@@ -361,11 +365,7 @@ public class EXPathWebParser
         ParsingGroup group = ctxt.getCurrentGroup();
         handler.setGroup(group);
         // the filters
-        String[] filters = handleFiltersAttr(parser);
-        for ( String filter : filters ) {
-            QName f = parser.parseLiteralQName(filter);
-            handler.addFilter(f);
-        }
+        handleFiltersAttr(parser, handler);
     }
 
     /**
@@ -402,7 +402,7 @@ public class EXPathWebParser
      * optional out, and must have at least one of them.  The parsing algorithm
      * must be rework to guarantee exactly that and handle all possible errors.
      */
-    private Filter handleFilter(StreamParser parser, ParsingContext ctxt)
+    private ParsingFilter handleFilter(StreamParser parser, ParsingContext ctxt)
             throws ParseException
                  , TechnicalException
     {
@@ -426,8 +426,7 @@ public class EXPathWebParser
             parser.nextTag(); // </out>
             parser.nextTag(); // </filter>
         }
-        QName qname = parser.parseLiteralQName(name);
-        return new Filter(qname, in, out);
+        return new ParsingFilter(name, in, out);
     }
 
     /**
@@ -440,15 +439,13 @@ public class EXPathWebParser
             throws ParseException
     {
         parser.ensureStartTag("chain");
-        String name_s = parser.getAttribute("name");
-        QName name = parser.parseLiteralQName(name_s);
+        String name = parser.getAttribute("name");
         ParsingChain chain = new ParsingChain(name);
         parser.nextTag();
         while ( parser.getLocalName().equals("filter") ) {
             parser.ensureStartTag("filter");
             String ref = parser.getAttribute("ref");
-            QName qname = parser.parseLiteralQName(ref);
-            chain.addFilter(qname);
+            chain.addFilter(ref);
             parser.nextTag(); // </filter>
             parser.nextTag(); // <filter> or </chain>
         }
@@ -531,26 +528,24 @@ public class EXPathWebParser
     {
         ParsingGroup parent = ctxt.getCurrentGroup();
         ParsingGroup group  = new ParsingGroup(parent);
-        String[] names = handleFiltersAttr(parser);
-        for ( String name : names ) {
-            QName f = parser.parseLiteralQName(name);
-            group.addFilter(f);
-        }
+        handleFiltersAttr(parser, group);
         return group;
     }
 
-    private String[] handleFiltersAttr(StreamParser parser)
+    private void handleFiltersAttr(StreamParser parser, ParsingFiltered filtered)
             throws ParseException
     {
         String filters = parser.getAttribute("filters");
         if ( filters == null ) {
-            return new String[]{};
+            return;
         }
         String[] names = filters.split("\\s");
         if ( names.length == 0 ) {
             parser.parseError("Filter attribtue is empty");
         }
-        return names;
+        for ( String name : names ) {
+            filtered.addFilter(name);
+        }
     }
 
     /**
@@ -715,7 +710,10 @@ public class EXPathWebParser
     }
 
     /** The webapp descriptor namespace. */
-    private static final String DESC_NS = "http://expath.org/ns/webapp/descriptor";
+    private static final String DESC_NS = "http://expath.org/ns/webapp";
+    /** The legacy webapp descriptor namespace (in some drafts before Webapp 1.0). */
+    @Deprecated
+    private static final String LEGACY_DESC_NS = "http://expath.org/ns/webapp/descriptor";
     /** The servlex extension file name. */
     private static final String SERVLEX_FILENAME = "servlex.xml";
     /** The servlex extension namespace. */
