@@ -13,17 +13,23 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.WebRepository;
 
 /**
  * Implements web:install-webapp().
  * 
  * The XPath signatures:
  *
- *     web:install-webapp($pkg as xs:base64Binary) as xs:string
+ *     web:install-webapp($repo as item(),
+ *                        $pkg  as xs:base64Binary) as xs:string?
  *
- *     web:install-webapp($pkg  as xs:base64Binary,
- *                        $root as xs:string) as xs:string
+ *     web:install-webapp($repo as item(),
+ *                        $pkg  as xs:base64Binary,
+ *                        $root as xs:string) as xs:string?
+ *
+ * The parameter $repo must be a {@link RepositoryItem}.
+ * 
+ * If the function returns no string, then it installed a regular library
+ * package (not a webapp).
  *
  * @author Florent Georges
  * @date   2013-09-11
@@ -31,11 +37,6 @@ import org.expath.servlex.WebRepository;
 public class InstallWebappFunction
         extends ExtensionFunctionDefinition
 {
-    public InstallWebappFunction(WebRepository repo)
-    {
-        myRepo = repo;
-    }
-
     @Override
     public StructuredQName getFunctionQName()
     {
@@ -45,36 +46,34 @@ public class InstallWebappFunction
     @Override
     public int getMinimumNumberOfArguments()
     {
-        return 1;
+        return 2;
     }
 
     @Override
     public int getMaximumNumberOfArguments()
     {
-        return 2;
+        return 3;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        return FunTypes.types(FunTypes.SINGLE_BASE64, FunTypes.SINGLE_STRING);
+        return FunTypes.types(FunTypes.SINGLE_ITEM, FunTypes.SINGLE_BASE64, FunTypes.SINGLE_STRING);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        return FunTypes.SINGLE_STRING;
+        return FunTypes.OPTIONAL_STRING;
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new InstallWebappCall(myRepo);
+        return new InstallWebappCall();
     }
 
     static final String LOCAL_NAME = "install-webapp";
-
-    private WebRepository myRepo;
 }
 
 
