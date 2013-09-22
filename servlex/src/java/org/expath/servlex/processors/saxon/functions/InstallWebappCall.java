@@ -20,6 +20,7 @@ import net.sf.saxon.trans.XPathException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
+import org.expath.pkg.repo.Repository;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
@@ -30,74 +31,102 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * 
  * The XPath signatures:
  *
- *     web:install-webapp($pkg as xs:base64Binary) as xs:string
+ *     web:install-webapp($repo as item(),
+ *                        $pkg  as xs:base64Binary) as xs:string?
  *
- *     web:install-webapp($pkg  as xs:base64Binary,
- *                        $root as xs:string) as xs:string
+ *     web:install-webapp($repo as item(),
+ *                        $pkg  as xs:base64Binary,
+ *                        $root as xs:string) as xs:string?
  *
+ * The parameter $repo must be a {@link RepositoryItem}.
+ * 
+ * If the function returns no string, then it installed a regular library
+ * package (not a webapp).
+ * 
+ * TODO: Maybe return more information about the webapp, as XML elements.
+ * 
+ * Possible XPath errors:
+ * 
+ * - web:cannot-install: if installation is disabled on the repository (if it
+ *   is read-only).
+ * 
+ * - web:already-installed: if the package is already installed.
+ * 
+ * - web:invalid-context-root: if the provided context root is not syntactically
+ *   valid.
+ * 
  * @author Florent Georges
  * @date   2013-09-11
  */
 public class InstallWebappCall
         extends ExtensionFunctionCall
 {
-    public InstallWebappCall(WebRepository repo)
-    {
-        myRepo = repo;
-    }
-
     @Override
     public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
             throws XPathException
     {
         // the params
-        FunParams params = new FunParams(orig_params, 1, 2);
-        byte[] pkg  = params.asBinary(0, false);
-        String root = null;
-        if ( params.number() == 2 ) {
-            root = params.asString(1, false);
+        FunParams params = new FunParams(orig_params, 2, 3);
+        WebRepository repo = params.asRepository(0, false);
+        byte[]        pkg  = params.asBinary(1, false);
+        String        root = null;
+        if ( params.number() == 3 ) {
+            root = params.asString(2, false);
         }
         // log it
-        LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME).param(pkg).param(root).value());
+        LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME).param(repo).param(pkg).param(root).value());
         // do it
+        String value = doit(repo, pkg, root);
         try {
-            String value = doit(pkg, root);
             return SaxonHelper.toSequenceIterator(value);
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error installing the webapp", ex);
+            throw FunErrors.unexpected("Internal error with the data model", ex);
         }
     }
 
-    private String doit(byte[] pkg, String root)
+    private String doit(WebRepository repo, byte[] pkg, String root)
             throws XPathException
-                 , TechnicalException
     {
-        if ( ! myRepo.canInstall() ) {
-            throw new XPathException("Installation not supported on repo");
-        }
         File file = save(pkg);
         try {
             // TODO: Set whether to override an existing package (instead of false),
             // from an extra param...?
-            return myRepo.install(file, root, false);
+            return repo.install(file, root, false);
+        }
+        catch ( WebRepository.CannotInstall ex ) {
+            throw FunErrors.cannotInstall(ex);
+        }
+        catch ( WebRepository.InvalidContextRoot ex ) {
+            throw FunErrors.invalidContextRoot(ex);
+        }
+        catch ( Repository.AlreadyInstalledException ex ) {
+            throw FunErrors.alreadyInstalled(ex);
+        }
+        catch ( TechnicalException ex ) {
+            throw FunErrors.unexpected(ex);
         }
         catch ( PackageException ex ) {
-            throw new TechnicalException("Error creating a temporary dir", ex);
+            throw FunErrors.unexpected(ex);
         }
     }
 
     private File save(byte[] pkg)
             throws XPathException
-                 , TechnicalException
     {
-        String id = Servlex.getRequestMap().getPrivate("web:request-id");
+        String id;
+        try {
+            id = Servlex.getRequestMap().getPrivate("web:request-id");
+        }
+        catch ( TechnicalException ex ) {
+            throw FunErrors.unexpected("Error accessing the request ID", ex);
+        }
         File dir = null;
         try {
             dir = File.createTempFile("servlex-", id);
         }
         catch ( IOException ex ) {
-            throw new TechnicalException("Error creating a temporary dir", ex);
+            throw FunErrors.unexpected("Error creating a temporary dir", ex);
         }
         dir.delete();
         dir.mkdirs();
@@ -108,16 +137,13 @@ public class InstallWebappCall
             IOUtils.write(pkg, out);
         }
         catch ( IOException ex ) {
-            throw new TechnicalException("Error writing the package to a temporary file: " + file, ex);
+            throw FunErrors.unexpected("Error writing the package to a temporary file: " + file, ex);
         }
         return file;
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(InstallWebappCall.class);
-
-    /** The repository. */
-    private WebRepository myRepo;
 }
 
 
