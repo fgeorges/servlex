@@ -155,7 +155,7 @@ public class XmlWriter
     public void emptyElement(String name, int indent, Attribute... attrs)
             throws TechnicalException
     {
-        openTag(name, indent, false, attrs);
+        openTag(name, indent, true, attrs);
     }
 
     /**
