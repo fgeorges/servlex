@@ -1,0 +1,57 @@
+<webapp xmlns="http://expath.org/ns/webapp"
+        xmlns:web="http://expath.org/ns/webapp"
+        xmlns:app="http://servlex.net/ns/webapp-manager"
+        name="http://servlex.net/app/manager"
+        abbrev="new-manager"
+        version="0.1.0"
+        spec="1.0">
+
+   <title>Web application manager for a web container.</title>
+
+   <application filters="web-errors"/>
+
+   <filter name="view">
+      <out>
+         <xslt uri="http://servlex.net/ns/webapp-manager/view.xsl"/>
+      </out>
+   </filter>
+
+   <error name="web-errors" catch="*">
+      <xslt uri="http://servlex.net/ns/webapp-manager/web-errors.xsl"/>
+   </error>
+
+   <resource pattern="/"      rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/home"  rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/reset" rewrite="pages/reset.xml"  media-type="text/xml" filters="view"/>
+
+   <resource pattern="/style/.+.css"  media-type="text/css"/>
+   <resource pattern="/images/.+.png" media-type="image/png"/>
+   <resource pattern="/images/.+.gif" media-type="image/gif"/>
+
+   <servlet name="list" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/webapps.xsl"/>
+      <url pattern="/webapps"/>
+   </servlet>
+
+   <servlet name="deploy" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy.xsl"/>
+      <url pattern="/deploy"/>
+   </servlet>
+
+   <servlet name="deploy-file" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-file.xsl"/>
+      <url pattern="/deploy-file"/>
+   </servlet>
+
+   <servlet name="deploy-cxan" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-cxan.xsl"/>
+      <url pattern="/deploy-cxan"/>
+   </servlet>
+
+<!--
+    TODO:
+    - remove?webapp=xxx
+    - do-reset
+-->
+
+</webapp>

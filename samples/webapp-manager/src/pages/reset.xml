@@ -1,0 +1,7 @@
+<page menu="reset">
+   <title>Reset cache</title>
+   <form href="do-reset">
+      Clear the application cache:
+      <button label="Reset"/>
+   </form>
+</page>
