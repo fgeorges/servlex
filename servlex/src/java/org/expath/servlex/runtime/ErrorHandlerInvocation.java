@@ -49,6 +49,15 @@ public class ErrorHandlerInvocation
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("error handler invocation");
+        myWrapped.cleanup(auditor);
+        myImpl.cleanup(auditor);
+    }
+
+    @Override
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
@@ -78,14 +87,17 @@ public class ErrorHandlerInvocation
         if ( myEvery ) {
             return true;
         }
-        else if ( myNs == null && myLocal.equals(name.getLocalPart()) ) {
+        else if ( myNs == null && myLocal != null && myLocal.equals(name.getLocalPart()) ) {
             return true;
         }
-        else if ( myLocal == null && myNs.equals(name.getNamespaceURI()) ) {
+        else if ( myLocal == null && myNs != null && myNs.equals(name.getNamespaceURI()) ) {
             return true;
+        }
+        else if ( myCode != null ) {
+            return myCode.equals(name);
         }
         else {
-            return myCode.equals(name);
+            return false;
         }
     }
 
