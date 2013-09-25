@@ -130,16 +130,17 @@ public class SaxonSequence
     public Element elementAt(int position)
             throws TechnicalException
     {
-        // If the sequence is exactly one document node, then its children
-        // nodes are used directly instead.
-        SaxonDocument doc = isSingleDocument();
+        // If the item at that position is exactly one document node, and its
+        // children are exactly one element node (ignoring whitespace-only text
+        // nodes), then it is returned directly instead.
+        SaxonDocument doc = isDocument(position);
         if ( doc == null ) {
             Item item = itemAt(position);
             return SaxonHelper.toSaxonElement(item);
         }
         else {
-            Sequence seq = doc.getChildren();
-            return seq.elementAt(position);
+            XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
+            return new SaxonElement(elem);
         }
     }
 
@@ -182,32 +183,20 @@ public class SaxonSequence
     }
 
     /**
-     * Test whether this sequence is a single document node.
-     * 
-     * If the sequence is empty or has 2 or more items, it returns null.  If it
-     * contains 1 single item which is not a document node, it returns null as
-     * well.  If the sequence is a single item which is a document node, then
-     * this node is returned as a {@link SaxonDocument}.
+     * Test whether the item at that position is a document node.
      */
-    private SaxonDocument isSingleDocument()
+    private SaxonDocument isDocument(int position)
     {
-        Item first = itemAt(0);
-        if ( first == null ) {
-            // if empty sequence
+        Item at = itemAt(position);
+        if ( at == null ) {
+            // no item at that position
             return null;
         }
-        Item second = itemAt(1);
-        if ( second != null ) {
-            // if 2 or more items in the sequence
-            return null;
-        }
-        // if here, then sequence is a singleton
-        XdmItem item = SaxonItem.getXdmItem(first);
+        XdmItem item = SaxonItem.getXdmItem(at);
         if ( item.isAtomicValue() ) {
             // if the item is atomic
             return null;
         }
-        // if here, then sequence is one single node
         XdmNode node = (XdmNode) item;
         try {
             // try to convert to SaxonDocument...
@@ -217,6 +206,24 @@ public class SaxonSequence
             // ... ctor raises an exception if 'node' is not a node
             return null;
         }
+    }
+
+    /**
+     * Test whether this sequence is a single document node.
+     * 
+     * If the sequence is empty or has 2 or more items, it returns null.  If it
+     * contains 1 single item which is not a document node, it returns null as
+     * well.  If the sequence is a single item which is a document node, then
+     * this node is returned as a {@link SaxonDocument}.
+     */
+    private SaxonDocument isSingleDocument()
+    {
+        Item second = itemAt(1);
+        if ( second != null ) {
+            // if 2 or more items in the sequence
+            return null;
+        }
+        return isDocument(0);
     }
 
     private Iterable<Item> myItems;

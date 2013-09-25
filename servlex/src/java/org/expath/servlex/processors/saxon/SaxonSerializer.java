@@ -190,6 +190,7 @@ class SaxonSerializer
         // TODO: Can I use Saxon extension methods here?  Like "saxon:base64Binary"
         // or "saxon:hexBinary"...
         // See http://saxonica.com/documentation/#!extensions/output-extras.
+        // TODO: What if myMethod is set?  We don't take it into account here...?
         if ( "binary".equals(method) ) {
             method = "text";
             out = new Base64OutputStream(out, false);

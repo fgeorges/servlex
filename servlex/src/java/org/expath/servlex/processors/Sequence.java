@@ -35,8 +35,9 @@ public interface Sequence
      * element node (if there is such an item but it is not an element, this is
      * en error).
      * 
-     * If the sequence is exactly one document node, then its children nodes
-     * are used directly instead.
+     * If the item at that position is exactly one document node, and its
+     * children are exactly one element node (ignoring whitespace-only text
+     * nodes), then it is returned directly instead.
      */
     public Element elementAt(int position)
             throws TechnicalException;
