@@ -10,12 +10,16 @@
 package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.util.Input;
+import com.xmlcalabash.util.Output;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.saxon.s9api.Axis;
@@ -113,7 +117,8 @@ public class CalabashPipeline
             // compile the pipeline
             if ( node == null ) {
                 LOG.debug("About to href the pipeline: " + href);
-                myCompiled = myRuntime.load(href);
+                Input in = new Input(href);
+                myCompiled = myRuntime.load(in);
             }
             else {
                 LOG.debug("About to compile the pipeline document: " + node.getBaseURI());
@@ -145,15 +150,23 @@ public class CalabashPipeline
     {
         Processor saxon = myCalabash.getSaxon();
         XProcConfiguration xconf = new XProcConfiguration(saxon);
-        XProcProcessor proc = new XProcProcessor(xconf);
+        XProcRuntime runtime = new XProcRuntime(xconf);
         SaxonRepository repo = myCalabash.getRepository();
         PkgConfigurer configurer = new PkgConfigurer(repo.getUnderlyingRepo());
-        proc.setConfigurer(configurer);
-        XProcRuntime runtime = new XProcRuntime(proc);
+        runtime.setConfigurer(configurer);
         // runtime.setMessageListener(new MsgListener());
         File profiling = myConfig.getProfileFile("xproc-profile");
         if ( profiling != null ) {
-            runtime.setProfileOutput(profiling);
+            try {
+                OutputStream stream = new FileOutputStream(profiling);
+                Output out = new Output(stream);
+                runtime.setProfile(out);
+            }
+            catch ( FileNotFoundException ex ) {
+                // there is no point in stopping processing if the profile
+                // file is not writable
+                LOG.error("Error opening the profile file for Calabash: " + profiling);
+            }
         }
         // FIXME: Have to reconfigure the Saxon processor, because Calabash
         // install its own resolvers.  Should be ok though, but double-check!
