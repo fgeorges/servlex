@@ -39,20 +39,20 @@
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.9.0dev/hello-world/"             targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.9.0dev/hello-world-0.9.0dev.xaw" targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/LICENSE"        targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/NOTICE"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/LICENSE"        targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/NOTICE"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
          <!-- TODO: Add the execution bit to the files in bin/. -->
-         <file src="apache-tomcat-7.0.37/bin/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/conf/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/lib/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/logs/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/profiling/"     targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/repo/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/temp/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/webapps/"       targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-7.0.37/work/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/bin/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/conf/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/lib/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/logs/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/profiling/"     targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/repo/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/temp/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/webapps/"       targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-7.0.47/work/"          targetdir="$INSTALL_PATH"/>
          <parsable targetfile="$INSTALL_PATH/conf/catalina.properties"/>
       </pack>
    </packs>

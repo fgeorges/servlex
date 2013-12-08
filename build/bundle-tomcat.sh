@@ -32,7 +32,7 @@ fi
 IZPACK=/Applications/IzPack/bin/compile
 
 # the Tomcat base name (both .tar.gz and dir must have the same name)
-TOMCAT_NAME=apache-tomcat-7.0.37
+TOMCAT_NAME=apache-tomcat-7.0.47
 
 # the dir containing this script
 BASEDIR=`dirname $0`
