@@ -11,6 +11,7 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
@@ -63,6 +64,13 @@ public class ParseBasicAuthCall
         }
         String username = decoded.substring(0, colon);
         String password = decoded.substring(colon + 1);
+        // build the resulting element
+        return buildResult(username, password);
+    }
+
+    private SequenceIterator buildResult(String username, String password)
+            throws XPathException
+    {
         try {
             // build the resulting element
             TreeBuilder b = myProcs.makeTreeBuilder(NS, PREFIX);
@@ -74,7 +82,8 @@ public class ParseBasicAuthCall
             // return the basic-auth element, inside the document node
             Document doc = b.getRoot();
             XdmNode root = SaxonHelper.getDocumentRootElement(doc);
-            return SingletonIterator.makeIterator(root.getUnderlyingNode());
+            NodeInfo node = root.getUnderlyingNode();
+            return SingletonIterator.makeIterator(node);
         }
         catch ( TechnicalException ex ) {
             String msg = "Technical exception occured in Saxon extension function";
