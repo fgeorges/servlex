@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
@@ -56,6 +57,11 @@ import org.expath.servlex.runtime.ComponentError;
  */
 public class SaxonHelper
 {
+    public static String clarkName(NodeInfo node)
+    {
+        return "{" + node.getURI() + "}" + node.getLocalPart();
+    }
+
     public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config)
             throws PackageException
     {

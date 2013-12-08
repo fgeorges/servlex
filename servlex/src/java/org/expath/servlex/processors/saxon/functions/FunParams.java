@@ -10,8 +10,10 @@
 package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.Type;
 import net.sf.saxon.value.Base64BinaryValue;
 import net.sf.saxon.value.ObjectValue;
 import net.sf.saxon.value.StringValue;
@@ -63,7 +65,6 @@ class FunParams
      * {@code XPathException} is thrown.  As well as if there is more than
      * one item.
      * 
-     * @param params The list of parameters, as passed by Saxon.
      * @param pos The position of the parameter to analyze, 0-based.
      * @param optional Can the parameter be the empty sequence?
      */
@@ -87,7 +88,6 @@ class FunParams
      * {@code XPathException} is thrown.  As well as if there is more than
      * one item.
      * 
-     * @param params The list of parameters, as passed by Saxon.
      * @param pos The position of the parameter to analyze, 0-based.
      * @param optional Can the parameter be the empty sequence?
      */
@@ -112,7 +112,6 @@ class FunParams
      * {@code XPathException} is thrown.  As well as if there is more than
      * one item.
      * 
-     * @param params The list of parameters, as passed by Saxon.
      * @param pos The position of the parameter to analyze, 0-based.
      * @param optional Can the parameter be the empty sequence?
      */
@@ -135,13 +134,71 @@ class FunParams
     }
 
     /**
+     * Return the pos-th parameter, checking it is an element node.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item, or if the param is not an element node.
+     * 
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public NodeInfo asElement(int pos, boolean optional)
+            throws XPathException
+    {
+        Item item = asItem(pos, optional);
+        if ( item == null ) {
+            return null;
+        }
+        if ( ! ( item instanceof NodeInfo ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a node");
+        }
+        NodeInfo node = (NodeInfo) item;
+        int kind = node.getNodeKind();
+        if ( kind != Type.ELEMENT ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not an element (kind: " + kind + ")");
+        }
+        return node;
+    }
+
+    /**
+     * Return the pos-th parameter, checking it is an element node, as well as its name.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item, or if the param is not an element node, or if the element
+     * name is not equal to {@code name} (in the webapp namespace).
+     * 
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     * @param name The required local name of the element.
+     */
+    public NodeInfo asElement(int pos, boolean optional, String name)
+            throws XPathException
+    {
+        NodeInfo elem = asElement(pos, optional);
+        String actual_name = elem.getLocalPart();
+        if ( ! actual_name.equals(name) ) {
+            String msg = "The " + ordinal(pos) + " param element local name is: "
+                    + actual_name + ", instead of: " + name;
+            throw new XPathException(msg);
+        }
+        String actual_ns = elem.getURI();
+        if ( ! actual_ns.equals(ServlexConstants.WEBAPP_NS) ) {
+            String msg = "The " + ordinal(pos) + " param element namespace is: "
+                    + actual_ns + ", instead of: " + ServlexConstants.WEBAPP_NS;
+            throw new XPathException(msg);
+        }
+        return elem;
+    }
+
+    /**
      * Return the pos-th parameter, checking its arity.
      * 
      * If optional is false and the parameter is the empty sequence, an
      * {@code XPathException} is thrown.  As well as if there is more than
      * one item.
      * 
-     * @param params The list of parameters, as passed by Saxon.
      * @param pos The position of the parameter to analyze, 0-based.
      * @param optional Can the parameter be the empty sequence?
      */
@@ -215,6 +272,21 @@ class FunParams
                     myBuf.append("'");
                     myBuf.append(value.replace("'", "''"));
                     myBuf.append("'");
+                }
+            }
+            return this;
+        }
+
+        // TODO: Adapt specifically for element nodes?
+        public Formatter param(Item item)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                if ( item == null ) {
+                    myBuf.append("()");
+                }
+                else {
+                    myBuf.append(item.toString());
                 }
             }
             return this;

@@ -27,6 +27,7 @@ import org.expath.servlex.processors.saxon.functions.SetSessionFieldFunction;
 import org.expath.servlex.processors.saxon.functions.SetWebappFieldFunction;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.saxon.functions.ConfigParamFunction;
+import org.expath.servlex.processors.saxon.functions.ExecuteFunction;
 import org.expath.servlex.processors.saxon.functions.InstallEnabledFunction;
 import org.expath.servlex.processors.saxon.functions.InstallFromCxanFunction;
 import org.expath.servlex.processors.saxon.functions.InstallWebappFunction;
@@ -84,6 +85,8 @@ public class WebappFunctions
         saxon.registerExtensionFunction(new RepositoryFunction(config));
         // the config access and management functions
         saxon.registerExtensionFunction(new ConfigParamFunction());
+        // the execute function
+        saxon.registerExtensionFunction(new ExecuteFunction(procs, saxon));
     }
 }
 
