@@ -92,4 +92,7 @@ perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
     -pi izpack-tomcat.xml
 
 # create the installer
-"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-installer.jar"
+# TODO: IzPack outputs a lot of helpless warnings, hope it will be fixed in a future version...
+"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-installer.jar" 2>&1 \
+    | grep -v "com.sun.java.util.jar.pack.Utils$Pack200Logger warning"   \
+    | grep -v "bytes of LocalVariableTable attribute in"
