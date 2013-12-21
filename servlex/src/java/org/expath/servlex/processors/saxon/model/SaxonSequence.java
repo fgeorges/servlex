@@ -17,6 +17,7 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
@@ -68,6 +69,7 @@ public class SaxonSequence
     }
 
     public SaxonSequence(SequenceIterator iter)
+            throws TechnicalException
     {
         if ( iter == null ) {
             throw new NullPointerException("Iterator is null for Saxon sequence");
@@ -77,7 +79,7 @@ public class SaxonSequence
 
     private void init(Iterator<Item> iter)
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         while ( iter.hasNext() ) {
             items.add(iter.next());
         }
@@ -86,7 +88,7 @@ public class SaxonSequence
 
     private void init(XdmSequenceIterator iter)
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         while ( iter.hasNext() ) {
             XdmItem item = iter.next();
             items.add(new SaxonItem(item));
@@ -95,11 +97,17 @@ public class SaxonSequence
     }
 
     private void init(SequenceIterator iter)
+            throws TechnicalException
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         net.sf.saxon.om.Item item;
-        while ( (item = iter.current()) != null ) {
-            items.add(new SaxonItem(item));
+        try {
+            while ( (item = iter.next()) != null ) {
+                items.add(new SaxonItem(item));
+            }
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error iterating the Saxon sequence", ex);
         }
         myItems = items;
     }
@@ -226,6 +234,7 @@ public class SaxonSequence
         return isDocument(0);
     }
 
+    /** The items. */
     private Iterable<Item> myItems;
 
     private static class ItemIterable
@@ -242,7 +251,7 @@ public class SaxonSequence
             return new ItemIterator(myOriginal.iterator());
         }
 
-        private Iterable<Item> myOriginal;
+        private final Iterable<Item> myOriginal;
     }
 
     private static class ItemIterator
@@ -272,7 +281,7 @@ public class SaxonSequence
             myOriginal.remove();
         }
 
-        private Iterator<Item> myOriginal;
+        private final Iterator<Item> myOriginal;
     }
 }
 
