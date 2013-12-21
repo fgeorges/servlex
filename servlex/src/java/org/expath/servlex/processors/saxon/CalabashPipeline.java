@@ -77,7 +77,9 @@ public class CalabashPipeline
             throws ServlexException
     {
         auditor.cleanup("calabash pipleline, close the runtime object");
-        myRuntime.close();
+        if ( myRuntime != null ) {
+            myRuntime.close();
+        }
     }
 
     /**
