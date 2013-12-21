@@ -184,7 +184,7 @@
    </xsl:template>
 
    <xsl:template match="text">
-      <input type="text" name="{ @name }" size="{ @size }"/>
+      <input type="text" name="{ @name }" size="{ @size }" value="{ . }"/>
    </xsl:template>
 
    <xsl:template match="subtitle">
@@ -217,6 +217,12 @@
       <li>
          <xsl:apply-templates/>
       </li>
+   </xsl:template>
+
+   <xsl:template match="debug">
+      <xsl:comment>
+         <xsl:copy-of select="node()"/>
+      </xsl:comment>
    </xsl:template>
 
 </xsl:stylesheet>
