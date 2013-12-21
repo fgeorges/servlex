@@ -91,6 +91,10 @@ class FunTypes
     public static final SequenceType OPTIONAL_LONG     = SequenceType.OPTIONAL_LONG;
     public static final SequenceType OPTIONAL_SHORT    = SequenceType.OPTIONAL_SHORT;
     public static final SequenceType OPTIONAL_STRING   = SequenceType.OPTIONAL_STRING;
+    // nodes
+    // TODO: Add other node kinds, and document nodes for other arities...
+    // (as well as document node tests with root element name...)
+    public static final SequenceType OPTIONAL_DOCUMENT = SequenceType.OPTIONAL_DOCUMENT_NODE;
 
     // anys
     public static final SequenceType ANY_ITEM     = make(ANY, ITEM);

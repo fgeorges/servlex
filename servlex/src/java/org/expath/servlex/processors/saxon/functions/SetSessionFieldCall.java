@@ -22,10 +22,9 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.tools.Properties;
 
 /**
- * TODO: Doc...
+ * Set the value of a property in the session.
  *
  * @author Florent Georges
- * @date   2010-06-10
  */
 public class SetSessionFieldCall
         extends ExtensionFunctionCall
@@ -45,6 +44,10 @@ public class SetSessionFieldCall
             Properties props = Servlex.getSessionMap();
             Sequence seq = new SaxonSequence(value);
             props.set(name, seq);
+            if ( LOG.isTraceEnabled() ) {
+                LOG.trace("Use session map: " + props);
+                LOG.trace("Set key: " + name + ", to: " + seq + " (" + value + ")");
+            }
             return EmptyIterator.getInstance();
         }
         catch ( TechnicalException ex ) {

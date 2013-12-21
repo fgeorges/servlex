@@ -33,6 +33,7 @@ import org.expath.servlex.processors.saxon.functions.InstallFromCxanFunction;
 import org.expath.servlex.processors.saxon.functions.InstallWebappFunction;
 import org.expath.servlex.processors.saxon.functions.InstalledWebappsFunction;
 import org.expath.servlex.processors.saxon.functions.RepositoryFunction;
+import org.expath.servlex.processors.saxon.functions.TMP_ZipEntryAsXmlFunction;
 
 /**
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
@@ -54,9 +55,20 @@ public class WebappFunctions
      * that extension functions are always registered, regardless of the import
      * statements...  Really?!?  Well, it seems there is no technical way to
      * achieve that with Saxon API...
+     * 
+     * @param procs The processors object to pass to the function objects which
+     *     need one.
+     * 
+     * @param saxon The Saxon processor object to pass to the function objects
+     *     which need one.
+     * 
+     * @param config The Servlex config object to pass to the function objects
+     *     which need one.
      */
     public static void setup(Processors procs, Processor saxon, ServerConfig config)
     {
+        // TODO: FIXME: The temporary ZIP entry as XML function.
+        saxon.registerExtensionFunction(new TMP_ZipEntryAsXmlFunction(saxon));
         // the request fields management functions
         saxon.registerExtensionFunction(new GetRequestFieldFunction());
         saxon.registerExtensionFunction(new GetRequestFieldNamesFunction());

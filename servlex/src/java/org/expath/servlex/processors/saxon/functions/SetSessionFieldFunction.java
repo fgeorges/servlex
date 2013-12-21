@@ -15,15 +15,14 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 /**
- * TODO: Doc...
+ * Set the value of a property in the session.
+ * 
+ * The XPath prototype:
  *
  *     web:set-session-field($name as xs:string, $value as item()*)
  *        as empty-sequence()
  *
- * (return value is the previous value is any)
- *
  * @author Florent Georges
- * @date   2010-06-10
  */
 public class SetSessionFieldFunction
         extends ExtensionFunctionDefinition

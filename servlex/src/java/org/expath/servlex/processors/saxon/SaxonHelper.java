@@ -183,7 +183,7 @@ public class SaxonHelper
     public static SequenceIterator toSequenceIterator(Iterable<String> strings)
             throws TechnicalException
     {
-        List<StringValue> items = new ArrayList<StringValue>();
+        List<StringValue> items = new ArrayList<>();
         for ( String s : strings ) {
             StringValue v = new StringValue(s);
             items.add(v);
@@ -193,9 +193,13 @@ public class SaxonHelper
 
     /**
      * Return the root element of the document node passed in param.
+     * 
+     * @param doc The document node to return the root element from.
      *
-     * Throw an error is the param is null, is not a document node, or if it
-     * not exactly one child which is an element node.
+     * @return The root element of the document node passed in {@code  doc}.
+     * 
+     * @throws TechnicalException if {@code doc} is null, is not a document node,
+     *     or if it not exactly one child which is an element node.
      */
     public static XdmNode getDocumentRootElement(Document doc)
             throws TechnicalException
@@ -226,7 +230,10 @@ public class SaxonHelper
     /**
      * Return next node, ignoring all whitespace-only text nodes.
      * 
-     * Return null if there is no such next node.
+     * @param it The sequence where ignoring whitespace text nodes from.
+     * 
+     * @return The next node, ignoring all whitespace-only text nodes, or null
+     *     if there is no such next node.
      */
     public static XdmNode ignoreWhitespaceTextNodes(XdmSequenceIterator it)
     {

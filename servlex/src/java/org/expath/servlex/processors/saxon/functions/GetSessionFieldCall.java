@@ -42,6 +42,10 @@ public class GetSessionFieldCall
         try {
             SequenceProperties props = Servlex.getSessionMap();
             Sequence seq = props.get(name);
+            if ( LOG.isTraceEnabled() ) {
+                LOG.trace("Use session map: " + props);
+                LOG.trace("Get key: " + name + ", is: " + seq);
+            }
             return SaxonHelper.toSequenceIterator(seq);
         }
         catch ( TechnicalException ex ) {

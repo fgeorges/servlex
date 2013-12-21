@@ -33,15 +33,14 @@ abstract class ParsingHandler
     public AddressHandler makeAddressHandler(ParsingContext ctxt, Logger log)
             throws ParseException
     {
-        String  java_regex;
-        Pattern regex;
+        String java_regex;
         try {
             java_regex = RegexHelper.xpathToJava(myPattern, log);
-            regex = Pattern.compile(java_regex);
         }
         catch ( TechnicalException ex ) {
             throw new ParseException("The pattern is not a valid XPath regex", ex);
         }
+        Pattern regex = Pattern.compile(java_regex);
         AddressHandler handler = makeIt(ctxt, regex, java_regex);
         Wrapper wrapper = makeWrapper(ctxt);
         handler.setWrapper(wrapper);

@@ -32,6 +32,18 @@ class FunParams
      * Check the number of parameters in params, and throw an error if not OK.
      * 
      * @param params The parameter list.
+     * @param num The number of parameters.
+     */
+    public FunParams(SequenceIterator[] params, int num)
+            throws XPathException
+    {
+        this(params, num, num);
+    }
+
+    /**
+     * Check the number of parameters in params, and throw an error if not OK.
+     * 
+     * @param params The parameter list.
      * @param min The minimal number of parameters.
      * @param max The maximum number of parameters.
      */
@@ -363,9 +375,9 @@ class FunParams
             return doit;
         }
 
-        private StringBuilder myBuf;
-        private int myNum;
-        private int myMax;
+        private final StringBuilder myBuf;
+        private final int myNum;
+        private final int myMax;
         private int myI;
     }
 
