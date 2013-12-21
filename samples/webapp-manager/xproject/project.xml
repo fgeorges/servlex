@@ -5,4 +5,7 @@
 
    <title>Web application manager for a web container.</title>
 
+   <dependency package="http://expath.org/lib/http-client"/>
+   <dependency package="http://expath.org/lib/zip"/>
+
 </project>

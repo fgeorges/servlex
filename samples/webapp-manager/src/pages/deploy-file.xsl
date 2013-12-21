@@ -2,15 +2,19 @@
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:pkg="http://expath.org/ns/pkg"
                 xmlns:web="http://expath.org/ns/webapp"
+                xmlns:desc="http://expath.org/ns/webapp/descriptor"
+                xmlns:zip="http://expath.org/ns/zip"
                 xmlns:app="http://servlex.net/ns/webapp-manager"
                 exclude-result-prefixes="#all"
                 version="2.0">
+
+   <xsl:import href="deploy-lib.xsl"/>
 
    <pkg:import-uri>http://servlex.net/app/manager/pages/deploy-file.xsl</pkg:import-uri>
 
    <xsl:param name="web:input" required="yes"/>
 
-   <xsl:template match="document-node()[empty(web:request)]">
+   <xsl:template match="document-node()">
       <xsl:message terminate="yes">
          <xsl:text>Unexpected document?!?: </xsl:text>
          <xsl:value-of select="name(*)"/>
@@ -18,7 +22,7 @@
       </xsl:message>
    </xsl:template>
 
-   <xsl:template match="document-node()[exists(web:request)]">
+   <xsl:template match="document-node(element(web:request))">
       <xsl:apply-templates/>
    </xsl:template>
 
@@ -85,30 +89,11 @@
             <xsl:otherwise>
                <xsl:apply-templates select="." mode="install">
                   <xsl:with-param name="repo" select="$repo"/>
-                  <xsl:with-param name="body" select="$content"/>
+                  <xsl:with-param name="xar"  select="$content"/>
                </xsl:apply-templates>
             </xsl:otherwise>
          </xsl:choose>
       </page>
-   </xsl:template>
-
-   <xsl:template match="web:request" mode="install">
-      <xsl:param name="repo" required="yes"/>
-      <xsl:param name="body" required="yes" as="xs:base64Binary"/>
-      <xsl:variable name="root" select="web:install-webapp($repo, $body)"/>
-      <para>
-         <xsl:choose>
-            <xsl:when test="exists($root)">
-               <link href="../{ $root }/">
-                  <xsl:value-of select="$root"/>
-               </link>
-            </xsl:when>
-            <xsl:otherwise>
-               <xsl:text>The package </xsl:text>
-            </xsl:otherwise>
-         </xsl:choose>
-         <xsl:text> has been successfully installed.</xsl:text>
-      </para>
    </xsl:template>
 
 </xsl:stylesheet>

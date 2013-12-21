@@ -2,15 +2,19 @@
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:pkg="http://expath.org/ns/pkg"
                 xmlns:web="http://expath.org/ns/webapp"
+                xmlns:hc="http://expath.org/ns/http-client"
                 xmlns:app="http://servlex.net/ns/webapp-manager"
                 exclude-result-prefixes="#all"
                 version="2.0">
+
+   <xsl:import href="http://expath.org/ns/http-client.xsl"/>
+   <xsl:import href="deploy-lib.xsl"/>
 
    <pkg:import-uri>http://servlex.net/app/manager/pages/deploy-cxan.xsl</pkg:import-uri>
 
    <xsl:param name="web:input" required="yes"/>
 
-   <xsl:template match="document-node()[empty(web:request)]">
+   <xsl:template match="document-node()">
       <xsl:message terminate="yes">
          <xsl:text>Unexpected document?!?: </xsl:text>
          <xsl:value-of select="name(*)"/>
@@ -18,11 +22,7 @@
       </xsl:message>
    </xsl:template>
 
-   <xsl:template match="document-node()[exists(web:request)]">
-<xsl:message>
-   REQUEST:
-   <xsl:copy-of select="."/>
-</xsl:message>
+   <xsl:template match="document-node(element(web:request))">
       <xsl:apply-templates/>
    </xsl:template>
 
@@ -66,7 +66,7 @@
                      concat('Both CXAN ID and package name provided: resp. ''', $id, ''' and ''', $name, '''.'))"/>
             </xsl:when>
             <xsl:otherwise>
-               <xsl:apply-templates select="." mode="install">
+               <xsl:apply-templates select="." mode="cxan">
                   <xsl:with-param name="repo"    select="$repo"/>
                   <xsl:with-param name="server"  select="$server"/>
                   <xsl:with-param name="id"      select="$id"/>
@@ -78,29 +78,75 @@
       </page>
    </xsl:template>
 
-   <xsl:template match="web:request" mode="install">
+   <xsl:template match="web:request" mode="cxan">
       <xsl:param name="repo"    required="yes"/>
       <xsl:param name="server"  required="yes" as="xs:string"/>
       <xsl:param name="id"      required="yes" as="xs:string?"/>
       <xsl:param name="name"    required="yes" as="xs:string?"/>
       <xsl:param name="version" required="yes" as="xs:string?"/>
-      <xsl:variable name="domain" select="
-          if ( $server eq 'prod' ) then 'cxan.org' else 'test.cxan.org'"/>
-      <xsl:variable name="root" select="
-          web:install-from-cxan($repo, $domain, $id, $name, $version)"/>
-      <para>
-         <xsl:choose>
-            <xsl:when test="exists($root)">
-               <link href="../{ $root }/">
-                  <xsl:value-of select="$root"/>
-               </link>
-            </xsl:when>
-            <xsl:otherwise>
-               <xsl:text>The package </xsl:text>
-            </xsl:otherwise>
-         </xsl:choose>
-         <xsl:text> has been successfully installed.</xsl:text>
-      </para>
+      <xsl:variable name="url" as="xs:string">
+         <xsl:value-of>
+            <xsl:text>http://</xsl:text>
+            <xsl:if test="$server eq 'sandbox'">
+               <xsl:text>test.</xsl:text>
+            </xsl:if>
+            <xsl:text>cxan.org/file?</xsl:text>
+            <xsl:choose>
+               <xsl:when test="exists($id)">
+                  <xsl:text>id=</xsl:text>
+                  <xsl:value-of select="encode-for-uri($id)"/>
+               </xsl:when>
+               <xsl:otherwise>
+                  <xsl:text>name=</xsl:text>
+                  <xsl:value-of select="encode-for-uri($name)"/>
+               </xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="exists($version)">
+               <xsl:text>&amp;version=</xsl:text>
+               <xsl:value-of select="encode-for-uri($version)"/>
+            </xsl:if>
+         </xsl:value-of>
+      </xsl:variable>
+      <xsl:variable name="cxan-req" as="element()">
+         <hc:request href="{ $url }" method="get"/>
+      </xsl:variable>
+      <xsl:variable name="cxan-resp" select="hc:send-request($cxan-req)"/>
+      <xsl:choose>
+         <xsl:when test="not($cxan-resp[1]/@status/xs:integer(.) eq 200)">
+            <xsl:sequence select="
+                error(
+                  xs:QName('app:http-error'),
+                  concat(
+                     'HTTP return code is not 200 for ', $url, ': ',
+                     $cxan-resp[1]/@status, ' ', $cxan-resp[1]/@message))"/>
+         </xsl:when>
+         <xsl:when test="empty($cxan-resp[2])">
+            <xsl:sequence select="
+                error(
+                  xs:QName('app:http-error'),
+                  concat('CXAN response does not contain body for ', $url))"/>
+         </xsl:when>
+         <xsl:when test="exists($cxan-resp[3])">
+            <xsl:sequence select="
+                error(
+                  xs:QName('app:http-error'),
+                  concat('CXAN response contains more than one body for ', $url))"/>
+         </xsl:when>
+         <xsl:when test="not($cxan-resp[2] instance of xs:base64Binary)">
+            <xsl:sequence select="
+                error(
+                  xs:QName('app:http-error'),
+                  concat(
+                     'CXAN response content is not binary for: ', $url, ', type is: ',
+                     $cxan-resp[1]/hc:header[@name eq 'content-type']/@value))"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:apply-templates select="." mode="install">
+               <xsl:with-param name="repo" select="$repo"/>
+               <xsl:with-param name="xar"  select="$cxan-resp[2]"/>
+            </xsl:apply-templates>
+         </xsl:otherwise>
+      </xsl:choose>
    </xsl:template>
 
 </xsl:stylesheet>

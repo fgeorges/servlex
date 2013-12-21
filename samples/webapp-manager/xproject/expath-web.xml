@@ -33,6 +33,14 @@
       <url pattern="/webapps"/>
    </servlet>
 
+   <!--
+      - /deploy gives forms to /deploy-file (to upload a XAR/XAW file) and to
+        /deploy-cxan (to download a XAR/XAW from CXAN).
+      - /deploy-file and /deploy-cxan save the package into the session and
+        present the user with a confirmation page (with the root context and
+        other config option forms)
+      - /deploy-at actually implements the deployment
+   -->
    <servlet name="deploy" filters="view">
       <xslt uri="http://servlex.net/app/manager/pages/deploy.xsl"/>
       <url pattern="/deploy"/>
@@ -46,6 +54,11 @@
    <servlet name="deploy-cxan" filters="view">
       <xslt uri="http://servlex.net/app/manager/pages/deploy-cxan.xsl"/>
       <url pattern="/deploy-cxan"/>
+   </servlet>
+
+   <servlet name="deploy-at" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-at.xsl"/>
+      <url pattern="/deploy-at"/>
    </servlet>
 
 <!--
