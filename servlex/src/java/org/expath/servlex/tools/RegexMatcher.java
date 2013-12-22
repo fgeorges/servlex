@@ -1,46 +1,88 @@
 /****************************************************************************/
-/*  File:       ParsingResource.java                                        */
+/*  File:       RegexMatcher.java                                           */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-09-13                                                  */
+/*  Date:       2013-12-21                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.parser;
+package org.expath.servlex.tools;
 
-import java.util.regex.Pattern;
-import org.expath.servlex.model.AddressHandler;
-import org.expath.servlex.model.Resource;
-import org.expath.servlex.tools.RegexPattern;
+import java.util.regex.Matcher;
 
 /**
- * Represent an address handler while parsing.
+ * Encapsulate matching of XPath regex subparts.
  *
  * @author Florent Georges
- * @date   2013-09-13
  */
-class ParsingResource
-        extends ParsingHandler
+public class RegexMatcher
 {
-    public void setRewrite(String rewrite)
+    public RegexMatcher(Matcher matcher, String value)
     {
-        myRewrite = rewrite;
+        myValue = value;
+        myLen = value.length();
+        myMatcher = matcher;
+        myCount = matcher.groupCount();
     }
 
-    public void setMediaType(String type)
+    public boolean matches()
     {
-        myMediaType = type;
+        return myMatcher.matches();
     }
 
-    @Override
-    protected AddressHandler makeIt(ParsingContext ctxt, RegexPattern regex)
+    public String next()
     {
-        return new Resource(regex, myRewrite, myMediaType);
+        if ( myGroup > myCount ) {
+            if ( myLastIndex < myLen ) {
+                String res = myValue.substring(myLastIndex);
+                myLastIndex = myLen;
+                return res;
+            }
+            else {
+                return null;
+            }
+        }
+        int s = myMatcher.start(myGroup);
+        if ( myPreGroup && myLastIndex < myMatcher.start(myGroup) ) {
+            myPreGroup = false;
+            String res = myValue.substring(myLastIndex, s);
+            myLastIndex = s;
+            return res;
+        }
+        if ( myMatcher.group(myGroup) == null ) {
+            myPreGroup = true;
+            ++myGroup;
+            return next();
+        }
+        else {
+            myPreGroup = true;
+            ++myGroup;
+            myLastIndex = myMatcher.end(myGroup);
+            return myMatcher.group(myGroup);
+        }
     }
 
-    private String myRewrite;
-    private String myMediaType;
+    public boolean isGroup()
+    {
+        return ! myPreGroup;
+    }
+
+    public int groupNumber()
+    {
+        if ( ! isGroup() ) {
+            throw new IllegalStateException("Cannot ask the number group when not on a group");
+        }
+        return myGroup - 1;
+    }
+
+    private final String myValue;
+    private final Matcher myMatcher;
+    private final int myCount;
+    private final int myLen;
+    private int myLastIndex = 0;
+    private int myGroup = 1;
+    private boolean myPreGroup = true;
 }
 
 

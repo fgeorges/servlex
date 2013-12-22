@@ -10,13 +10,13 @@
 package org.expath.servlex.model;
 
 import org.expath.servlex.components.Component;
-import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ServletInvocation;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexPattern;
 
 
 /**
@@ -28,9 +28,9 @@ import org.expath.servlex.tools.Auditor;
 public class Servlet
         extends AddressHandler
 {
-    public Servlet(String name, Component implem, Pattern url_pattern, String[] groups)
+    public Servlet(String name, Component implem, RegexPattern regex, String[] groups)
     {
-        super(url_pattern);
+        super(regex);
         myName = name;
         myImpl = implem;
         myGroups = groups;

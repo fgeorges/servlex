@@ -1,7 +1,7 @@
 /****************************************************************************/
-/*  File:       RegexHelper.java                                            */
+/*  File:       RegexPattern.java                                           */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-05-06                                                  */
+/*  Date:       2013-12-21                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
@@ -11,34 +11,72 @@ package org.expath.servlex.tools;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.sf.saxon.functions.regex.JDK15RegexTranslator;
-import net.sf.saxon.functions.regex.JRegularExpression;
-import net.sf.saxon.functions.regex.RegexSyntaxException;
-import net.sf.saxon.functions.regex.RegularExpression;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.regex.JDK15RegexTranslator;
+import org.expath.servlex.tools.regex.JRegularExpression;
+import org.expath.servlex.tools.regex.RegexSyntaxException;
+import org.expath.servlex.tools.regex.RegularExpression;
 
 /**
- * Helper for XPath regexes (implementation depends on Saxon).
+ * Encapsulate XPath regex matching and replacing.
  *
  * @author Florent Georges
- * @date   2013-05-06
  */
-public class RegexHelper
+public class RegexPattern
 {
+    public RegexPattern(String regex, Logger logger)
+            throws TechnicalException
+    {
+        myLexical = regex;
+        String jre = toJavaRegex(regex, logger);
+        myRegex = Pattern.compile(jre);
+    }
+
+    public RegexMatcher matcher(String value)
+    {
+        Matcher m = myRegex.matcher(value);
+        return new RegexMatcher(m, value);
+    }
+
+    public String replace(String value, String rewrite)
+            throws TechnicalException
+    {
+        if ( rewrite == null ) {
+            return value;
+        }
+        else {
+            try {
+                JRegularExpression re = new JRegularExpression(myRegex);
+                return re.replace(value, rewrite).toString();
+            }
+            catch ( XPathException ex ) {
+                throw new TechnicalException("Error replacing matches in pattern", ex);
+            }
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "#<regex-pattern " + myLexical + ">";
+    }
+
     /**
      * Translate an XPath regex to a native Java SE 1.5 regex.
      */
-    public static String xpathToJava(String regex, Logger logger)
+    private String toJavaRegex(String regex, Logger logger)
             throws TechnicalException
     {
         try {
-            int options = RegularExpression.XML11 | RegularExpression.XPATH20;
-            List<RegexSyntaxException> warnings = new ArrayList<RegexSyntaxException>();
+            int options = RegularExpression.XPATH30;
+            List<RegexSyntaxException> warnings = new ArrayList<>();
             String res = JDK15RegexTranslator.translate(regex, options, 0, warnings);
             for ( RegexSyntaxException w : warnings ) {
-                logger.warn("expath-web.xml parser: Warning in regex: '" + w + "'");
+                logger.info("XPath to Java regex compiler: Warning in regex: '" + w + "'");
             }
             return res;
         }
@@ -47,28 +85,8 @@ public class RegexHelper
         }
     }
 
-    /**
-     * Replace the matches in {@code value}, given the {@code regex} and the {@code rewrite} string.
-     * 
-     * If {@code rewrite} is null, the value is returned as is.  The {@code regex}
-     * is a Java regex.
-     */
-    public static String replaceMatches(String value, String regex, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                JRegularExpression re = new JRegularExpression(regex, 0);
-                return re.replace(value, rewrite).toString();
-            }
-            catch ( XPathException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
-    }
+    private final Pattern myRegex;
+    private final String  myLexical;
 }
 
 

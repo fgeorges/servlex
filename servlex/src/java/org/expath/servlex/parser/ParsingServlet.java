@@ -16,6 +16,7 @@ import org.expath.servlex.components.Component;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Represent a servlet while parsing.
@@ -42,7 +43,7 @@ class ParsingServlet
     }
 
     @Override
-    protected AddressHandler makeIt(ParsingContext ctxt, Pattern regex, String java_regex)
+    protected AddressHandler makeIt(ParsingContext ctxt, RegexPattern regex)
     {
         String[] groups = myMatchGroups.toArray(new String[]{ });
         return new Servlet(myName, myImplem, regex, groups);
@@ -50,7 +51,7 @@ class ParsingServlet
 
     private String       myName        = null;
     private Component    myImplem      = null;
-    private List<String> myMatchGroups = new ArrayList<String>();
+    private List<String> myMatchGroups = new ArrayList<>();
 }
 
 

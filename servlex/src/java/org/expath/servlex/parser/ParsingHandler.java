@@ -9,12 +9,11 @@
 
 package org.expath.servlex.parser;
 
-import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Wrapper;
-import org.expath.servlex.tools.RegexHelper;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Represent an address handler while parsing.
@@ -33,21 +32,20 @@ abstract class ParsingHandler
     public AddressHandler makeAddressHandler(ParsingContext ctxt, Logger log)
             throws ParseException
     {
-        String java_regex;
+        RegexPattern regex;
         try {
-            java_regex = RegexHelper.xpathToJava(myPattern, log);
+            regex = new RegexPattern(myPattern, log);
         }
         catch ( TechnicalException ex ) {
             throw new ParseException("The pattern is not a valid XPath regex", ex);
         }
-        Pattern regex = Pattern.compile(java_regex);
-        AddressHandler handler = makeIt(ctxt, regex, java_regex);
+        AddressHandler handler = makeIt(ctxt, regex);
         Wrapper wrapper = makeWrapper(ctxt);
         handler.setWrapper(wrapper);
         return handler;
     }
 
-    protected abstract AddressHandler makeIt(ParsingContext ctxt, Pattern regex, String java_regex);
+    protected abstract AddressHandler makeIt(ParsingContext ctxt, RegexPattern regex);
 
     private String myPattern = null;
 }

@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Matcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +35,7 @@ import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.BodyParser;
 import org.expath.servlex.tools.ContentType;
+import org.expath.servlex.tools.RegexMatcher;
 import org.expath.servlex.tools.TraceInputStream;
 
 /**
@@ -70,7 +70,7 @@ public class RequestConnector
         return myAuditor;
     }
 
-    public void setMatcher(Matcher matcher)
+    public void setMatcher(RegexMatcher matcher)
     {
         myMatcher = matcher;
     }
@@ -100,7 +100,7 @@ public class RequestConnector
                 // parse the request (to web:request + sequence of bodies)
                 // (parseRequest() puts everything in the list, and returns the
                 // web:request document node)
-                List<Item> input = new ArrayList<Item>();
+                List<Item> input = new ArrayList<>();
                 boolean trace_content = config.isTraceContentEnabled();
                 myWebRequest = parseRequest(builder, input, trace_content);
                 myInput = myProcs.buildSequence(input);
@@ -125,6 +125,7 @@ public class RequestConnector
         }
     }
 
+    @Override
     public void connectToQuery(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
@@ -327,25 +328,22 @@ public class RequestConnector
             b.textElem("part", myPath);
         }
         else {
-            int last_index = 0;
             String[] groups = myServlet.getGroupNames();
-            for ( int i = 1; i <= myMatcher.groupCount(); ++i ) {
-                if ( last_index < myMatcher.start(i) ) {
-                    b.textElem("part", myPath.substring(last_index, myMatcher.start(i)));
-                }
-                if ( myMatcher.group(i) != null ) {
+            String part;
+            while ( (part = myMatcher.next()) != null ) {
+                if ( myMatcher.isGroup() ) {
                     b.startElem("match");
-                    if ( i <= groups.length && groups[i-1] != null ) {
-                        b.attribute("name", groups[i-1]);
+                    int n = myMatcher.groupNumber();
+                    if ( n <= groups.length && groups[n-1] != null ) {
+                        b.attribute("name", groups[n-1]);
                     }
                     b.startContent();
-                    b.characters(myMatcher.group(i));
+                    b.characters(part);
                     b.endElem();
-                    last_index = myMatcher.end(i);
                 }
-            }
-            if ( last_index < myPath.length() ) {
-                b.textElem("part", myPath.substring(last_index));
+                else {
+                    b.textElem("part", part);
+                }
             }
         }
         b.endElem();
@@ -591,7 +589,7 @@ public class RequestConnector
     /** The servlet to serve this request. */
     private Servlet myServlet = null;
     /** The regex matcher to get the groups out of the URI. */
-    private Matcher myMatcher = null;
+    private RegexMatcher myMatcher = null;
     /** The all input sequence, that is, the request element followed by bodies. */
     private Sequence myInput = null;
     /** The web:request document node, null at beginning, placed here when parsed. */

@@ -25,7 +25,7 @@ import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.RegexHelper;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Represent a specific invocation of an application's resource, at a specific URI.
@@ -36,11 +36,11 @@ import org.expath.servlex.tools.RegexHelper;
 public class ResourceInvocation
         extends Invocation
 {
-    public ResourceInvocation(Resource rsrc, String path, RequestConnector request, String java_regex, String rewrite)
+    public ResourceInvocation(Resource rsrc, String path, RequestConnector request, RegexPattern regex, String rewrite)
     {
         super(path, request);
         myRsrc = rsrc;
-        myJavaRegex = java_regex;
+        myRegex = regex;
         myRewrite = rewrite;
     }
 
@@ -48,7 +48,7 @@ public class ResourceInvocation
     public void cleanup(Auditor auditor)
             throws ServlexException
     {
-        auditor.cleanup("resource invocation: " + myJavaRegex);
+        auditor.cleanup("resource invocation: " + myRegex);
         myRsrc.cleanup(auditor);
     }
 
@@ -59,7 +59,7 @@ public class ResourceInvocation
         auditor.invoke("resource");
         String orig_path = getPath();
         try {
-            String path = RegexHelper.replaceMatches(orig_path, myJavaRegex, myRewrite);
+            String path = myRegex.replace(orig_path, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
             Source src = pkg.getResolver().resolveComponent(path);
             // return a 404 if the resource does not exist
@@ -94,9 +94,9 @@ public class ResourceInvocation
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ResourceInvocation.class);
 
-    private Resource myRsrc;
-    private String   myJavaRegex;
-    private String   myRewrite;
+    private final Resource     myRsrc;
+    private final RegexPattern myRegex;
+    private final String       myRewrite;
 }
 
 
