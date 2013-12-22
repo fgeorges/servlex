@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -25,12 +24,11 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.ListIterator;
 import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.EmptySequence;
-import net.sf.saxon.value.ShareableSequence;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.Value;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
@@ -154,9 +152,9 @@ public class SaxonHelper
             throws TechnicalException
     {
         XdmValue value = toXdmValue(sequence);
-        ValueRepresentation rep = value.getUnderlyingValue();
+        net.sf.saxon.om.Sequence seq = value.getUnderlyingValue();
         try {
-            return Value.asIterator(rep);
+            return seq.iterate();
         }
         catch ( XPathException ex ) {
             throw new TechnicalException("Error getting an iterator out of an XDM value", ex);
@@ -188,7 +186,7 @@ public class SaxonHelper
             StringValue v = new StringValue(s);
             items.add(v);
         }
-        return new ShareableSequence(items).iterate();
+        return new ListIterator(items);
     }
 
     /**
@@ -279,9 +277,9 @@ public class SaxonHelper
     private static class MyValue
             extends XdmValue
     {
-        public static XdmValue wrap(ValueRepresentation v)
+        public static XdmValue wrap(net.sf.saxon.om.Sequence s)
         {
-            return XdmValue.wrap(v);
+            return XdmValue.wrap(s);
         }
     }
 }
