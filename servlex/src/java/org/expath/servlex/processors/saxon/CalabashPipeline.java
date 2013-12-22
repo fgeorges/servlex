@@ -154,7 +154,7 @@ public class CalabashPipeline
         XProcConfiguration xconf = new XProcConfiguration(saxon);
         XProcRuntime runtime = new XProcRuntime(xconf);
         SaxonRepository repo = myCalabash.getRepository();
-        PkgConfigurer configurer = new PkgConfigurer(repo.getUnderlyingRepo());
+        PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
         runtime.setConfigurer(configurer);
         // runtime.setMessageListener(new MsgListener());
         File profiling = myConfig.getProfileFile("xproc-profile");
