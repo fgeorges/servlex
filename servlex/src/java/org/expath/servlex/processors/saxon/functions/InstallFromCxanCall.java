@@ -13,14 +13,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * Implements web:install-from-cxan().
@@ -73,7 +72,7 @@ public class InstallFromCxanCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -94,12 +93,7 @@ public class InstallFromCxanCall
                 .value());
         // do it
         String value = doit(repo, domain, id, name, version, root);
-        try {
-            return SaxonHelper.toSequenceIterator(value);
-        }
-        catch ( TechnicalException ex ) {
-            throw FunErrors.unexpected("Internal error with the data model", ex);
-        }
+        return FunReturn.value(value);
     }
 
     private String doit(WebRepository repo, String domain, String id, String name, String version, String root)

@@ -18,14 +18,12 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.tree.iter.SingletonIterator;
 import org.apache.log4j.Logger;
 
 /**
@@ -46,7 +44,7 @@ public class TMP_ZipEntryAsXmlCall
     }
 
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -58,10 +56,7 @@ public class TMP_ZipEntryAsXmlCall
         LOG.debug(fmt.param(zip).param(entry).value());
         // do it
         XdmNode doc = doit(zip, entry);
-        if ( doc == null ) {
-            return EmptyIterator.getInstance();
-        }
-        return SingletonIterator.makeIterator(doc.getUnderlyingNode());
+        return FunReturn.value(doc);
     }
 
     private XdmNode doit(byte[] zip, String entry_name)

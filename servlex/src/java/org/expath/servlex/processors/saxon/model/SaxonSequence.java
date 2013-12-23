@@ -68,6 +68,22 @@ public class SaxonSequence
         init(seq.iterator());
     }
 
+    public SaxonSequence(net.sf.saxon.om.Sequence seq)
+            throws TechnicalException
+    {
+        if ( seq == null ) {
+            throw new NullPointerException("Sequence is null for Saxon sequence");
+        }
+        SequenceIterator it;
+        try {
+            it = seq.iterate();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error getting an iterator out of the sequence", ex);
+        }
+        init(it);
+    }
+
     public SaxonSequence(SequenceIterator iter)
             throws TechnicalException
     {

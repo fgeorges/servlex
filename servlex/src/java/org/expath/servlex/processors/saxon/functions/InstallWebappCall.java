@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -24,7 +24,6 @@ import org.expath.pkg.repo.Repository;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * Implements web:install-webapp().
@@ -62,7 +61,7 @@ public class InstallWebappCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -77,12 +76,7 @@ public class InstallWebappCall
         LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME).param(repo).param(pkg).param(root).value());
         // do it
         String value = doit(repo, pkg, root);
-        try {
-            return SaxonHelper.toSequenceIterator(value);
-        }
-        catch ( TechnicalException ex ) {
-            throw FunErrors.unexpected("Internal error with the data model", ex);
-        }
+        return FunReturn.value(value);
     }
 
     private String doit(WebRepository repo, byte[] pkg, String root)

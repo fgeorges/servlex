@@ -11,10 +11,8 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.SingletonIterator;
-import net.sf.saxon.value.ObjectValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.WebRepository;
@@ -40,7 +38,7 @@ public class RepositoryCall
     }
 
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -48,16 +46,15 @@ public class RepositoryCall
         // log it
         LOG.debug(params.format(RepositoryFunction.LOCAL_NAME).value());
         // do it
-        WebRepository  repo   = myConfig.getRepository();
-        ObjectValue    object = new ObjectValue(repo);
-        return SingletonIterator.makeIterator(object);
+        WebRepository repo = myConfig.getRepository();
+        return FunReturn.value(repo);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(RepositoryCall.class);
 
     /** The repository. */
-    private ServerConfig myConfig;
+    private final ServerConfig myConfig;
 }
 
 

@@ -11,14 +11,12 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.SequenceProperties;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -30,7 +28,7 @@ public class GetWebappFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -41,8 +39,8 @@ public class GetWebappFieldCall
         // getting the sequence in the webapp
         try {
             SequenceProperties props = Servlex.getWebappMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            org.expath.servlex.processors.Sequence seq = props.get(name);
+            return FunReturn.value(seq);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex webapp management", ex);

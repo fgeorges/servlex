@@ -11,13 +11,11 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.tree.iter.EmptyIterator;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.tools.Properties;
 
@@ -30,25 +28,25 @@ public class SetSessionFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
         FunParams params = new FunParams(orig_params, 2, 2);
         String name = params.asString(0, false);
-        SequenceIterator value = orig_params[1];
+        Sequence value = orig_params[1];
         // log it
         LOG.debug(params.format(SetSessionFieldFunction.LOCAL_NAME).param(name).param(value).value());
         // setting the sequence in the session
         try {
             Properties props = Servlex.getSessionMap();
-            Sequence seq = new SaxonSequence(value);
+            org.expath.servlex.processors.Sequence seq = new SaxonSequence(value);
             props.set(name, seq);
             if ( LOG.isTraceEnabled() ) {
                 LOG.trace("Use session map: " + props);
                 LOG.trace("Set key: " + name + ", to: " + seq + " (" + value + ")");
             }
-            return EmptyIterator.getInstance();
+            return FunReturn.empty();
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex session management", ex);

@@ -18,14 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Axis;
+import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.AxisIterator;
-import net.sf.saxon.tree.iter.SingletonIterator;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
@@ -62,7 +61,7 @@ public class ExecuteCall
     }
 
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         if ( true ) {
@@ -96,7 +95,7 @@ public class ExecuteCall
     private void parseExecProgram(NodeInfo program)
             throws XPathException
     {
-        AxisIterator<NodeInfo> it = program.iterateAxis(Axis.CHILD, NodeKindTest.ELEMENT);
+        AxisIterator<NodeInfo> it = program.iterateAxis(AxisInfo.CHILD, NodeKindTest.ELEMENT);
         NodeInfo child;
         while ( (child = it.next()) != null ) {
             String ns   = child.getURI();
@@ -131,7 +130,7 @@ public class ExecuteCall
         }
     }
 
-    private SequenceIterator buildResult(String code, String stdout, String stderr)
+    private Sequence buildResult(String code, String stdout, String stderr)
             throws XPathException
     {
         try {
@@ -146,8 +145,7 @@ public class ExecuteCall
             // return the basic-auth element, inside the document node
             Document doc = b.getRoot();
             XdmNode root = SaxonHelper.getDocumentRootElement(doc);
-            NodeInfo node = root.getUnderlyingNode();
-            return SingletonIterator.makeIterator(node);
+            return root.getUnderlyingNode();
         }
         catch ( TechnicalException ex ) {
             String msg = "Technical exception occured in Saxon extension function";

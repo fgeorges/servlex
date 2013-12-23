@@ -11,14 +11,12 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.tools.SequenceProperties;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -30,7 +28,7 @@ public class GetSessionFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -41,12 +39,12 @@ public class GetSessionFieldCall
         // getting the sequence in the session
         try {
             SequenceProperties props = Servlex.getSessionMap();
-            Sequence seq = props.get(name);
+            org.expath.servlex.processors.Sequence seq = props.get(name);
             if ( LOG.isTraceEnabled() ) {
                 LOG.trace("Use session map: " + props);
                 LOG.trace("Get key: " + name + ", is: " + seq);
             }
-            return SaxonHelper.toSequenceIterator(seq);
+            return FunReturn.value(seq);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex session management", ex);

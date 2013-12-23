@@ -11,6 +11,7 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
@@ -34,7 +35,7 @@ public class InstallEnabledCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -43,13 +44,8 @@ public class InstallEnabledCall
         // log it
         LOG.debug(params.format(InstallEnabledFunction.LOCAL_NAME).param(repo).value());
         // do it
-        try {
-            boolean value = repo.canInstall();
-            return SaxonHelper.toSequenceIterator(value);
-        }
-        catch ( TechnicalException ex ) {
-            throw new XPathException("Error retrieving whether repository has install enabled", ex);
-        }
+        boolean value = repo.canInstall();
+        return FunReturn.value(value);
     }
 
     /** The logger. */

@@ -11,13 +11,11 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 import org.expath.servlex.tools.SequenceProperties;
 
 /**
@@ -30,7 +28,7 @@ public class GetRequestFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -41,8 +39,7 @@ public class GetRequestFieldCall
         // getting the sequence in the request properties
         try {
             SequenceProperties props = Servlex.getRequestMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            return FunReturn.value(props.get(name));
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex request management", ex);

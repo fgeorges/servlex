@@ -12,12 +12,10 @@ package org.expath.servlex.processors.saxon.functions;
 import java.util.Set;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
-import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * Implements web:installed-webapps().
@@ -37,7 +35,7 @@ public class InstalledWebappsCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -46,13 +44,8 @@ public class InstalledWebappsCall
         // log it
         LOG.debug(params.format(InstalledWebappsFunction.LOCAL_NAME).param(repo).value());
         // do it
-        try {
-            Set<String> value = repo.getContextRoots();
-            return SaxonHelper.toSequenceIterator(value);
-        }
-        catch ( TechnicalException ex ) {
-            throw new XPathException("Error getting the list of webapps", ex);
-        }
+        Set<String> value = repo.getContextRoots();
+        return FunReturn.value(value);
     }
 
     /** The logger. */

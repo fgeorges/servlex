@@ -11,6 +11,7 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.Type;
@@ -34,7 +35,7 @@ class FunParams
      * @param params The parameter list.
      * @param num The number of parameters.
      */
-    public FunParams(SequenceIterator[] params, int num)
+    public FunParams(Sequence[] params, int num)
             throws XPathException
     {
         this(params, num, num);
@@ -47,7 +48,7 @@ class FunParams
      * @param min The minimal number of parameters.
      * @param max The maximum number of parameters.
      */
-    public FunParams(SequenceIterator[] params, int min, int max)
+    public FunParams(Sequence[] params, int min, int max)
             throws XPathException
     {
         if ( params.length < min || params.length > max ) {
@@ -220,15 +221,16 @@ class FunParams
         if ( pos < 0 || pos >= number() ) {
             throw new XPathException("Asked for the " + ordinal(pos) + " param of " + number());
         }
-        SequenceIterator param = myParams[pos];
-        Item item = param.next();
+        Sequence param = myParams[pos];
+        SequenceIterator it = param.iterate();
+        Item item = it.next();
         if ( item == null ) {
             if ( optional ) {
                 return null;
             }
             throw new XPathException("The " + ordinal(pos) + " param is an empty sequence");
         }
-        if ( param.next() != null ) {
+        if ( it.next() != null ) {
             throw new XPathException("The " + ordinal(pos) + " param sequence has more than one item");
         }
         return item;
@@ -336,7 +338,7 @@ class FunParams
             return this;
         }
 
-        public Formatter param(SequenceIterator value)
+        public Formatter param(Sequence value)
             throws XPathException
         {
             if ( checkPos() ) {
@@ -381,7 +383,7 @@ class FunParams
         private int myI;
     }
 
-    private SequenceIterator[] myParams;
+    private Sequence[] myParams;
     private int myMax;
 }
 
