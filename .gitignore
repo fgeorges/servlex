@@ -1,5 +1,6 @@
 .~
-/test/apache-tomcat-7.0.35/
+/test/apache-tomcat-7.0.*
+/test/apache-tomcat-8.0.*
 /test/cases/filters.html
 /test/cases/mapping.html
 /test/cases/simple.html
