@@ -95,7 +95,7 @@ public class WebappsParser
             throws ParseException
     {
         // the result map
-        Map<URI, String> result = new HashMap<URI, String>();
+        Map<URI, String> result = new HashMap<>();
 
         // the "webapp" elements
         for ( ; /* ever */; ) {
@@ -120,7 +120,7 @@ public class WebappsParser
     private void handleWebapp(StreamParser parser, Map<URI, String> map)
             throws ParseException
     {
-        // <webapp root="myapp">
+        // <webapp root="myapp" enabled="false">
         //    <package name="http://example.org/my/webapp"/>
         // </webapp>
         parser.ensureStartTag("webapp");
@@ -136,9 +136,23 @@ public class WebappsParser
 
         // @enabled
         String enabled = parser.getAttribute("enabled");
-        // TODO: Parse the boolean value properly...
-        if ( enabled != null && ! ("true".equals(enabled) || "1".equals(enabled)) ) {
-            parser.parseError("/webapps/webapp/@enabled is not 1 or true, disabled is not supported: " + ctxt_root);
+        if ( enabled != null ) {
+            switch ( enabled.trim() ) {
+                case "true":
+                case "1":
+                    // webapp enabled, nothing to do;
+                    break;
+                case "false":
+                case "0":
+                    // webapp disabled, not supported yet
+                    parser.parseError("/webapps/webapp/@enabled is " + enabled +
+                            " for " + ctxt_root + ", disabling not supported yet");
+                    break;
+                default:
+                    // invalid value
+                    parser.parseError("Invalid value for /webapps/webapp/@enabled for "
+                            + ctxt_root + ": " + enabled);
+            }
         }
 
         // package/@name
@@ -167,7 +181,7 @@ public class WebappsParser
     private static final String  ROOT_RE         = "^[-a-zA-Z0-9]+$";
     private static final Pattern ROOT_PATTERN    = Pattern.compile(ROOT_RE);
 
-    private Source mySource;
+    private final Source mySource;
 }
 
 
