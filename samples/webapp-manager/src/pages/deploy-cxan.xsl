@@ -84,69 +84,94 @@
       <xsl:param name="id"      required="yes" as="xs:string?"/>
       <xsl:param name="name"    required="yes" as="xs:string?"/>
       <xsl:param name="version" required="yes" as="xs:string?"/>
-      <xsl:variable name="url" as="xs:string">
-         <xsl:value-of>
-            <xsl:text>http://</xsl:text>
-            <xsl:if test="$server eq 'sandbox'">
-               <xsl:text>test.</xsl:text>
-            </xsl:if>
-            <xsl:text>cxan.org/file?</xsl:text>
-            <xsl:choose>
-               <xsl:when test="exists($id)">
-                  <xsl:text>id=</xsl:text>
-                  <xsl:value-of select="encode-for-uri($id)"/>
-               </xsl:when>
-               <xsl:otherwise>
-                  <xsl:text>name=</xsl:text>
-                  <xsl:value-of select="encode-for-uri($name)"/>
-               </xsl:otherwise>
-            </xsl:choose>
-            <xsl:if test="exists($version)">
-               <xsl:text>&amp;version=</xsl:text>
-               <xsl:value-of select="encode-for-uri($version)"/>
-            </xsl:if>
-         </xsl:value-of>
-      </xsl:variable>
-      <xsl:variable name="cxan-req" as="element()">
-         <hc:request href="{ $url }" method="get"/>
-      </xsl:variable>
-      <xsl:variable name="cxan-resp" select="hc:send-request($cxan-req)"/>
+      <xsl:variable name="url"      select="app:cxan-url($server, $id, $name, $version)"/>
+      <xsl:variable name="response" select="app:ask-cxan($url)"/>
+      <xsl:variable name="status"   select="$response[1]/@status/xs:integer(.)"/>
       <xsl:choose>
-         <xsl:when test="not($cxan-resp[1]/@status/xs:integer(.) eq 200)">
-            <xsl:sequence select="
-                error(
-                  xs:QName('app:http-error'),
-                  concat(
-                     'HTTP return code is not 200 for ', $url, ': ',
-                     $cxan-resp[1]/@status, ' ', $cxan-resp[1]/@message))"/>
+         <xsl:when test="$status eq 404">
+            <para>Package does not exist.</para>
+            <para>
+               <xsl:text>ID: </xsl:text>
+               <xsl:value-of select="$id"/>
+               <br/>
+               <xsl:text>Name: </xsl:text>
+               <xsl:value-of select="$name"/>
+               <br/>
+               <xsl:text>Version: </xsl:text>
+               <xsl:value-of select="$version"/>
+               <br/>
+               <xsl:text>Server: </xsl:text>
+               <xsl:value-of select="$server"/>
+            </para>
          </xsl:when>
-         <xsl:when test="empty($cxan-resp[2])">
+         <xsl:when test="empty($response[2])">
             <xsl:sequence select="
                 error(
                   xs:QName('app:http-error'),
                   concat('CXAN response does not contain body for ', $url))"/>
          </xsl:when>
-         <xsl:when test="exists($cxan-resp[3])">
+         <xsl:when test="exists($response[3])">
             <xsl:sequence select="
                 error(
                   xs:QName('app:http-error'),
                   concat('CXAN response contains more than one body for ', $url))"/>
          </xsl:when>
-         <xsl:when test="not($cxan-resp[2] instance of xs:base64Binary)">
+         <xsl:when test="not($response[2] instance of xs:base64Binary)">
             <xsl:sequence select="
                 error(
                   xs:QName('app:http-error'),
                   concat(
                      'CXAN response content is not binary for: ', $url, ', type is: ',
-                     $cxan-resp[1]/hc:header[@name eq 'content-type']/@value))"/>
+                     $response[1]/hc:header[@name eq 'content-type']/@value))"/>
          </xsl:when>
          <xsl:otherwise>
             <xsl:apply-templates select="." mode="install">
                <xsl:with-param name="repo" select="$repo"/>
-               <xsl:with-param name="xar"  select="$cxan-resp[2]"/>
+               <xsl:with-param name="xar"  select="$response[2]"/>
             </xsl:apply-templates>
          </xsl:otherwise>
       </xsl:choose>
    </xsl:template>
+
+   <xsl:function name="app:cxan-url" as="xs:string">
+      <xsl:param name="server"  as="xs:string"/>
+      <xsl:sequence select="if ( $server eq 'sandbox' ) 'test.cxan.org' else 'cxan.org' ..."/>
+   </xsl:function>
+
+   <xsl:function name="app:cxan-url" as="xs:string">
+      <xsl:param name="server"  as="xs:string"/>
+      <xsl:param name="id"      as="xs:string?"/>
+      <xsl:param name="name"    as="xs:string?"/>
+      <xsl:param name="version" as="xs:string?"/>
+      <xsl:value-of>
+         <xsl:text>http://</xsl:text>
+         <xsl:if test="$server eq 'sandbox'">
+            <xsl:text>test.</xsl:text>
+         </xsl:if>
+         <xsl:text>cxan.org/file?</xsl:text>
+         <xsl:choose>
+            <xsl:when test="exists($id)">
+               <xsl:text>id=</xsl:text>
+               <xsl:value-of select="encode-for-uri($id)"/>
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:text>name=</xsl:text>
+               <xsl:value-of select="encode-for-uri($name)"/>
+            </xsl:otherwise>
+         </xsl:choose>
+         <xsl:if test="exists($version)">
+            <xsl:text>&amp;version=</xsl:text>
+            <xsl:value-of select="encode-for-uri($version)"/>
+         </xsl:if>
+      </xsl:value-of>
+   </xsl:function>
+
+   <xsl:function name="app:ask-cxan">
+      <xsl:param name="url" as="xs:string"/>
+      <xsl:variable name="request" as="element()">
+         <hc:request href="{ $url }" method="get"/>
+      </xsl:variable>
+      <xsl:sequence select="hc:send-request($request)"/>
+   </xsl:function>
 
 </xsl:stylesheet>
