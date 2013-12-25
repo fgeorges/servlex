@@ -159,6 +159,17 @@ public class XmlWriter
     }
 
     /**
+     * Write an element with text content, with its attributes, at a specific indent level.
+     */
+    public void textElement(String name, String content, int indent, Attribute... attrs)
+            throws TechnicalException
+    {
+        openElement(name, indent, attrs);
+        text(content);
+        closeElement(name, 0);
+    }
+
+    /**
      * Common implementation of openElement() and emptyElement().
      */
     private void openTag(String name, int indent, boolean empty, Attribute... attrs)

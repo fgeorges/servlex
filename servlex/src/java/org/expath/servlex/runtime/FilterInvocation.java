@@ -26,9 +26,9 @@ import org.expath.servlex.tools.Auditor;
 public class FilterInvocation
         extends Invocation
 {
-    public FilterInvocation(Component in, Component out, Invocation wrapped, String path, RequestConnector request)
+    public FilterInvocation(String name, Component in, Component out, Invocation wrapped, String path, RequestConnector request)
     {
-        super(path, request);
+        super(name, path, request);
         myIn = in;
         myOut = out;
         myWrapped = wrapped;
@@ -53,7 +53,10 @@ public class FilterInvocation
             throws ServlexException
                  , ComponentError
     {
-        auditor.invoke("filter");
+        auditor.invoke(
+                "filter", getName(), getPath(),
+                myIn  == null ? "" : myIn.toString(),
+                myOut == null ? "" : myOut.toString());
         // inbound filter
         if ( myIn != null ) {
             // TODO: If this returns a web:response, we should return straight
@@ -72,9 +75,9 @@ public class FilterInvocation
         return connector;
     }
 
-    private Component myIn;
-    private Component myOut;
-    private Invocation myWrapped;
+    private final Component  myIn;
+    private final Component  myOut;
+    private final Invocation myWrapped;
 }
 
 

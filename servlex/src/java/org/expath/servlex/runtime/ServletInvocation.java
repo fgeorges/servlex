@@ -26,9 +26,9 @@ import org.expath.servlex.tools.Auditor;
 public class ServletInvocation
         extends Invocation
 {
-    public ServletInvocation(Component impl, String path, RequestConnector request)
+    public ServletInvocation(String name, Component impl, String path, RequestConnector request)
     {
-        super(path, request);
+        super(name, path, request);
         myImpl = impl;
     }
 
@@ -45,12 +45,14 @@ public class ServletInvocation
             throws ServlexException
                  , ComponentError
     {
-        auditor.invoke("servlet");
+        auditor.invoke(
+                "servlet", getName(), getPath(),
+                myImpl == null ? "" : myImpl.toString());
         return myImpl.run(connector, config, auditor);
     }
 
-    /** ... */
-    private Component myImpl;
+    /** The implementation of this servlet, a specific component. */
+    private final Component myImpl;
 }
 
 

@@ -110,19 +110,19 @@ public class ErrorHandler
     @Override
     public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
     {
-        Invocation invoc = new ErrorHandlerInvocation(path, request, wrapped, myImpl, myEvery, myCode, myNs, myLocal);
+        Invocation invoc = new ErrorHandlerInvocation(getName(), path, request, wrapped, myImpl, myEvery, myCode, myNs, myLocal);
         if ( myWrapper != null ) {
             invoc = myWrapper.makeInvocation(path, request, invoc);
         }
         return invoc;
     }
 
-    private Component myImpl;
-    private boolean   myEvery;
-    private QName     myCode;
-    private String    myNs;
-    private String    myLocal;
-    private Wrapper   myWrapper = null;
+    private final Component myImpl;
+    private final boolean   myEvery;
+    private QName   myCode;
+    private String  myNs;
+    private String  myLocal;
+    private Wrapper myWrapper = null;
 }
 
 

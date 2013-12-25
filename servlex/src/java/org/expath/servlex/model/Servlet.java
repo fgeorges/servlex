@@ -9,6 +9,7 @@
 
 package org.expath.servlex.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.expath.servlex.components.Component;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
@@ -64,10 +65,12 @@ public class Servlet
     public void logApplication(Logger log)
     {
         super.logApplication(log);
-        log.debug("   (is a Servlet):");
-        log.debug("      name   : " + myName);
-        log.debug("      groups : " + myGroups);
-        log.debug("      impl   : " + myImpl);
+        if ( log.isDebugEnabled() ) {
+            log.debug("   (is a Servlet):");
+            log.debug("      name   : " + myName);
+            log.debug("      groups : " + StringUtils.join(myGroups, ", "));
+            log.debug("      impl   : " + myImpl);
+        }
         if ( myImpl != null ) {
             myImpl.logApplication(log);
         }
@@ -77,13 +80,13 @@ public class Servlet
     protected Invocation makeInvocation(String path, String method, RequestConnector connector)
     {
         connector.setServlet(this);
-        return new ServletInvocation(myImpl, path, connector);
+        return new ServletInvocation(myName, myImpl, path, connector);
     }
 
-    private String myName;
-    private Component myImpl;
+    private final String    myName;
+    private final Component myImpl;
     /** Match group names (group[i] is null if it is not set). */
-    private String[] myGroups;
+    private final String[]  myGroups;
 }
 
 

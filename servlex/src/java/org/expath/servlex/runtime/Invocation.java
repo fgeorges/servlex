@@ -30,10 +30,16 @@ import org.expath.servlex.tools.Cleanable;
 public abstract class Invocation
         implements Cleanable
 {
-    public Invocation(String path, RequestConnector request)
+    public Invocation(String name, String path, RequestConnector request)
     {
+        myName = name;
         myPath = path;
         myRequest = request;
+    }
+
+    public String getName()
+    {
+        return myName;
     }
 
     public String getPath()
@@ -50,8 +56,9 @@ public abstract class Invocation
             throws ServlexException
                  , ComponentError;
 
-    private String myPath;
-    private RequestConnector myRequest;
+    private final String           myName;
+    private final String           myPath;
+    private final RequestConnector myRequest;
 }
 
 

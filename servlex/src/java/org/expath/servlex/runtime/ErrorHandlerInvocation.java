@@ -37,9 +37,9 @@ import org.expath.servlex.tools.Auditor;
 public class ErrorHandlerInvocation
         extends Invocation
 {
-    public ErrorHandlerInvocation(String path, RequestConnector request, Invocation wrapped, Component impl, boolean every, QName code, String ns, String local)
+    public ErrorHandlerInvocation(String name, String path, RequestConnector request, Invocation wrapped, Component impl, boolean every, QName code, String ns, String local)
     {
-        super(path, request);
+        super(name, path, request);
         myWrapped = wrapped;
         myImpl    = impl;
         myEvery   = every;
@@ -62,7 +62,9 @@ public class ErrorHandlerInvocation
             throws ServlexException
                  , ComponentError
     {
-        auditor.invoke("error handler");
+        auditor.invoke(
+                "error handler", getName(), getPath(),
+                myImpl == null ? "" : myImpl.toString());
         try {
             return myWrapped.invoke(connector, app, config, auditor);
         }
@@ -101,12 +103,12 @@ public class ErrorHandlerInvocation
         }
     }
 
-    private Invocation myWrapped;
-    private Component  myImpl;
-    private boolean    myEvery;
-    private QName      myCode;
-    private String     myNs;
-    private String     myLocal;
+    private final Invocation myWrapped;
+    private final Component  myImpl;
+    private final boolean    myEvery;
+    private final QName      myCode;
+    private final String     myNs;
+    private final String     myLocal;
 }
 
 

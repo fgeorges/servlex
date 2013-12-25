@@ -38,7 +38,7 @@ public class ResourceInvocation
 {
     public ResourceInvocation(Resource rsrc, String path, RequestConnector request, RegexPattern regex, String rewrite)
     {
-        super(path, request);
+        super(null, path, request);
         myRsrc = rsrc;
         myRegex = regex;
         myRewrite = rewrite;
@@ -56,7 +56,10 @@ public class ResourceInvocation
     public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
     {
-        auditor.invoke("resource");
+        auditor.invoke(
+                "resource", getName(), getPath(),
+                myRegex == null ? "" : myRegex.toString(),
+                myRewrite);
         String orig_path = getPath();
         try {
             String path = myRegex.replace(orig_path, myRewrite);

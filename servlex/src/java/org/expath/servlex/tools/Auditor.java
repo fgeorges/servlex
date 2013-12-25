@@ -100,9 +100,7 @@ public class Auditor
             try {
                 String d = format(myStop);
                 String m = Long.toString(ms);
-                myWriter.openElement("end", 1, a("date", d), a("ms", m));
-                myWriter.text(duration(ms));
-                myWriter.closeElement("end", 0);
+                myWriter.textElement("end", duration(ms), 1, a("date", d), a("ms", m));
                 myWriter.ln();
                 myWriter.closeElement("profile", 0);
                 myWriter.ln();
@@ -190,14 +188,26 @@ public class Auditor
         }
     }
 
-    public void invoke(String what)
+    public void invoke(String kind, String name, String path, String... components)
             throws ServlexException
     {
         if ( myWriter != null ) {
             try {
                 myWriter.openElement("invoke", 1);
-                myWriter.text(what);
-                myWriter.closeElement("invoke", 0);
+                myWriter.ln();
+                myWriter.textElement("kind", kind, 2);
+                myWriter.ln();
+                if ( name != null ) {
+                    myWriter.textElement("name", name, 2);
+                    myWriter.ln();
+                }
+                myWriter.textElement("path", path, 2);
+                myWriter.ln();
+                for ( String c : components ) {
+                    myWriter.textElement("component", c, 2);
+                    myWriter.ln();
+                }
+                myWriter.closeElement("invoke", 1);
                 myWriter.ln();
                 myWriter.flush();
             }

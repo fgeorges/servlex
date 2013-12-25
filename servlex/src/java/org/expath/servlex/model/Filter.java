@@ -63,11 +63,11 @@ public class Filter
     @Override
     public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
     {
-        return new FilterInvocation(myIn, myOut, wrapped, path, request);
+        return new FilterInvocation(getName(), myIn, myOut, wrapped, path, request);
     }
 
-    private Component myIn;
-    private Component myOut;
+    private final Component myIn;
+    private final Component myOut;
 }
 
 
