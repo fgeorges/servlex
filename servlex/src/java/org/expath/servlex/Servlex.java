@@ -257,7 +257,7 @@ public class Servlex
             out.println("      <h1>Servlex</h1>");
             out.println("      <p>Welcome!  Your Servlex server has been installed.");
             out.println("      You can go to the applications you already installed,");
-            out.println("      or go to the Servlex <a href='manager/home'>manager</a>.</p>");
+            out.println("      or go to the Servlex <a href='manager/'>manager</a>.</p>");
             out.println("   </body>");
             out.println("</html>");
         }
@@ -286,7 +286,7 @@ public class Servlex
         // log request and profiling info
         auditor.begin(request);
         // invoke the component
-        Connector result;
+        Connector result = null;
         try {
             result = invoc.invoke(request, app, ourConfig, auditor);
         }
@@ -296,6 +296,10 @@ public class Servlex
         }
         finally {
             invoc.cleanup(auditor);
+            // end the audit in case of exception (if result is null)
+            if ( result == null ) {
+                auditor.end();
+            }
         }
         // connect the result to the client
         result.connectToResponse(resp, ourConfig, procs);
