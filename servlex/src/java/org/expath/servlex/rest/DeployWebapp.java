@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.manager;
+package org.expath.servlex.rest;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +29,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
+import org.expath.servlex.manager.View;
 
 /**
  * Servlet used to deploy a XAW file.
