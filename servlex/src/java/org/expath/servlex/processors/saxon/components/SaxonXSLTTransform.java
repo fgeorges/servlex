@@ -271,14 +271,18 @@ public class SaxonXSLTTransform
                 throws TechnicalException
         {
             // the code
-            String prefix = error.getName().getPrefix();
-            String local  = error.getName().getLocalPart();
-            String ns     = error.getName().getNamespaceURI();
-            QName  code   = new QName(prefix, ns, local);
+            QName code = null;
+            javax.xml.namespace.QName name = error.getName();
+            if ( name != null ) {
+                String prefix = name.getPrefix();
+                String local  = name.getLocalPart();
+                String ns     = name.getNamespaceURI();
+                code = new QName(prefix, ns, local);
+            }
             // the message
-            String msg    = error.getMsg();
+            String msg = error.getMsg();
             // set them as options
-            myTrans.setParameter(CODE_NAME, new XdmAtomicValue(code));
+            myTrans.setParameter(CODE_NAME, code == null ? null : new XdmAtomicValue(code));
             myTrans.setParameter(MESSAGE,   new XdmAtomicValue(msg));
         }
 
@@ -315,7 +319,7 @@ public class SaxonXSLTTransform
         private static final QName  CODE_NAME = new QName(PREFIX, NS, "error-code");
         private static final QName  MESSAGE   = new QName(PREFIX, NS, "error-message");
 
-        private XsltTransformer myTrans;
+        private final XsltTransformer myTrans;
     }
 }
 
