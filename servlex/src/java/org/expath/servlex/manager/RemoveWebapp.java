@@ -114,7 +114,7 @@ public class RemoveWebapp
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(Manager.class);
+    private static final Logger LOG = Logger.getLogger(RemoveWebapp.class);
 
     /** The server configuration. */
     private ServerConfig myConfig;
