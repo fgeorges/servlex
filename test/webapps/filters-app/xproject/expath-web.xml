@@ -1,0 +1,50 @@
+<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+        xmlns:app="http://expath.org/ns/test/servlex/filters-app-webapp"
+        name="http://expath.org/test/servlex/filters-app-webapp"
+        abbrev="filters-app"
+        version="0.1.0">
+
+   <title>Servlex test webapp for filters, when the application itself is filtered</title>
+
+   <application filters="filter-one"/>
+
+   <!-- the first filter -->
+   <filter name="filter-one">
+      <in>
+         <xquery function="app:in-filter-one"/>
+      </in>
+      <out>
+         <xslt uri="http://expath.org/ns/test/servlex/filters-app-webapp/out-one.xsl"/>
+      </out>
+   </filter>
+
+   <!-- the second filter -->
+   <filter name="filter-two">
+      <in>
+         <xquery function="app:in-filter-two"/>
+      </in>
+      <out>
+         <xslt uri="http://expath.org/ns/test/servlex/filters-app-webapp/out-two.xsl"/>
+      </out>
+   </filter>
+
+   <!-- the third filter -->
+   <filter name="filter-three">
+      <in>
+         <xquery function="app:in-filter-three"/>
+      </in>
+      <out>
+         <xslt uri="http://expath.org/ns/test/servlex/filters-app-webapp/out-three.xsl"/>
+      </out>
+   </filter>
+
+   <resource pattern="/" rewrite="index.html" media-type="application/xhtml+xml"/>
+
+   <!-- the only servlet -->
+   <servlet name="servlet" filters="filter-two filter-three">
+      <xslt uri="http://expath.org/ns/test/servlex/filters-app-webapp/servlet.xsl"
+            function="app:hello-xslt"/>
+      <url pattern="/servlet"/>
+   </servlet>
+
+</webapp>
