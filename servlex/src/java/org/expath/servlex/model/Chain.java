@@ -28,6 +28,11 @@ public class Chain
     {
         super(name);
         myWrappers = wrappers;
+        int len = wrappers.length;
+        myReverse  = new Wrapper[len];
+        for ( int i = 0; i < len; ++i ) {
+            myReverse[i] = myWrappers[len - 1 - i];
+        }
     }
 
     @Override
@@ -56,13 +61,14 @@ public class Chain
     public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
     {
         // chain all invocations, beginning by wrapped, to the outermost
-        for ( Wrapper w : myWrappers ) {
+        for ( Wrapper w : myReverse ) {
             wrapped = w.makeInvocation(path, request, wrapped);
         }
         return wrapped;
     }
 
-    private Wrapper[] myWrappers;
+    private final Wrapper[] myWrappers;
+    private final Wrapper[] myReverse;
 }
 
 
