@@ -2,10 +2,12 @@
 /test/apache-tomcat-7.0.*
 /test/apache-tomcat-8.0.*
 /test/cases/filters.html
+/test/cases/filters-app.html
 /test/cases/mapping.html
 /test/cases/simple.html
 /test/cases/xsltforms.html
 /test/test-repo/
 /test/webapps/filters/dist/
+/test/webapps/filters-app/dist/
 /test/webapps/mapping/dist/
 /test/webapps/xsltforms/dist/
