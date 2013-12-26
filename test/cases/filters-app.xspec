@@ -43,10 +43,10 @@
       <x:like label="assertions"/>
       <x:variable name="html" select="$x:result[2]/h:html"/>
       <x:expect label="filtered"   context="$html/h:head/h:title">
-         <h:title>(in 1) (in 2) (in 3) Hello, me! (out 3) (out 2) (out1)</h:title>
+         <h:title>Hello, (in 3) (in 2) (in 1) me! (out 3) (out 2) (out 1)</h:title>
       </x:expect>
       <x:expect label="body title" context="$html/h:body/h:p">
-         <h:p>(in 1) (in 2) (in 3) Hello, me! (out 3) (out 2) (out1)</h:p>
+         <h:p>Hello, (in 3) (in 2) (in 1) me!</h:p>
       </x:expect>
    </x:scenario>
 
