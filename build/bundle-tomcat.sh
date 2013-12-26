@@ -56,7 +56,7 @@ mkdir "${TOMCAT}/profiling"
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
 
 # deploy the webapp manager
-xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/webapp-manager-0.2.0.xaw"
+xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
 xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-http-client-saxon-0.11.0dev.xar"
 xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-zip-saxon-0.7.0pre1.xar"
 
