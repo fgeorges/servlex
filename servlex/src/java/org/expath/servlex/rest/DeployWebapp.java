@@ -10,18 +10,19 @@
 package org.expath.servlex.rest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.regex.Pattern;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
@@ -29,13 +30,12 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
-import org.expath.servlex.manager.View;
 
 /**
  * Servlet used to deploy a XAW file.
  *
- * It must receive a POST request of type "multipart/form-data", with the part
- * "xawfile" that contains the XAW file to deploy (or the XAR file to install).
+ * It must receive a POST request of type "application/octet-stream", the content
+ * of which is the XAW file to deploy (or the XAR file to install).
  *
  * TODO: This servlet must be protected by Digest Authentication!
  *
@@ -43,6 +43,10 @@ import org.expath.servlex.manager.View;
  * .../deploy/my-webapp}" instead of just "{@code .../deploy}", in order to
  * deploy the webapp with a specific context root.  By default it is got from
  * the webapp descriptor, and that's the only way available for now.
+ * 
+ * TODO: Define a specific content type for XAR and XAW files? (instead of
+ * application/octet-stream, something like application/x-expath-xar+zip, and
+ * maybe application/x-expath-xaw+zip as well)
  *
  * @author Florent Georges
  * @date   2010-02-19
@@ -77,228 +81,220 @@ public class DeployWebapp
         myRepo = myConfig.getRepository();
     }
 
-    /** 
-     * GET display the web form.
+    /**
+     * Accepts only POST requests, to install a XAR or XAW file.
+     * 
+     * @param req The HTTP request object.
+     * 
+     * @param resp The HTTP response object.
+     * 
+     * @throws IOException In case of any I/O error.
+     * 
+     * @throws ServletException In case of any other error.
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException
-                 , ServletException
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException
+                 , IOException
     {
-        View view = new View(resp, "deploy", "Deploy");
-        if ( myRepo.canInstall() ) {
-            view.println("<p>Deploy a webapp, either from a local XAW file, or directly from CXAN.");
-            view.println("If you deploy directly from CXAN, you can use either a CXAN ID <b>or</b>");
-            view.println("a full package name.  The version number is optional (if not set, the");
-            view.println("latest one is picked).</p>");
-            view.println("<p><b>Local file:</b></p>");
-            view.println("<form action='deploy' method='post' enctype='multipart/form-data'>");
-            view.println("   <input type='file' name='xawfile' size='40'>");
-            view.println("   <br/><br/>");
-            view.println("   <input type='submit' value='Deploy'>");
-            view.println("</form>");
-            view.println("<p><b>From CXAN:</b></p>");
-            view.println("<form action='deploy-cxan' method='post' enctype='application/x-www-form-urlencoded'>");
-            view.println("   <table>");
-            view.println("      <tr>");
-            view.println("         <td class='right'>ID:</td>");
-            view.println("         <td><input name='id' size='50' type='text' /></td>");
-            view.println("      </tr>");
-            view.println("      <tr>");
-            view.println("         <td class='right'>Name:</td>");
-            view.println("         <td><input name='name' size='50' type='text' /></td>");
-            view.println("      </tr>");
-            view.println("      <tr>");
-            view.println("         <td class='right'>Version:</td>");
-            view.println("         <td><input name='version' size='50' type='text' /></td>");
-            view.println("      </tr>");
-            view.println("      <tr>");
-            view.println("         <td class='right'>From:</td>");
-            view.println("         <td>");
-            view.println("            <select name='server'>");
-            view.println("               <option selected='selected' value='prod'>Production - http://cxan.org/</option>");
-            view.println("               <option value='sandbox'>Sandbox - http://test.cxan.org/</option>");
-            view.println("            </select>");
-            view.println("         </td>");
-            view.println("      </tr>");
-            view.println("   </table>");
-            view.println("   <p><input value='Deploy' type='submit'></p>");
-            view.println("</form>");
+        String method = req.getMethod().toLowerCase();
+        if ( method.equals("post") ) {
+            doPost(req, resp);
         }
         else {
-            view.println("<p><em>(installation disabled, read-only storage)</em></p>");
+            resp.addHeader("Allow", "POST");
+            resp.sendError(405, "Method Not Allowed");
         }
-        view.close();
     }
 
-    /** 
-     * Deploy a XAW file.
+    /**
+     * Deploy a XAR or a XAW file.
+     * 
+     * @param req The HTTP request object.
+     * 
+     * @param resp The HTTP response object.
+     * 
+     * @throws IOException In case of any I/O error.
+     * 
+     * @throws ServletException In case of any other error.
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException
                  , ServletException
     {
-        View view = new View(resp, "deploy", "Deploy");
-        view.print("<p>");
+        resp.setContentType("application/xml");
+        resp.setCharacterEncoding("UTF-8");
+        ServletOutputStream out = resp.getOutputStream();
         try {
             if ( ! myRepo.canInstall() ) {
-                error(501, "Install not supported, storage is read-only");
+                error(501, "Not Implemented", "Install not supported, storage is read-only.");
             }
             // name will be null if the package is not a webapp
             String name = doInstall(req);
+            out.println("<success>");
             if ( name == null ) {
-                view.print("The package");
+                out.print("   <msg>The package");
             }
             else {
-                view.print("<a href='../");
-                view.print(name);
-                view.print("/'>");
-                view.print(name);
-                view.print("</a>");
+                out.print("   <msg>The webapp at ");
+                out.print(name);
             }
-            view.print(" has been successfully installed.");
+            out.println(" has been successfully installed.</msg>");
+            out.println("</success>");
+        }
+        catch ( RestError ex ) {
+            out.println("<error>");
+            out.println("   <msg>" + ex.getUserMessage() + "</msg>");
+            out.println("</error>");
+            ex.sendError(resp);
         }
         catch ( ServlexException ex ) {
-            view.print("<b>Error</b>: " + ex.getMessage());
-            ex.setStatus(resp);
+            out.println("<error>");
+            out.println("   <msg>Unexpected exception: " + ex.getMessage() + "</msg>");
+            out.println("</error>");
+            ex.sendError(resp);
         }
         catch ( RuntimeException ex ) {
-            view.println("<b>UNEXPECTED RUNTIME ERROR</b>: " + ex.getMessage() + "</p>");
-            view.println("<p><b>Please report this</b> to the mailing list, see the");
-            view.println("   logs for additional information about the error.</p>");
-            throw ex;
-        }
-        finally {
-            view.println("</p>");
-            view.close();
+            out.println("<error>");
+            out.println("   <msg>Unexpected runtime error: " + ex.getMessage() + "</msg>");
+            out.println("   <msg>Please report this to the mailing list, see Servlex logs");
+            out.println("      for additional information about the error.</msg>");
+            out.println("</error>");
+            resp.sendError(500, "Internal Server Error");
         }
     }
 
     /**
-     * TODO: Remove dependency on Apache 'fileupload'. First of all, the
-     * algorithm here is broken (looping over parts, uploading every file and
-     * using the last one silently).  Then it should check everything is ok,
-     * then pass the input stream to myConfig (in order to do so, I'd have to
-     * add the ability to install from an input stream on the repository).
+     * TODO: This function should check everything is ok, then pass the input
+     * stream to myConfig (in order to do so, I'd have to add the ability to
+     * install from an input stream on the repository).
      */
     private String doInstall(HttpServletRequest req)
             throws ServlexException
     {
-        if ( ! ServletFileUpload.isMultipartContent(req) ) {
-            error(400, "Request is not Multipart Content: " + req.getContentType());
-        }
-        File archive = null;
+        // TODO: Test the content type, once defined (see the doc of this class)
+//        if ( ! req.getContentType().equals("application/x-expath-xar+zip") ) {
+//            error(415, "Unsupported Media Type",
+//                    "Unsupported media type: " + req.getContentType()
+//                    + ", require application/x-expath-xar+zip.");
+//        }
+        String root = getContextRoot(req);
+        File archive = saveFile(req);
         try {
-            FileItemFactory factory = new DiskFileItemFactory(0, null);
-            ServletFileUpload upload = new ServletFileUpload(factory);
-            for ( FileItem item : (List<FileItem>) upload.parseRequest(req) ) {
-                // plain form field
-                if ( item.isFormField() ) {
-                    error(400, "Unknown parameter: " + item.getFieldName());
-                }
-                // file upload part
-                else {
-                    String id = req.getSession(true).getId();
-                    archive = uploadFile(item, id);
-                }
-            }
-        }
-        catch ( FileUploadException ex ) {
-            error(500, "Error uploading the file", ex);
-        }
-        if ( archive == null ) {
-            error(500, "File not provided");
-        }
-
-        try {
-            // TODO: Set the context root (instead of null) and whether to
-            // override an existing package (instead of false), form a form
-            // filled by the user...
-            return myRepo.install(archive, null, false);
+            // TODO: Set whether to override an existing package (instead of
+            // false), from a request URI query parameter.
+            return myRepo.install(archive, root, false);
         }
         catch ( Repository.AlreadyInstalledException ex ) {
-            error(400, "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
+            error(409, "Conflict", "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
         }
-        catch ( PackageException ex ) {
-            error(500, "Error installing the webapp", ex);
-        }
-        catch ( TechnicalException ex ) {
-            error(500, "Error installing the webapp", ex);
+        catch ( PackageException | TechnicalException ex ) {
+            error(500, "Internal Server Error", "Error installing the webapp: " + ex.getMessage(), ex);
         }
         // cannot happen, because error() always throws an exception
-        throw new ServlexException(500, "Cannot happen (doInstall)");
+        return null;
     }
 
     /**
-     * TODO: ...
+     * Return the context root to install the webapp, at the end of the URL.
      */
-    private File uploadFile(FileItem item, String id)
+    private String getContextRoot(HttpServletRequest req)
+            throws RestError
+    {
+        String info = req.getPathInfo();
+        if ( info == null ) {
+            error(500, "Internal Server Error", "Path info is null.");
+        }
+        if ( ! info.startsWith("/") ) {
+            error(500, "Internal Server Error", "Path info does not start with /.");
+        }
+        String root = info.substring(1);
+        if ( ! CTXT_ROOT_PATTERN.matcher(root).matches() ) {
+            error(400, "Bad Request", "The webapp context root is not valid: "
+                    + root + "(using the regex: " + CTXT_ROOT_RE + ")");
+        }
+        return root;
+    }
+
+    /**
+     * Return a file object to use to store the uploaded file.
+     */
+    private File saveFile(HttpServletRequest req)
             throws ServlexException
     {
-        String field = item.getFieldName();
-        if ( ! "xawfile".equals(field) ) {
-            error(400, "Unknown parameter: " + field);
-        }
-        String file = item.getName();
-        // some clients, as Opera and IE, include the full path name instead of
-        // just the basename of the file; this trick works around this problem
-        file = new File(file).getName();
-        if ( LOG.isInfoEnabled() ) {
-            String type = item.getContentType();
-            boolean memory = item.isInMemory();
-            long size = item.getSize();
-            LOG.info("Deployer: upload file: " + field + ", " + file + ", "
-                    + type + ", " + memory + ", " + size);
-        }
-        if ( file == null ) {
-            error(400, "The file has no name (null).");
-        }
-        if ( "".equals(file) ) {
-            error(400, "The file has no name (empty).");
-        }
-        if ( item.getSize() == 0 ) {
-            error(400, "The file is empty (size = 0).");
-        }
-        File work_dir = null;
+        File file = getFile(req);
+        OutputStream out = openFile(file);
         try {
-            work_dir = File.createTempFile("servlex-", id);
+            InputStream in = req.getInputStream();
+            IOUtils.copy(in, out);
+            out.close();
+            return file;
         }
         catch ( IOException ex ) {
-            error(500, "Error creating a temporary dir", ex);
+            error(500, "Internal Server Error", "Error uploading the file", ex);
+            // cannot happen, because error() always throws an exception
+            return null;
         }
-        work_dir.delete();
-        work_dir.mkdirs();
-        File xaw_file = new File(work_dir, file);
-        if ( xaw_file.exists() ) {
-            xaw_file.delete();
-        }
+    }
+
+    /**
+     * Return a file object to use to store the uploaded file.
+     */
+    private File getFile(HttpServletRequest req)
+            throws ServlexException
+    {
+        String id = req.getSession(true).getId();
+        File file = null;
         try {
-            item.write(xaw_file);
+            file = File.createTempFile("servlex-", id);
         }
-        catch ( Exception ex ) {
-            error(500, "Error while writing the uploaded archive", ex);
+        catch ( IOException ex ) {
+            error(500, "Internal Server Error", "Error creating a temporary dir, with ID: " + id, ex);
         }
-        return xaw_file;
+        return file;
     }
 
-    // TODO: Error management!
-    private void error(int code, String msg)
+    /**
+     * Open a file as an output stream.
+     */
+    private OutputStream openFile(File file)
             throws ServlexException
     {
-        LOG.error(code + ": " + msg);
-        throw new ServlexException(code, msg);
+        try {
+            return new FileOutputStream(file);
+        }
+        catch ( FileNotFoundException ex ) {
+            error(500, "Internal Server Error", "File not found: " + file.getName());
+            // cannot happen, because error() always throws an exception
+            return null;
+        }
     }
 
-    private void error(int code, String msg, Throwable ex)
-            throws ServlexException
+    private void error(int code, String status, String msg)
+            throws RestError
     {
-        LOG.error(code + ": " + msg, ex);
-        throw new ServlexException(code, msg, ex);
+        LOG.error(code + ": " + status + ": " + msg);
+        throw new RestError(code, status, msg);
+    }
+
+    private void error(int code, String status, String msg, Throwable ex)
+            throws RestError
+    {
+        LOG.error(code + ": " + status + ": " + msg, ex);
+        throw new RestError(code, status, msg, ex);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(DeployWebapp.class);
+    /**
+     * The regex for webapp context roots.
+     * 
+     * TODO: The current draft of the spec says it is an NCName.
+     */
+    private static final String CTXT_ROOT_RE = "[-a-zA-Z0-9]+";
+    /** The patter for the regex for webapp context roots. */
+    private static final Pattern CTXT_ROOT_PATTERN = Pattern.compile(CTXT_ROOT_RE);
 
     /** The server configuration. */
     private ServerConfig myConfig;
