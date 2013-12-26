@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webapp xmlns="http://expath.org/ns/webapp"
+        name="http://servlex.net/test/filters-order"
+        abbrev="test-filters-order"
+        version="0.1.0"
+        spec="1.0">
+
+   <title>Descriptor to test parsing and resulting order of filters.</title>
+
+   <application filters="errors"/>
+
+   <filter name="view">
+      <out>
+         <xslt uri="http://servlex.net/test/view.xsl"/>
+      </out>
+   </filter>
+
+   <error name="errors" catch="*">
+      <xslt uri="http://servlex.net/test/errors.xsl"/>
+   </error>
+
+   <servlet name="test" filters="view">
+      <xslt uri="http://servlex.net/test/style.xsl"/>
+      <url pattern="/test"/>
+   </servlet>
+
+</webapp>

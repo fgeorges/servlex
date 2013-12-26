@@ -183,9 +183,11 @@ public class EXPathWebParser
      * 
      * TODO: Plug schema validation of expath-web.xml.
      * 
+     * Note: it is private, but is package-level to be unit-testable.
+     * 
      * @param ns The namespace of the web descriptor.
      */
-    private Application parseDescriptorFile(Source descriptor, Package pkg, String ns)
+    Application parseDescriptorFile(Source descriptor, Package pkg, String ns)
             throws ParseException
                  , TechnicalException
     {
@@ -710,10 +712,10 @@ public class EXPathWebParser
     }
 
     /** The webapp descriptor namespace. */
-    private static final String DESC_NS = "http://expath.org/ns/webapp";
+    static final String DESC_NS = "http://expath.org/ns/webapp";
     /** The legacy webapp descriptor namespace (in some drafts before Webapp 1.0). */
     @Deprecated
-    private static final String LEGACY_DESC_NS = "http://expath.org/ns/webapp/descriptor";
+    static final String LEGACY_DESC_NS = "http://expath.org/ns/webapp/descriptor";
     /** The servlex extension file name. */
     private static final String SERVLEX_FILENAME = "servlex.xml";
     /** The servlex extension namespace. */
@@ -724,7 +726,7 @@ public class EXPathWebParser
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
 
     /** The map of Processors objects. */
-    private ProcessorsMap myProcs;
+    private final ProcessorsMap myProcs;
 }
 
 

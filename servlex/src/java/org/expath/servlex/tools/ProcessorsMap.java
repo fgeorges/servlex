@@ -27,19 +27,32 @@ import org.expath.servlex.processors.Processors;
 public class ProcessorsMap
 {
     public ProcessorsMap(Processors dflt, Repository repo, ServerConfig config)
+            throws TechnicalException
     {
-        myRepo = repo;
-        myConfig = config;
-        myDefault = dflt;
-        myMap.put(dflt.getClass().getCanonicalName(), dflt);
+        this(dflt, null, repo, config);
     }
 
     public ProcessorsMap(String clazz, Repository repo, ServerConfig config)
             throws TechnicalException
     {
+        this(null, clazz, repo, config);
+    }
+
+    public ProcessorsMap(Processors dflt, String clazz, Repository repo, ServerConfig config)
+            throws TechnicalException
+    {
         myRepo = repo;
         myConfig = config;
-        myDefault = getProcessors(clazz);
+        if ( dflt == null && clazz != null ) {
+            dflt = getProcessors(clazz);
+        }
+        if ( clazz == null && dflt != null ) {
+            clazz = dflt.getClass().getCanonicalName();
+        }
+        myDefault = dflt;
+        if ( dflt != null && clazz != null ) {
+            myMap.put(clazz, dflt);
+        }
     }
 
     /**
@@ -112,7 +125,7 @@ public class ProcessorsMap
     }
 
     /** The map with all processors implementations. */
-    private Map<String, Processors> myMap = new HashMap<String, Processors>();
+    private Map<String, Processors> myMap = new HashMap<>();
     /** The default processors. */
     private Processors myDefault;
     /** The repo to use to instantiate new Processors objects. */
