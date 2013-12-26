@@ -3,12 +3,9 @@
                 xmlns:pkg="http://expath.org/ns/pkg"
                 xmlns:web="http://expath.org/ns/webapp"
                 xmlns:desc="http://expath.org/ns/webapp/descriptor"
-                xmlns:zip="http://expath.org/ns/zip"
                 xmlns:app="http://servlex.net/ns/webapp-manager"
                 exclude-result-prefixes="#all"
                 version="2.0">
-
-   <xsl:import href="http://expath.org/ns/zip.xsl"/>
 
    <pkg:import-uri>http://servlex.net/app/manager/pages/deploy-at.xsl</pkg:import-uri>
 
@@ -56,21 +53,8 @@
    </xsl:template>
 
    <!--
-      For the 2-phases deploy:
-      
-      - save the XAR into the session
-      - parse the root from expath-web.xml
-      - ask for the root, defaulted to the one in expath-web.xml
-      - go to the same URL (but GET, with ?root=...)
-      - the implem of the GET can be done here or in another component
-          (but I think there is no support in expath-web.xml to dispatch based on
-          methods, so the same component might be required)
-      
-      Put another way:
-      
-      - save $body into the session (a binary)
-      - parse $body as a ZIP file, and extract expath-web.xml
-      - ...
+      Install the XAR or XAW file retrieved from the session, using the context
+      root given in parameters.
    -->
    <xsl:template match="web:request" mode="deploy">
       <xsl:param name="repo" required="yes"/>

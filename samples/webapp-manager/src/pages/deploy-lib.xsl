@@ -18,17 +18,14 @@
       - display a form asking for the context root
         (defaults to what's in expath-web.xml)
       
-      TODO: Display more information about the package (like the name and
-      version of the package, always interesting, and even required for
-      libraries).
+      TODO: Handle errors with the descriptor(s): do they exist, do they contain
+      required information, etc.?
    -->
    <xsl:template match="web:request" mode="install">
       <xsl:param name="repo" required="yes"/>
       <xsl:param name="xar"  required="yes" as="xs:base64Binary"/>
-      <xsl:variable name="pkg-desc" select="web:tmp--zip-entry-as-xml($xar, 'expath-pkg.xml')/*"/>
-      <xsl:variable name="web-desc" select="web:tmp--zip-entry-as-xml($xar, 'expath-web.xml')/*"/>
-      <!--xsl:variable name="pkg-desc" select="zip:xml-entry($xar, 'expath-pkg.xml')"/-->
-      <!--xsl:variable name="web-desc" select="zip:xml-entry($xar, 'expath-web.xml')"/-->
+      <xsl:variable name="pkg-desc" select="zip:xml-entry($xar, 'expath-pkg.xml')/*"/>
+      <xsl:variable name="web-desc" select="zip:xml-entry($xar, 'expath-web.xml')/*"/>
       <xsl:value-of select="web:set-session-field('manager:xar-to-deploy', $xar)"/>
       <para>
          <xsl:choose>
