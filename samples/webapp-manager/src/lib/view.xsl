@@ -33,11 +33,12 @@
       <web:response status="200" message="Ok">
          <web:body content-type="application/xhtml+xml" method="xhtml"/>
       </web:response>
+      <xsl:variable name="root" as="xs:string" select="( @root, '.' )[1]"/>
       <html>
          <head>
             <xsl:apply-templates select="title" mode="head"/>
-            <link rel="stylesheet"    type="text/css"  href="style/manager.css"/>
-            <link rel="shortcut icon" type="image/png" href="images/expath-icon.png"/>
+            <link rel="stylesheet"    type="text/css"  href="{ $root }/style/manager.css"/>
+            <link rel="shortcut icon" type="image/png" href="{ $root }/images/expath-icon.png"/>
          </head>
          <body>
             <div id="upbg"> </div>
@@ -47,7 +48,9 @@
                      <h1>Servlex manager</h1>
                   </div>
                </div>
-               <xsl:call-template name="menu"/>
+               <xsl:call-template name="menu">
+                  <xsl:with-param name="root" select="$root"/>
+               </xsl:call-template>
                <div id="menubottom"> </div>
                <div id="content">
                   <div class="normalcontent">
@@ -86,12 +89,13 @@
    </xsl:variable>
 
    <xsl:template name="menu">
+      <xsl:param name="root" as="xs:string" required="yes"/>
       <xsl:variable name="menu" select="@menu" as="xs:string"/>
       <div id="menu">
          <ul>
             <xsl:for-each select="$menu-items/*">
                <li>
-                  <a href="{ @name }" title="{ @title }">
+                  <a href="{ $root }/{ @name }" title="{ @title }">
                      <xsl:if test="$menu eq @name">
                         <xsl:attribute name="class" select="'active'"/>
                      </xsl:if>

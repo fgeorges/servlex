@@ -37,9 +37,9 @@
                      <xsl:sort select="."/>
                      <item>
                         <xsl:text>(</xsl:text>
-                        <link href="remove?webapp={ . }">x</link>
+                        <link href="remove/{ encode-for-uri(.) }">x</link>
                         <xsl:text>) </xsl:text>
-                        <link href="../{ . }/">
+                        <link href="../{ encode-for-uri(.) }/">
                            <xsl:value-of select="."/>
                         </link>
                      </item>

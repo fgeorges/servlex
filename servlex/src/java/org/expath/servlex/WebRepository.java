@@ -25,7 +25,6 @@ import org.expath.pkg.repo.UserInteractionStrategy;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.WebappsParser;
-import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.ProcessorsMap;
 import org.expath.servlex.tools.WebappsXmlFile;
 
@@ -132,15 +131,18 @@ public class WebRepository
     }
 
     /**
-     * Remove a webapp (or a library) in the repository.
+     * Remove a webapp in the repository.
      */
     public synchronized void remove(String appname)
             throws PackageException
                  , TechnicalException
     {
+        if ( ! canInstall() ) {
+            throw new CannotInstall();
+        }
         Application app = myApps.get(appname);
         if ( app == null ) {
-            throw new PackageException("The application is not installed: " + appname);
+            throw new InvalidContextRoot("No application is deployed at: " + appname);
         }
         Package pkg = app.getPackage();
         myUnderlying.removePackage(pkg.getName(), true, new LoggingUserInteraction());
@@ -200,7 +202,7 @@ public class WebRepository
             throw new CannotInstall();
         }
         if ( ctxt_root != null && ! WebappsParser.isContextRootValid(ctxt_root) ) {
-            throw new InvalidContextRoot(ctxt_root);
+            throw new InvalidContextRoot("Syntactically invalid context root: " + ctxt_root);
         }
     }
 
@@ -258,9 +260,9 @@ public class WebRepository
     public static class InvalidContextRoot
             extends TechnicalException
     {
-        InvalidContextRoot(String root)
+        InvalidContextRoot(String msg)
         {
-            super("Syntactically invalid context root: " + root);
+            super(msg);
         }
     }
 

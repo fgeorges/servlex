@@ -60,9 +60,16 @@
       <url pattern="/deploy-at"/>
    </servlet>
 
+   <servlet name="remove" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/remove.xsl"/>
+      <!-- TODO: The current draft says a context root must be an NCName... -->
+      <url pattern="/remove/([-a-zA-Z0-9]+)">
+         <match group="1" name="root"/>
+      </url>
+   </servlet>
+
 <!--
     TODO:
-    - remove?webapp=xxx
     - do-reset
 -->
 
