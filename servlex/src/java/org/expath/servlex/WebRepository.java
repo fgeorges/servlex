@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       WebRepository.java                                         */
+/*  File:       WebRepository.java                                          */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2013-09-11                                                  */
 /*  Tags:                                                                   */
@@ -45,8 +45,13 @@ public class WebRepository
         myUnderlying = underlying;
         myProcs = procs;
         myApps = initApplications();
-        // get webapps.xml
-        Storage storage = myUnderlying.getStorage();
+        myWebappsXml = canInstall() ? getWebappsXml(underlying) : null;
+    }
+
+    private WebappsXmlFile getWebappsXml(Repository repo)
+            throws TechnicalException
+    {
+        Storage storage = repo.getStorage();
         if ( ! (storage instanceof FileSystemStorage) ) {
             throw new TechnicalException("Installing and removing webapps only supported on File System Storage: " + storage.getClass());
         }
@@ -54,7 +59,7 @@ public class WebRepository
         File dir = fs_storage.getRootDirectory();
         File file = new File(dir, ".expath-web/webapps.xml");
         try {
-            myWebappsXml = new WebappsXmlFile(file);
+            return new WebappsXmlFile(file);
         }
         catch ( PackageException ex ) {
             throw new TechnicalException("Error creating the object for .expath-web/webapps.xml", ex);
