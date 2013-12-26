@@ -1,9 +1,8 @@
 <webapp xmlns="http://expath.org/ns/webapp"
-        xmlns:web="http://expath.org/ns/webapp"
         xmlns:app="http://servlex.net/ns/webapp-manager"
         name="http://servlex.net/app/manager"
-        abbrev="new-manager"
-        version="0.1.0"
+        abbrev="manager"
+        version="0.2.0"
         spec="1.0">
 
    <title>Web application manager for a web container.</title>

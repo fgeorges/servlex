@@ -8,4 +8,8 @@
        </webapp>
    -->
 
+   <webapp root="manager">
+      <package name="http://servlex.net/app/manager"/>
+   </webapp>
+
 </webapps>
