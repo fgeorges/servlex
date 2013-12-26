@@ -84,7 +84,8 @@
       <xsl:param name="id"      required="yes" as="xs:string?"/>
       <xsl:param name="name"    required="yes" as="xs:string?"/>
       <xsl:param name="version" required="yes" as="xs:string?"/>
-      <xsl:variable name="url"      select="app:cxan-url($server, $id, $name, $version)"/>
+      <xsl:variable name="domain"   select="app:domain($server)"/>
+      <xsl:variable name="url"      select="app:cxan-url($domain, $id, $name, $version)"/>
       <xsl:variable name="response" select="app:ask-cxan($url)"/>
       <xsl:variable name="status"   select="$response[1]/@status/xs:integer(.)"/>
       <xsl:choose>
@@ -101,7 +102,9 @@
                <xsl:value-of select="$version"/>
                <br/>
                <xsl:text>Server: </xsl:text>
-               <xsl:value-of select="$server"/>
+               <link href="http://{ $domain }/">
+                  <xsl:value-of select="$domain"/>
+               </link>
             </para>
          </xsl:when>
          <xsl:when test="empty($response[2])">
@@ -133,22 +136,20 @@
       </xsl:choose>
    </xsl:template>
 
-   <xsl:function name="app:cxan-url" as="xs:string">
+   <xsl:function name="app:domain" as="xs:string">
       <xsl:param name="server"  as="xs:string"/>
-      <xsl:sequence select="if ( $server eq 'sandbox' ) 'test.cxan.org' else 'cxan.org' ..."/>
+      <xsl:sequence select="if ( $server eq 'sandbox' ) then 'test.cxan.org' else 'cxan.org'"/>
    </xsl:function>
 
    <xsl:function name="app:cxan-url" as="xs:string">
-      <xsl:param name="server"  as="xs:string"/>
+      <xsl:param name="domain"  as="xs:string"/>
       <xsl:param name="id"      as="xs:string?"/>
       <xsl:param name="name"    as="xs:string?"/>
       <xsl:param name="version" as="xs:string?"/>
       <xsl:value-of>
          <xsl:text>http://</xsl:text>
-         <xsl:if test="$server eq 'sandbox'">
-            <xsl:text>test.</xsl:text>
-         </xsl:if>
-         <xsl:text>cxan.org/file?</xsl:text>
+         <xsl:value-of select="$domain"/>
+         <xsl:text>/file?</xsl:text>
          <xsl:choose>
             <xsl:when test="exists($id)">
                <xsl:text>id=</xsl:text>
