@@ -33,7 +33,6 @@ import org.expath.servlex.processors.saxon.functions.InstallFromCxanFunction;
 import org.expath.servlex.processors.saxon.functions.InstallWebappFunction;
 import org.expath.servlex.processors.saxon.functions.InstalledWebappsFunction;
 import org.expath.servlex.processors.saxon.functions.RepositoryFunction;
-import org.expath.servlex.processors.saxon.functions.TMP_ZipEntryAsXmlFunction;
 
 /**
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
@@ -67,8 +66,6 @@ public class WebappFunctions
      */
     public static void setup(Processors procs, Processor saxon, ServerConfig config)
     {
-        // TODO: FIXME: The temporary ZIP entry as XML function.
-        saxon.registerExtensionFunction(new TMP_ZipEntryAsXmlFunction(saxon));
         // the request fields management functions
         saxon.registerExtensionFunction(new GetRequestFieldFunction());
         saxon.registerExtensionFunction(new GetRequestFieldNamesFunction());
