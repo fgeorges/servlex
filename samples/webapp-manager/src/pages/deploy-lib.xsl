@@ -33,17 +33,19 @@
             <xsl:otherwise>Library: </xsl:otherwise>
          </xsl:choose>
          <xsl:value-of select="$pkg-desc/pkg:title"/>
-         <xsl:text>, version </xsl:text>
+         <br/>
+         <xsl:text>Version: </xsl:text>
          <xsl:value-of select="$pkg-desc/@version"/>
-         <xsl:text>, name </xsl:text>
+         <br/>
+         <xsl:text>Name: </xsl:text>
          <xsl:value-of select="$pkg-desc/@name"/>
          <xsl:for-each select="$pkg-desc/pkg:home">
-            <xsl:text>, more information at </xsl:text>
+            <br/>
+            <xsl:text>More information at: </xsl:text>
             <link href="{ . }">
                <xsl:value-of select="."/>
             </link>
          </xsl:for-each>
-         <xsl:text>.</xsl:text>
       </para>
       <form href="deploy-at">
          <xsl:choose>
