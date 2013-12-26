@@ -156,22 +156,6 @@ public class ServerConfig
     }
 
     /**
-     * Reload the configuration.
-     *
-     * TODO: Maybe we should instead really reparse the map in the same instance,
-     * so we do not invalidate all the reference to the existing instance, so
-     * this is really a singleton (and other classes can keep a reference to
-     * the singleton instance if they want).
-     */
-    public static synchronized ServerConfig reload(ServletConfig config)
-            throws TechnicalException
-    {
-        // Just get rid of the previous one and instantiate a new one.
-        INSTANCE = null;
-        return getInstance(config);
-    }
-
-    /**
      * Return the singleton instance.
      *
      * Return the instance if it exists, without taking the params into account.

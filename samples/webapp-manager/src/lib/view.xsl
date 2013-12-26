@@ -82,10 +82,10 @@
    </xsl:template>
 
    <xsl:variable name="menu-items">
-      <menu name="home"    title="Servlex manager home"   label="Home"/>
-      <menu name="webapps" title="Installed webapps list" label="Webapps"/>
-      <menu name="deploy"  title="Deploy a webapp"        label="Deploy"/>
-      <menu name="reset"   title="Reset the webapp cache" label="Reset"/>
+      <menu name="home"    title="Servlex manager home"    label="Home"/>
+      <menu name="webapps" title="Installed webapps list"  label="Webapps"/>
+      <menu name="deploy"  title="Deploy a webapp"         label="Deploy"/>
+      <menu name="reload"  title="Reload the webapp cache" label="Reload"/>
    </xsl:variable>
 
    <xsl:template name="menu">

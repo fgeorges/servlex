@@ -32,6 +32,7 @@ import org.expath.servlex.processors.saxon.functions.InstallEnabledFunction;
 import org.expath.servlex.processors.saxon.functions.InstallFromCxanFunction;
 import org.expath.servlex.processors.saxon.functions.InstallWebappFunction;
 import org.expath.servlex.processors.saxon.functions.InstalledWebappsFunction;
+import org.expath.servlex.processors.saxon.functions.ReloadWebappsFunction;
 import org.expath.servlex.processors.saxon.functions.RemoveWebappFunction;
 import org.expath.servlex.processors.saxon.functions.RepositoryFunction;
 
@@ -93,6 +94,7 @@ public class WebappFunctions
         saxon.registerExtensionFunction(new InstallWebappFunction());
         saxon.registerExtensionFunction(new InstalledWebappsFunction());
         saxon.registerExtensionFunction(new RemoveWebappFunction());
+        saxon.registerExtensionFunction(new ReloadWebappsFunction());
         saxon.registerExtensionFunction(new RepositoryFunction(config));
         // the config access and management functions
         saxon.registerExtensionFunction(new ConfigParamFunction());

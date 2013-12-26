@@ -67,6 +67,18 @@ public class WebRepository
     }
 
     /**
+     * Reload the applications from the repository.
+     * 
+     * The existing application objects are thrown away, and the web descriptors
+     * of all deployed applications are parsed again.
+     */
+    public synchronized void reload()
+            throws TechnicalException
+    {
+        myApps = initApplications();
+    }
+
+    /**
      * Return the underlying package repository.
      */
     public Repository getUnderlying()
@@ -245,7 +257,7 @@ public class WebRepository
     /** The map of Processors objects. */
     private final ProcessorsMap myProcs;
     /** The application map. */
-    private final Map<String, Application> myApps;
+    private Map<String, Application> myApps;
 
     /**
      * Specific exception when trying to install a package in a read-only repository.

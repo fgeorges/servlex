@@ -19,9 +19,9 @@
       <xslt uri="http://servlex.net/ns/webapp-manager/web-errors.xsl"/>
    </error>
 
-   <resource pattern="/"      rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
-   <resource pattern="/home"  rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
-   <resource pattern="/reset" rewrite="pages/reset.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/"       rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/home"   rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/reload" rewrite="pages/reset.xml"  media-type="text/xml" filters="view"/>
 
    <resource pattern="/style/.+.css"  media-type="text/css"/>
    <resource pattern="/images/.+.png" media-type="image/png"/>
@@ -68,9 +68,9 @@
       </url>
    </servlet>
 
-<!--
-    TODO:
-    - do-reset
--->
+   <servlet name="do-reload" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/reload.xsl"/>
+      <url pattern="/do-reload"/>
+   </servlet>
 
 </webapp>
