@@ -33,39 +33,52 @@ public class RegexMatcher
 
     public String next()
     {
+        // if all groups have been consumed...
         if ( myGroup > myCount ) {
+            myIsGroup = false;
+            // return the rest of the string if any
             if ( myLastIndex < myLen ) {
                 String res = myValue.substring(myLastIndex);
                 myLastIndex = myLen;
                 return res;
             }
+            // or return null if reached the end
             else {
                 return null;
             }
         }
+        // if there are still groups, get the start position
         int s = myMatcher.start(myGroup);
+        // if we have not consumed before the group, and there is something...
         if ( myPreGroup && myLastIndex < myMatcher.start(myGroup) ) {
+            myIsGroup = false;
+            // then return that string before the group
             myPreGroup = false;
             String res = myValue.substring(myLastIndex, s);
             myLastIndex = s;
             return res;
         }
+        // if there is nothing before the group, or already consumed, and the
+        // group is empty...
         if ( myMatcher.group(myGroup) == null ) {
+            // then recurse on the next pre-group
             myPreGroup = true;
             ++myGroup;
             return next();
         }
+        // if we need to consume the group (and there is one)
         else {
+            myIsGroup = true;
+            // then return the group
             myPreGroup = true;
-            ++myGroup;
             myLastIndex = myMatcher.end(myGroup);
-            return myMatcher.group(myGroup);
+            return myMatcher.group(myGroup++);
         }
     }
 
     public boolean isGroup()
     {
-        return ! myPreGroup;
+        return myIsGroup;
     }
 
     public int groupNumber()
@@ -83,6 +96,7 @@ public class RegexMatcher
     private int myLastIndex = 0;
     private int myGroup = 1;
     private boolean myPreGroup = true;
+    private boolean myIsGroup;
 }
 
 
