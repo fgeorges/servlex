@@ -30,7 +30,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-11-26
  */
 public class ParseHeaderValueCall
         extends ExtensionFunctionCall

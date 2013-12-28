@@ -36,7 +36,6 @@ import org.expath.servlex.processors.Processors;
  * list, in system properties).
  * 
  * @author Florent Georges
- * @date   2013-12-06
  */
 public class ExecuteFunction
         extends ExtensionFunctionDefinition

@@ -20,7 +20,6 @@ import net.sf.saxon.value.SequenceType;
  *     web:get-server-field-names() as xs:string*
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class GetServerFieldNamesFunction
         extends ExtensionFunctionDefinition

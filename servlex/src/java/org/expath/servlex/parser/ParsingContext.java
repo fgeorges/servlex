@@ -24,7 +24,6 @@ import org.expath.servlex.processors.Processors;
  * The context while parsing a webapp descriptor (aka expath-web.xml).
  *
  * @author Florent Georges
- * @date   2012-05-07
  */
 class ParsingContext
 {

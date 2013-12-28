@@ -33,7 +33,6 @@ import org.expath.servlex.tools.Auditor;
  * it carefully!
  *
  * @author Florent Georges
- * @date   2011-02-06
  */
 public class XdmConnector
         implements Connector

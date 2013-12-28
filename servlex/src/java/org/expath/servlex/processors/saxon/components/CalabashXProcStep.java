@@ -32,7 +32,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * TODO: ...
  *
  * @author Florent Georges
- * @date   2010-09-06
  */
 public class CalabashXProcStep
         implements Component

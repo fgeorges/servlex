@@ -40,7 +40,6 @@ import org.expath.servlex.processors.XSLTProcessor;
  * XSLT, XQuery and XProc processors based on Saxon and Calabash.
  *
  * @author Florent Georges
- * @date   2013-04-15
  */
 public class SaxonCalabash
     implements Processors

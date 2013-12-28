@@ -40,7 +40,6 @@ import org.expath.servlex.processors.saxon.functions.RepositoryFunction;
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
  *
  * @author Florent Georges
- * @date   2013-02-24
  */
 public class WebappFunctions
 {

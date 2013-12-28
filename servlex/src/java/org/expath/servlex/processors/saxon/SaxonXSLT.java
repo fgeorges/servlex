@@ -20,7 +20,6 @@ import org.expath.servlex.processors.XSLTProcessor;
  * The Saxon implementation of the XSLT processor.
  *
  * @author Florent Georges
- * @date   2013-04-15
  */
 class SaxonXSLT
         implements XSLTProcessor

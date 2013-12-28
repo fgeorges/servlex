@@ -22,7 +22,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * A document for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public class SaxonDocument
         extends SaxonItem

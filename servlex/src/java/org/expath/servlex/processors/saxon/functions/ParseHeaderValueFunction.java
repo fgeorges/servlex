@@ -35,7 +35,6 @@ import org.expath.servlex.processors.Processors;
  *    </web:header>
  *
  * @author Florent Georges
- * @date   2010-11-26
  */
 public class ParseHeaderValueFunction
         extends ExtensionFunctionDefinition

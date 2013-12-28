@@ -23,7 +23,6 @@ import net.sf.saxon.value.SequenceType;
  * (return value is the previous value is any)
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class SetRequestFieldFunction
         extends ExtensionFunctionDefinition

@@ -20,7 +20,6 @@ import org.expath.servlex.processors.XQueryProcessor;
  * The Saxon implementation of the XQuery processor.
  *
  * @author Florent Georges
- * @date   2013-04-15
  */
 class SaxonXQuery
         implements XQueryProcessor

@@ -18,7 +18,6 @@ import org.expath.servlex.tools.RegexPattern;
  * Represent an address handler while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-13
  */
 class ParsingResource
         extends ParsingHandler

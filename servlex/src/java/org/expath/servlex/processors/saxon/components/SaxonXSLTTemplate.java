@@ -42,7 +42,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * ...
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class SaxonXSLTTemplate
         implements Component

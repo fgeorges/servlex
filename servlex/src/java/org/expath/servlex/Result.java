@@ -49,7 +49,6 @@ import org.expath.servlex.processors.Serializer;
  * probably be found).
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 @Deprecated
 public class Result

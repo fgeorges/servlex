@@ -15,7 +15,6 @@ import javax.xml.namespace.QName;
  * Represents an abstract document node.
  *
  * @author Florent Georges
- * @date   2013-05-05
  */
 public interface Attribute
         extends Item

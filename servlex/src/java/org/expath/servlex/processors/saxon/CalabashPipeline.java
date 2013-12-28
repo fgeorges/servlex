@@ -59,7 +59,6 @@ import org.expath.servlex.tools.Cleanable;
  * Abstract an XProc pipeline.
  *
  * @author Florent Georges
- * @date   2013-02-12
  */
 public class CalabashPipeline
         implements Cleanable

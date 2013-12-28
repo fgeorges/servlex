@@ -52,7 +52,6 @@ import org.expath.servlex.WebRepository;
  * TODO: Define a way to set config parameters as well.
  *
  * @author Florent Georges
- * @date   2010-02-19
  */
 public class DeployWebapp
         extends HttpServlet

@@ -21,7 +21,6 @@ import org.expath.pkg.repo.tools.UpdatableXmlFile;
  * Represent the file [repo]/.expath-pkg/packages.xml.
  *
  * @author Florent Georges
- * @date   2013-09-17
  */
 public class WebappsXmlFile
         extends UpdatableXmlFile

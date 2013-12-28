@@ -22,7 +22,6 @@ import org.expath.servlex.tools.SequenceProperties;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-06-10
  */
 public class GetSessionFieldCall
         extends ExtensionFunctionCall

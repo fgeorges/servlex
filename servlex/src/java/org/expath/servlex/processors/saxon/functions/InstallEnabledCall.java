@@ -29,7 +29,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * The parameter $repo must be a {@link RepositoryItem}.
  * 
  * @author Florent Georges
- * @date   2013-09-16
  */
 public class InstallEnabledCall
         extends ExtensionFunctionCall

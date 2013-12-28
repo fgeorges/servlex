@@ -25,7 +25,6 @@ import net.sf.saxon.value.SequenceType;
  *     web:get-session-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
- * @date   2010-06-10
  */
 public class GetSessionFieldFunction
         extends ExtensionFunctionDefinition

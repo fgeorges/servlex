@@ -20,7 +20,6 @@ import org.expath.servlex.tools.Cleanable;
  * Servlet wrapper (can wrap a servlet, a filter, an error handler or a chain).
  *
  * @author Florent Georges
- * @date   2011-02-07
  */
 public abstract class Wrapper
         implements Cleanable

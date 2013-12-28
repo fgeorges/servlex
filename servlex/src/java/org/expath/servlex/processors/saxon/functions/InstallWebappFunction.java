@@ -39,7 +39,6 @@ import net.sf.saxon.value.SequenceType;
  * package (not a webapp).
  *
  * @author Florent Georges
- * @date   2013-09-11
  */
 public class InstallWebappFunction
         extends ExtensionFunctionDefinition

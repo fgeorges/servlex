@@ -31,7 +31,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * would be better here...?
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public class SaxonSequence
         implements Sequence

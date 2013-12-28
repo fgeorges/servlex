@@ -15,7 +15,6 @@ import org.expath.servlex.TechnicalException;
  * Represents an abstract document node.
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public interface Document
         extends Item

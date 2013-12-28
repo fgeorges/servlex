@@ -51,7 +51,6 @@ import org.expath.servlex.runtime.ComponentError;
  * Helper methods for Saxon.
  *
  * @author Florent Georges
- * @date   2010-12-21
  */
 public class SaxonHelper
 {

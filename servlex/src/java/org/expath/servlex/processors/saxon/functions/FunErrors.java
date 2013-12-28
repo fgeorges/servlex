@@ -17,7 +17,6 @@ import org.expath.servlex.ServlexConstants;
  * Utils for extension functions errors for Saxon.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 class FunErrors
 {

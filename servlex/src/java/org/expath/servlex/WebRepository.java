@@ -35,7 +35,6 @@ import org.expath.servlex.tools.WebappsXmlFile;
  * The package repository, with support for EXPath Webapp.
  *
  * @author Florent Georges
- * @date   2013-09-11
  */
 public class WebRepository
 {

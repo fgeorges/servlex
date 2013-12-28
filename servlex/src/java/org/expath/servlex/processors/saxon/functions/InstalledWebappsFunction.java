@@ -24,7 +24,6 @@ import net.sf.saxon.value.SequenceType;
  * The parameter $repo must be a {@link RepositoryItem}.
  *
  * @author Florent Georges
- * @date   2013-09-15
  */
 public class InstalledWebappsFunction
         extends ExtensionFunctionDefinition

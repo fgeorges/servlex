@@ -20,7 +20,6 @@ import org.expath.servlex.processors.Sequence;
  * null.
  *
  * @author Florent Georges
- * @date   2011-02-08
  */
 public class ComponentError
         extends Exception

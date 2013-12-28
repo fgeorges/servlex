@@ -18,7 +18,6 @@ import org.expath.servlex.processors.Sequence;
  * A {@link Properties} implementation for {@link Sequence} values.
  *
  * @author Florent Georges
- * @date   2013-05-19
  */
 public class SequenceProperties
         extends Properties<Item>

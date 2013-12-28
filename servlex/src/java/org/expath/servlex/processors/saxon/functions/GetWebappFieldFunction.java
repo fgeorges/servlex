@@ -25,7 +25,6 @@ import net.sf.saxon.value.SequenceType;
  *     web:get-webapp-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class GetWebappFieldFunction
         extends ExtensionFunctionDefinition

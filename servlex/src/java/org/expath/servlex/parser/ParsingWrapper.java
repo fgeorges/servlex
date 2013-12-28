@@ -15,7 +15,6 @@ import org.expath.servlex.model.Wrapper;
  * Represent a wrapper while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 abstract class ParsingWrapper
         extends ParsingFiltered

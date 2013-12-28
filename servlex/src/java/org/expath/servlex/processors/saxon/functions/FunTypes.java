@@ -25,7 +25,6 @@ import org.expath.servlex.ServlexConstants;
  * Utils for extension functions types for Saxon.
  *
  * @author Florent Georges
- * @date   2013-09-11
  */
 class FunTypes
 {

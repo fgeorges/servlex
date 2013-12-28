@@ -25,7 +25,6 @@ import org.expath.servlex.tools.RegexPattern;
  * particular path.  It is part of one particular application.
  *
  * @author Florent Georges
- * @date   2010-08-17
  */
 public abstract class AddressHandler
         implements Cleanable

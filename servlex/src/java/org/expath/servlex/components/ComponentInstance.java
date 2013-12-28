@@ -18,7 +18,6 @@ import org.expath.servlex.runtime.ComponentError;
  * One instance of a component (a component is the compiled for, this is the runtime).
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public interface ComponentInstance
 {

@@ -25,7 +25,6 @@ import org.expath.servlex.TechnicalException;
  * Facade class for this package, to parse the webapps.xml configuration file.
  *
  * @author Florent Georges
- * @date   2013-09-01
  */
 public class WebappsParser
 {

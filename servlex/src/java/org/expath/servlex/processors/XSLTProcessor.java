@@ -15,7 +15,6 @@ import org.expath.servlex.components.Component;
  * Abstract an XSLT processor.
  *
  * @author Florent Georges
- * @date   2013-04-15
  */
 public interface XSLTProcessor
 {

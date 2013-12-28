@@ -15,7 +15,6 @@ import org.expath.servlex.TechnicalException;
  * A generic interface to build an XML tree, independent on any processor.
  *
  * @author Florent Georges
- * @date   2013-04-16
  */
 public interface TreeBuilder
 {

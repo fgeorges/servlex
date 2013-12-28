@@ -13,7 +13,6 @@ package org.expath.servlex.processors;
  * Represents an abstract XDM item.
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public interface Item
 {

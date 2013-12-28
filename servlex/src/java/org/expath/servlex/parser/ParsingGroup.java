@@ -16,7 +16,6 @@ import java.util.List;
  * Represent a group while parsing.
  *
  * @author Florent Georges
- * @date   2012-05-07
  */
 class ParsingGroup
         extends ParsingFiltered

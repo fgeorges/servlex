@@ -33,7 +33,6 @@ import org.expath.servlex.tools.RegexMatcher;
  * Connector to the HTTP servlet request object.
  *
  * @author Florent Georges
- * @date   2011-02-06
  */
 public class RequestConnector
         implements Connector

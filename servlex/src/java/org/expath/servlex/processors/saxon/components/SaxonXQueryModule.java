@@ -41,7 +41,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * A component that is an XQuery Main Module, AKA "a query".
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class SaxonXQueryModule
         implements Component

@@ -20,7 +20,6 @@ import net.sf.saxon.value.SequenceType;
  *     web:get-request-field-names() as xs:string*
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class GetRequestFieldNamesFunction
         extends ExtensionFunctionDefinition

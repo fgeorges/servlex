@@ -16,7 +16,6 @@ import org.expath.servlex.model.Wrapper;
  * Represent a chain while parsing.
  *
  * @author Florent Georges
- * @date   2012-05-08
  */
 class ParsingChain
         extends ParsingWrapper

@@ -24,7 +24,6 @@ import org.expath.servlex.processors.Serializer;
  * Simple class to output XML to an {@link InputStream}.
  *
  * @author Florent Georges
- * @date   2013-09-14
  */
 public class XmlWriter
 {

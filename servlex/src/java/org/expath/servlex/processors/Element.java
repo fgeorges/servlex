@@ -17,7 +17,6 @@ import javax.xml.namespace.QName;
  * Represents an abstract element node.
  *
  * @author Florent Georges
- * @date   2013-05-05
  */
 public interface Element
         extends Item

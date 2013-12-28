@@ -28,7 +28,6 @@ import org.expath.servlex.processors.Item;
  * An element for Saxon.
  *
  * @author Florent Georges
- * @date   2013-05-06
  */
 public class SaxonElement
         extends SaxonItem

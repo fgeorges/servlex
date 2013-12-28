@@ -21,7 +21,6 @@ import org.expath.servlex.tools.Auditor;
  * A filter around a servlet (or around another filter, error handler, etc.)
  *
  * @author Florent Georges
- * @date   2011-02-07
  */
 public class Filter
         extends Wrapper

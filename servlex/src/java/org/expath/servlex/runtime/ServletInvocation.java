@@ -21,7 +21,6 @@ import org.expath.servlex.tools.Auditor;
  * Represent a specific invocation of an application's servlet, at a specific URI.
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class ServletInvocation
         extends Invocation

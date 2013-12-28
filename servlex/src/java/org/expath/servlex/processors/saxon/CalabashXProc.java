@@ -24,7 +24,6 @@ import org.expath.servlex.tools.Auditor;
  * Abstract an XProc processor.
  *
  * @author Florent Georges
- * @date   2013-02-12
  */
 public class CalabashXProc
         implements XProcProcessor

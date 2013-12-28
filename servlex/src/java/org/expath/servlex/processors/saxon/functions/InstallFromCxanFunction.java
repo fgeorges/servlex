@@ -39,7 +39,6 @@ import net.sf.saxon.value.SequenceType;
  * and exactly one has to be set.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 public class InstallFromCxanFunction
         extends ExtensionFunctionDefinition

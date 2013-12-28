@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
  * Wrap an XMLStreamReader with dedicated methods and consistent error handling.
  *
  * @author Florent Georges
- * @date   2012-05-07
  */
 public class StreamParser
 {

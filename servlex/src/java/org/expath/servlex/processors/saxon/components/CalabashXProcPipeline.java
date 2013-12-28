@@ -47,7 +47,6 @@ import org.expath.servlex.processors.saxon.CalabashHelper;
  * and implemented here...
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class CalabashXProcPipeline
         implements Component

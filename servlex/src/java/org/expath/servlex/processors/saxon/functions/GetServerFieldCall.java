@@ -22,7 +22,6 @@ import org.expath.servlex.tools.StringsProperties;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class GetServerFieldCall
         extends ExtensionFunctionCall

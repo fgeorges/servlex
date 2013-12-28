@@ -15,7 +15,6 @@ import org.expath.servlex.TechnicalException;
  * Exception for webapp descriptor parsing.
  *
  * @author Florent Georges
- * @date   2010-02-09
  */
 public class ParseException
         extends TechnicalException

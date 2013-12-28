@@ -13,7 +13,6 @@ package org.expath.servlex;
  * Technical, low-level exception.  Cannot go up to Servlex.service().
  *
  * @author Florent Georges
- * @date   2010-12-21
  */
 public class TechnicalException
         extends Exception

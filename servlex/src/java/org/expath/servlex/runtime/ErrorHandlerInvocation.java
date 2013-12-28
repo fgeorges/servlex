@@ -32,7 +32,6 @@ import org.expath.servlex.tools.Auditor;
  * </pre>
  *
  * @author Florent Georges
- * @date   2011-02-09
  */
 public class ErrorHandlerInvocation
         extends Invocation

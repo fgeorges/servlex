@@ -26,7 +26,6 @@ import org.expath.servlex.tools.Auditor;
  * groups, and/or chains.
  *
  * @author Florent Georges
- * @date   2012-04-25
  */
 public class ErrorHandler
         extends Wrapper

@@ -16,7 +16,6 @@ import java.util.List;
  * Represent an application element while parsing.
  *
  * @author Florent Georges
- * @date   2012-07-08
  */
 class ParsingApp
         extends ParsingFiltered

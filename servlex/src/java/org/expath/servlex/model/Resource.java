@@ -22,7 +22,6 @@ import org.expath.servlex.tools.RegexPattern;
  * A resource in an application, bound to a URI pattern.
  *
  * @author Florent Georges
- * @date   2010-08-17
  */
 public class Resource
         extends AddressHandler

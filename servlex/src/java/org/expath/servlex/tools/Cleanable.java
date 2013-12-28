@@ -15,7 +15,6 @@ import org.expath.servlex.ServlexException;
  * A resource that must be clean up when not needed anymore.
  *
  * @author Florent Georges
- * @date   2013-09-20
  */
 public interface Cleanable
 {

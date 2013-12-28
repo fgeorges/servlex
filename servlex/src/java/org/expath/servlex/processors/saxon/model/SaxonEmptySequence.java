@@ -21,7 +21,6 @@ import org.expath.servlex.processors.Sequence;
  * An empty sequence for Saxon.
  * 
  * @author Florent Georges
- * @date   2013-05-07
  */
 public class SaxonEmptySequence
         extends SaxonSequence

@@ -20,7 +20,6 @@ import net.sf.saxon.value.SequenceType;
  *     web:get-session-field-names() as xs:string*
  *
  * @author Florent Georges
- * @date   2010-06-12
  */
 public class GetSessionFieldNamesFunction
         extends ExtensionFunctionDefinition

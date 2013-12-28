@@ -31,7 +31,6 @@ import org.expath.servlex.tools.RegexPattern;
  * Represent a specific invocation of an application's resource, at a specific URI.
  *
  * @author Florent Georges
- * @date   2010-08-17
  */
 public class ResourceInvocation
         extends Invocation

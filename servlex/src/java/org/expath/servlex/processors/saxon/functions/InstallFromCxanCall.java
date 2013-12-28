@@ -68,7 +68,6 @@ import org.expath.servlex.WebRepository;
  *   valid.
  * 
  * @author Florent Georges
- * @date   2013-09-16
  */
 public class InstallFromCxanCall
         extends ExtensionFunctionCall

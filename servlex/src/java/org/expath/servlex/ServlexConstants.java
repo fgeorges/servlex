@@ -13,7 +13,6 @@ package org.expath.servlex;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-06-10
  */
 public class ServlexConstants
 {

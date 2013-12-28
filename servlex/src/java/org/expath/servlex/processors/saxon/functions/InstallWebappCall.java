@@ -71,7 +71,6 @@ import org.expath.servlex.WebRepository;
  * - web:unexpected: for any other error.
  * 
  * @author Florent Georges
- * @date   2013-09-11
  */
 public class InstallWebappCall
         extends ExtensionFunctionCall

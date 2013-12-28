@@ -21,7 +21,6 @@ import org.expath.servlex.tools.Cleanable;
  * A servlet entry point.
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public interface Component
         extends Cleanable

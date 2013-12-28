@@ -24,7 +24,6 @@ import org.expath.servlex.tools.RegexPattern;
  * A servlet in an application, bound to a URI pattern.
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class Servlet
         extends AddressHandler

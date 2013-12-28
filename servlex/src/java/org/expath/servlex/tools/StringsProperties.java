@@ -17,7 +17,6 @@ import org.expath.servlex.TechnicalException;
  * A {@link Properties} implementation for lists of {@link String} values.
  *
  * @author Florent Georges
- * @date   2013-05-19
  */
 public class StringsProperties
         extends Properties<String>

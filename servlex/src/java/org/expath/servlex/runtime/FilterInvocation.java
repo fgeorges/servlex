@@ -21,7 +21,6 @@ import org.expath.servlex.tools.Auditor;
  * The invocation of a filter, with its filtering components and it wrapped invocation.
  *
  * @author Florent Georges
- * @date   2011-02-07
  */
 public class FilterInvocation
         extends Invocation

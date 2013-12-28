@@ -36,7 +36,6 @@ import org.xml.sax.SAXException;
  * Parse bodies from HTTP requests or from files (i.e. from input streams).
  *
  * @author Florent Georges
- * @date   2013-09-13
  */
 public class BodyParser
 {

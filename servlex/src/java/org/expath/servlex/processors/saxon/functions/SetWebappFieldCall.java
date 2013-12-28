@@ -23,7 +23,6 @@ import org.expath.servlex.tools.Properties;
  * TODO: Doc...
  *
  * @author Florent Georges
- * @date   2010-11-22
  */
 public class SetWebappFieldCall
         extends ExtensionFunctionCall

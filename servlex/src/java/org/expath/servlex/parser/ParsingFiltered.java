@@ -18,7 +18,6 @@ import org.expath.servlex.model.Wrapper;
  * Represent a filtered object while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 abstract class ParsingFiltered
 {

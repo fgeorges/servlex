@@ -21,7 +21,6 @@ import org.expath.servlex.TechnicalException;
  * serialization.
  *
  * @author Florent Georges
- * @date   2013-04-16
  */
 public interface Serializer
 {

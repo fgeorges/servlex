@@ -50,7 +50,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  *     use it.
  *
  * @author Florent Georges
- * @date   2013-12-07
  */
 public class ExecuteCall
         extends ExtensionFunctionCall

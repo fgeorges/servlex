@@ -16,7 +16,6 @@ import org.expath.servlex.model.Filter;
  * Represent a chain while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 class ParsingFilter
         extends ParsingWrapper

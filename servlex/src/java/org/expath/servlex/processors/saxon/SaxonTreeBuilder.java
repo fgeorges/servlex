@@ -27,7 +27,6 @@ import org.expath.servlex.processors.TreeBuilder;
  * Tree builder implementation for Saxon.
  *
  * @author Florent Georges
- * @date   2010-11-26
  */
 class SaxonTreeBuilder
         implements TreeBuilder

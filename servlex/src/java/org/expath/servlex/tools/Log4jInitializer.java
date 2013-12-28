@@ -19,7 +19,6 @@ import org.apache.log4j.xml.DOMConfigurator;
  * startup phase, via the init() and load-on-startup mechanism.
  *
  * @author Florent Georges
- * @date   2010-02-15
  */
 public class Log4jInitializer
         extends HttpServlet

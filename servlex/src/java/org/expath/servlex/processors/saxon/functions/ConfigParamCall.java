@@ -30,7 +30,6 @@ import org.expath.servlex.model.ConfigParam;
  *                      $default as xs:string?) as xs:string?
  *
  * @author Florent Georges
- * @date   2013-08-22
  */
 public class ConfigParamCall
         extends ExtensionFunctionCall

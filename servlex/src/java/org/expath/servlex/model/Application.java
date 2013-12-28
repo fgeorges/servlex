@@ -26,7 +26,6 @@ import org.expath.servlex.tools.SequenceProperties;
  * Represent a webapp, with its metadata, its resources and its servlets.
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class Application
 {

@@ -22,7 +22,6 @@ import org.expath.servlex.processors.Processors;
  * A map of {@link Processors} objects, with caching.
  *
  * @author Florent Georges
- * @date   2013-09-11
  */
 public class ProcessorsMap
 {

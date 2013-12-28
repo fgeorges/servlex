@@ -17,7 +17,6 @@ import org.expath.servlex.processors.Sequence;
  * A document for Saxon.
  *
  * @author Florent Georges
- * @date   2013-04-30
  */
 public class SaxonItem
         implements Item

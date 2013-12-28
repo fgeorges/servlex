@@ -16,7 +16,6 @@ import org.expath.servlex.TechnicalException;
  * Abstract the provider of XSLT, XQuery and XProc processors.
  *
  * @author Florent Georges
- * @date   2013-04-15
  */
 public interface Processors
 {

@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
  * Proxy a {@link ServletInputStream} and log all data at trace level.
  *
  * @author Florent Georges
- * @date   2013-03-02
  */
 public class TraceInputStream
         extends ServletInputStream

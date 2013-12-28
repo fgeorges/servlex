@@ -30,7 +30,6 @@ import org.expath.servlex.tools.ProcessorsMap;
  * Facade class for this package, to parse EXPath Webapp descriptors.
  *
  * @author Florent Georges
- * @date   2010-02-09
  */
 public class EXPathWebParser
 {

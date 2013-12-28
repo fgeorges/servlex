@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
  * the headers Allow to be set in the response, with the list of allowed methods.
  *
  * @author Florent Georges
- * @date   2010-09-06
  */
 public class ServlexException
         extends Exception

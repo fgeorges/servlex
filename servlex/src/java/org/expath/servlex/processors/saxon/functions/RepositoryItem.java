@@ -23,7 +23,6 @@ import org.expath.servlex.WebRepository;
  * A specific type of item, encapsulating a {@link WebRepository} object.
  *
  * @author Florent Georges
- * @date   2013-09-15
  */
 public class RepositoryItem
         extends AtomicValue

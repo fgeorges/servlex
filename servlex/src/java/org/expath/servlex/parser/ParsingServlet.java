@@ -22,7 +22,6 @@ import org.expath.servlex.tools.RegexPattern;
  * Represent a servlet while parsing.
  *
  * @author Florent Georges
- * @date   2012-05-07
  */
 class ParsingServlet
         extends ParsingHandler

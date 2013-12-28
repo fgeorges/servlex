@@ -28,7 +28,6 @@ import org.expath.servlex.tools.ContentType;
  * Connector for a resource, can be connected only to the http servlet response.
  *
  * @author Florent Georges
- * @date   2011-02-06
  */
 public class ResourceConnector
         implements Connector

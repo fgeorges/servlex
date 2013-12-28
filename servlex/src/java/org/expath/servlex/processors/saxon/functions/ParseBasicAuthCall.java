@@ -27,7 +27,6 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
  * See {@link ParseBasicAuthFunction}.
  *
  * @author Florent Georges
- * @date   2012-05-04
  */
 public class ParseBasicAuthCall
         extends ExtensionFunctionCall

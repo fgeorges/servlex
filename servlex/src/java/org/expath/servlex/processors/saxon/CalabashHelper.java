@@ -30,7 +30,6 @@ import org.expath.servlex.runtime.ComponentError;
  * Helper methods for Calabash.
  *
  * @author Florent Georges
- * @date   2012-04-25
  */
 public class CalabashHelper
 {

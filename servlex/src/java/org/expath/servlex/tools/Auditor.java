@@ -27,7 +27,6 @@ import org.expath.servlex.processors.Processors;
  * Log audit information.
  *
  * @author Florent Georges
- * @date   2013-03-31
  */
 public class Auditor
 {

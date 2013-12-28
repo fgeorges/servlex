@@ -32,7 +32,6 @@ import org.expath.servlex.processors.Serializer;
  * serialization.
  *
  * @author Florent Georges
- * @date   2010-02-15
  */
 class SaxonSerializer
         implements Serializer

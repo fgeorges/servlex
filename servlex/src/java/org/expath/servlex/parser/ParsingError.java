@@ -18,7 +18,6 @@ import org.expath.servlex.model.Wrapper;
  * Represent an address handler while parsing.
  *
  * @author Florent Georges
- * @date   2013-09-16
  */
 class ParsingError
         extends ParsingWrapper

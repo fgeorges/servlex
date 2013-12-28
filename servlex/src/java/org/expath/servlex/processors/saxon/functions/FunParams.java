@@ -27,7 +27,6 @@ import org.expath.servlex.WebRepository;
  * Utils for extension functions parameters for Saxon.
  *
  * @author Florent Georges
- * @date   2013-08-22
  */
 class FunParams
 {

@@ -24,7 +24,6 @@ import org.expath.servlex.tools.Auditor;
  * Connect an XPath error to component implementations.
  *
  * @author Florent Georges
- * @date   2011-02-09
  */
 public class ErrorConnector
         implements Connector

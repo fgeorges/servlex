@@ -27,7 +27,6 @@ import org.expath.servlex.WebRepository;
  * TODO: Maybe return more information about each webapp, as XML elements.
  * 
  * @author Florent Georges
- * @date   2013-09-15
  */
 public class RepositoryCall
         extends ExtensionFunctionCall

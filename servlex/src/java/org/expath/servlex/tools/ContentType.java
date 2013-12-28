@@ -22,7 +22,6 @@ import org.expath.servlex.connectors.RequestConnector;
  * Represent a HTTP content-type header.
  *
  * @author Florent Georges
- * @date   2013-03-03
  */
 public class ContentType
 {

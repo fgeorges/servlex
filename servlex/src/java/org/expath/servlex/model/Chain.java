@@ -19,7 +19,6 @@ import org.expath.servlex.tools.Auditor;
  * A sequence of wrappers (filters and error handlers).
  *
  * @author Florent Georges
- * @date   2011-02-08
  */
 public class Chain
         extends Wrapper

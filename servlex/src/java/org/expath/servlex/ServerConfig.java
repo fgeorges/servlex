@@ -41,7 +41,6 @@ import static org.expath.servlex.ServlexConstants.TRACE_CONTENT_PROPERTY;
  * with several repositories?
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class ServerConfig
 {

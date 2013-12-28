@@ -25,7 +25,6 @@ import org.expath.servlex.tools.Cleanable;
  * TODO: The above comment is wrong, fix it.
  *
  * @author Florent Georges
- * @date   2010-08-17
  */
 public abstract class Invocation
         implements Cleanable

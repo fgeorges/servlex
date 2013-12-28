@@ -27,7 +27,6 @@ import org.expath.servlex.processors.Processors;
  * of the form "Basic XXX" where XXX is "user:password" encoded using Base64.
  *
  * @author Florent Georges
- * @date   2012-05-04
  */
 public class ParseBasicAuthFunction
         extends ExtensionFunctionDefinition

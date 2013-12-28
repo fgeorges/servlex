@@ -23,7 +23,6 @@ import org.expath.servlex.ServerConfig;
  *     web:repository() as item()
  *
  * @author Florent Georges
- * @date   2013-09-15
  */
 public class RepositoryFunction
         extends ExtensionFunctionDefinition

@@ -22,7 +22,6 @@ import org.expath.servlex.tools.Cleanable;
  * Encapsulate a connection between two components.
  *
  * @author Florent Georges
- * @date   2011-02-06
  */
 public interface Connector
         extends Cleanable

@@ -49,7 +49,6 @@ import org.expath.servlex.processors.saxon.model.SaxonDocument;
  * ...
  *
  * @author Florent Georges
- * @date   2009-12-12
  */
 public class SaxonXSLTTransform
         implements Component
