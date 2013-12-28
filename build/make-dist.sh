@@ -27,18 +27,6 @@ if test `basename $PWD` \!= build; then
     die "You must be in the servlex/build directory (the same as this script)"
 fi
 
-if test \! -f "$WAR"; then
-    die "$WAR does not exist"
-fi
-
-if test \! -f "$JAR"; then
-    die "$JAR does not exist"
-fi
-
-if test \! -f "$HELLO_xaw"; then
-    die "$HELLO_xaw does not exist"
-fi
-
 # clean up
 rm -rf ${DIR}
 rm -f ${DIR}.zip
@@ -54,11 +42,24 @@ echo "Subversion revision: ${REVISION}" >> ${DIR}/VERSION
 VERSION_PROP=../servlex/src/java/org/expath/servlex/tools/version.properties
 echo "org.expath.servlex.version=${DIST_VER}" > ${VERSION_PROP}
 echo "org.expath.servlex.revision=${REVISION}" >> ${VERSION_PROP}
+
 # build it
 ( cd ../servlex/ && ant ) || die "Build failed"
+if test \! -f "$WAR"; then
+    die "$WAR does not exist"
+fi
+if test \! -f "$JAR"; then
+    die "$JAR does not exist"
+fi
+
 # WAR and JAR
 cp "$WAR" ${DIR}/
 cp "$JAR" ${DIR}/
+
+( cd ../samples/hello-world && xproj build ) || die "Hello world build failed"
+if test \! -f "$HELLO_xaw"; then
+    die "$HELLO_xaw does not exist"
+fi
 
 # hello-world: the XAW...
 cp "$HELLO_xaw" ${DIR}/
