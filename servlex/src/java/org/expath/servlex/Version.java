@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  File:       ServlexVersion.java                                         */
+/*  File:       Version.java                                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2013-05-11                                                  */
 /*  Tags:                                                                   */
@@ -11,25 +11,24 @@ package org.expath.servlex;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Properties;
-import org.apache.log4j.Logger;
 
 /**
  * The version of Servlex.
  *
  * @author Florent Georges
- * @date   2013-05-11
  */
-public class ServlexVersion
+public class Version
 {
     /**
      * Return the singleton instance (instantiate it if not already).
      */
-    public static ServlexVersion getInstance()
+    public static Version getInstance()
             throws TechnicalException
     {
         if ( INSTANCE == null ) {
-            INSTANCE = new ServlexVersion();
+            INSTANCE = new Version();
         }
         return INSTANCE;
     }
@@ -51,9 +50,26 @@ public class ServlexVersion
     }
 
     /**
+     * Convenience main method, so the version can be displayed from the console.
+     */
+    public static void main(String[] args)
+            throws TechnicalException
+    {
+        getInstance().display(System.err);
+    }
+
+    /**
+     * Display the version information on {@code out}.
+     */
+    public void display(PrintStream out)
+    {
+        out.println("Servlex version " + getVersion() + ", revision #" + getRevision());
+    }
+
+    /**
      * Set the version and revision number by reading the properties file.
      */
-    private ServlexVersion()
+    private Version()
             throws TechnicalException
     {
         Properties props = new Properties();
@@ -72,11 +88,8 @@ public class ServlexVersion
         myRevision = props.getProperty(REVISION_PROP);
     }
 
-    /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ServlexVersion.class);
-
     /** The singleton instance. */
-    private static ServlexVersion INSTANCE = null;
+    private static Version INSTANCE = null;
 
     /** The resource name of the version properties file. */
     private static final String VERSION_RSRC = "/org/expath/servlex/tools/version.properties";

@@ -48,7 +48,6 @@ import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
  * The servlet dispatching the requests to the web applications in the container.
  *
  * @author Florent Georges
- * @date   2009-12-10
  */
 public class Servlex
         extends HttpServlet
@@ -157,7 +156,7 @@ public class Servlex
         if ( obj == null ) {
             StringsProperties props = new StringsProperties(PRIVATE_PROPS_PREFIX);
             try {
-                ServlexVersion versions = ServlexVersion.getInstance();
+                Version versions = Version.getInstance();
                 String ver = versions.getVersion();
                 String rev = versions.getRevision();
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
