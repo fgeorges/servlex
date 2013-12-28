@@ -9,6 +9,7 @@
 
 package org.expath.servlex.parser;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -59,6 +60,20 @@ class ParsingContext
     }
     public ParsingApp getApplication() {
         return myApp;
+    }
+
+    public void setBase(URI b) throws ParseException {
+        myBase = b;
+    }
+    public URI getBase() {
+        return myBase;
+    }
+
+    public void addConfigParam(ParsingConfigParam c) {
+        myConfigParams.add(c);
+    }
+    public List<ParsingConfigParam> getConfigParams() {
+        return myConfigParams;
     }
 
     public void addHandler(ParsingHandler h) {
@@ -125,14 +140,16 @@ class ParsingContext
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ParsingContext.class);
 
-    private Processors                   myProcs          = null;
-    private String                       myAbbrev         = null;
-    private String                       myTitle          = null;
-    private ParsingApp                   myApp            = null;
-    private List<ParsingHandler>         myHandlers       = new ArrayList<ParsingHandler>();
-    private Stack<ParsingGroup>          myInScopeGroups  = new Stack<ParsingGroup>();
-    private Map<String, ParsingWrapper>  myWrappers       = new HashMap<String, ParsingWrapper>();
-    private Map<ParsingWrapper, Wrapper> myActualWrappers = new HashMap<ParsingWrapper, Wrapper>();
+    private Processors myProcs  = null;
+    private String     myAbbrev = null;
+    private String     myTitle  = null;
+    private ParsingApp myApp    = null;
+    private URI        myBase   = null;
+    private final List<ParsingConfigParam>     myConfigParams   = new ArrayList<>();
+    private final List<ParsingHandler>         myHandlers       = new ArrayList<>();
+    private final Stack<ParsingGroup>          myInScopeGroups  = new Stack<>();
+    private final Map<String, ParsingWrapper>  myWrappers       = new HashMap<>();
+    private final Map<ParsingWrapper, Wrapper> myActualWrappers = new HashMap<>();
 }
 
 

@@ -188,7 +188,12 @@
    </xsl:template>
 
    <xsl:template match="text">
-      <input type="text" name="{ @name }" size="{ @size }" value="{ . }"/>
+      <input type="text" value="{ . }">
+         <xsl:copy-of select="@name|@size|@title"/>
+         <xsl:if test="@hidden/xs:boolean(.)">
+            <xsl:attribute name="type" select="'hidden'"/>
+         </xsl:if>
+      </input>
    </xsl:template>
 
    <xsl:template match="subtitle">

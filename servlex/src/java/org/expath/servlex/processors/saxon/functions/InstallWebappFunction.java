@@ -26,7 +26,14 @@ import net.sf.saxon.value.SequenceType;
  *                        $pkg  as xs:base64Binary,
  *                        $root as xs:string) as xs:string?
  *
- * The parameter $repo must be a {@link RepositoryItem}.
+ *     web:install-webapp($repo   as item(),
+ *                        $pkg    as xs:base64Binary,
+ *                        $root   as xs:string,
+ *                        $config as xs:string*) as xs:string?
+ *
+ * The parameter $repo must be a {@link RepositoryItem}.  The parameter $config
+ * must be an even sequence of strings: a config name then its value, then a
+ * config name then its value, etc., one pair for each config parameter.
  * 
  * If the function returns no string, then it installed a regular library
  * package (not a webapp).
@@ -52,13 +59,17 @@ public class InstallWebappFunction
     @Override
     public int getMaximumNumberOfArguments()
     {
-        return 3;
+        return 4;
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        return FunTypes.types(FunTypes.SINGLE_ITEM, FunTypes.SINGLE_BASE64, FunTypes.SINGLE_STRING);
+        return FunTypes.types(
+                FunTypes.SINGLE_ITEM,
+                FunTypes.SINGLE_BASE64,
+                FunTypes.SINGLE_STRING,
+                FunTypes.ANY_STRING);
     }
 
     @Override

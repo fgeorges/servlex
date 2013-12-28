@@ -70,6 +70,14 @@ class FunErrors
     }
 
     /**
+     * Returns the XPath exception for web:invalid-config-list.
+     */
+    public static XPathException invalidConfigList(String msg)
+    {
+        return FunErrors.make("invalid-config-list", msg);
+    }
+
+    /**
      * Returns the XPath exception for web:already-installed.
      */
     public static XPathException alreadyInstalled(Exception cause)

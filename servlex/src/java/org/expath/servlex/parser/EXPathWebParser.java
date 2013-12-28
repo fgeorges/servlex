@@ -9,23 +9,20 @@
 
 package org.expath.servlex.parser;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URI;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.transform.Source;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
-import org.expath.pkg.repo.Packages;
-import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.Storage.PackageResolver;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
+import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.tools.ProcessorsMap;
 
@@ -43,35 +40,17 @@ public class EXPathWebParser
     }
 
     /**
-     * Parse all webapp descriptors in the repository.
-     *
-     * TODO: For now, only get the "latest" version of a package.  See comments
-     * of {@link Repository#resolve(String,URISpace)} about that (versionning
-     * scheme is not always SemVer -- or could we impose it for webapps?)
-     */
-    @Deprecated
-    public Set<Application> parseDescriptors(Collection<Packages> packages)
-            throws ParseException
-                 , TechnicalException
-    {
-        // the result
-        Set<Application> apps = new HashSet<Application>();
-        // iterate on every sub-directories of the repo (i.e. on each package)
-        for ( Packages pp : packages ) {
-            Package pkg = pp.latest();
-            Application app = loadPackage(pkg);
-            if ( app != null ) {
-                apps.add(app);
-            }
-        }
-        // return the application maps
-        return apps;
-    }
-
-    /**
      * Parse the webapp descriptor of a given package, if any.
      * 
-     * Return null if the package is not a webapp.
+     * @return th application corresponding to a package, if any, or null if the
+     * package is not a webapp.
+     * 
+     * @param pkg The package to parse as a webapp.
+     * 
+     * @throws ParseException in case of any parsing error (for both
+     * {@code expath-web.xml} and {@code servlex.xml}).
+     * 
+     * @throws TechnicalException in case of any other technical error.
      */
     public Application loadPackage(Package pkg)
             throws ParseException
@@ -132,6 +111,16 @@ public class EXPathWebParser
         // the parsing context, with the default processors
         ParsingContext ctxt = new ParsingContext();
         ctxt.setProcessors(myProcs.getDefault());
+
+        // set the base URI
+        try {
+            URI base = pkg.getResolver().getContentDirBaseURI();
+            ctxt.setBase(base);
+        }
+        catch ( PackageException ex ) {
+            // do nothing, will be an error only if we need the base URI and it is null
+            LOG.debug("Impossible to get the content base URI for: " + pkg.getName(), ex);
+        }
 
         // try servlex.xml
         Source extensions = getDescriptor(pkg, SERVLEX_FILENAME);
@@ -219,41 +208,57 @@ public class EXPathWebParser
             }
             parser.ensureNamespace();
             String elem = parser.getLocalName();
-            if ( elem.equals("title") ) {
-                String title = parser.getElementText();
-                ctxt.setTitle(title);
-            }
-            else if ( elem.equals("application") ) {
-                ParsingApp a = handleApplication(parser);
-                ctxt.setApplication(a);
-            }
-            else if ( elem.equals("error") ) {
-                ParsingError e = handleError(parser, ctxt);
-                ctxt.addWrapper(e);
-            }
-            else if ( elem.equals("group") ) {
-                ParsingGroup g = handleGroup(parser, ctxt);
-                ctxt.pushGroup(g);
-            }
-            else if ( elem.equals("filter") ) {
-                ParsingFilter f = handleFilter(parser, ctxt);
-                ctxt.addWrapper(f);
-            }
-            else if ( elem.equals("chain") ) {
-                ParsingChain c = handleChain(parser);
-                ctxt.addWrapper(c);
-            }
-            else if ( elem.equals("servlet") ) {
-                ParsingServlet s = handleServlet(parser, ctxt);
-                ctxt.addHandler(s);
-            }
-            else if ( elem.equals("resource") ) {
-                ParsingResource rsrc = handleResource(parser, ctxt);
-                ctxt.addHandler(rsrc);
-            }
-            else {
-                String msg = "Unkown element in the descriptor for webapp ";
-                parser.parseError(msg + pkg.getName() + ": " + elem);
+            switch ( elem ) {
+                case "title": {
+                    String title = parser.getElementText();
+                    ctxt.setTitle(title);
+                    break;
+                }
+                case "config-param": {
+                    ParsingConfigParam c = handleConfigParam(parser);
+                    ctxt.addConfigParam(c);
+                    break;
+                }
+                case "application": {
+                    ParsingApp a = handleApplication(parser);
+                    ctxt.setApplication(a);
+                    break;
+                }
+                case "error": {
+                    ParsingError e = handleError(parser, ctxt);
+                    ctxt.addWrapper(e);
+                    break;
+                }
+                case "group": {
+                    ParsingGroup g = handleGroup(parser, ctxt);
+                    ctxt.pushGroup(g);
+                    break;
+                }
+                case "filter": {
+                    ParsingFilter f = handleFilter(parser, ctxt);
+                    ctxt.addWrapper(f);
+                    break;
+                }
+                case "chain": {
+                    ParsingChain c = handleChain(parser);
+                    ctxt.addWrapper(c);
+                    break;
+                }
+                case "servlet": {
+                    ParsingServlet s = handleServlet(parser, ctxt);
+                    ctxt.addHandler(s);
+                    break;
+                }
+                case "resource": {
+                    ParsingResource rsrc = handleResource(parser, ctxt);
+                    ctxt.addHandler(rsrc);
+                    break;
+                }
+                default: {
+                    String msg = "Unkown element in the descriptor for webapp ";
+                    parser.parseError(msg + pkg.getName() + ": " + elem);
+                    break;
+                }
             }
         }
 
@@ -302,7 +307,73 @@ public class EXPathWebParser
             AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
             app.addHandler(handler);
         }
+        // add config params
+        for ( ParsingConfigParam c : ctxt.getConfigParams()) {
+            ConfigParam config = c.makeConfigParam(ctxt);
+            app.addConfigParam(config);
+        }
         return app;
+    }
+
+    /**
+     * Handle an element 'config-param' in the webapp descriptor.
+     */
+    private ParsingConfigParam handleConfigParam(StreamParser parser)
+            throws ParseException
+    {
+        parser.ensureStartTag("config-param");
+        String id = parser.getAttribute("id");
+        if ( id == null ) {
+            parser.parseError("/webapp/config-param/@id is null");
+        }
+        LOG.debug("expath-web parser: config param: " + id);
+        ParsingConfigParam cfg = new ParsingConfigParam(id);
+        parser.nextTag();
+        // consume <name> and <desc> if any
+        handleDescription(parser, cfg);
+        // now, current event must be either <value> or <uri>
+        if ( parser.isStartTag("value") ) {
+            String value = parser.getElementText();
+            cfg.setValue(value);
+            parser.nextTag();
+        }
+        else if ( parser.isStartTag("uri") ) {
+            String uri = parser.getElementText();
+            cfg.setURI(uri);
+            parser.nextTag();
+        }
+        else {
+            parser.parseError("Expecting element 'value' or 'uri'");
+        }
+        // the end of the element
+        parser.ensureEndTag("config-param");
+        return cfg;
+    }
+
+    /**
+     * Handle an element with optional {@code <name>} and {@code <desc>}.
+     * 
+     * TODO: Plug it into other elements as well, like for instance servlet and
+     * filter elements.
+     * 
+     * Precondition: the parser must be on {@code <name>} if there is one, or on
+     * {@code <desc>} if there is one and no name, or on the next tag event if
+     * there is neither of them. Postcondition: the parser is on the next tag
+     * event (the next sibling element start or the parent end).
+     */
+    private void handleDescription(StreamParser parser, ParsingDescribed described)
+            throws ParseException
+    {
+        if ( parser.isStartTag("name") ) {
+            String name = parser.getElementText();
+            described.setName(name);
+            parser.nextTag();
+        }
+        if ( parser.isStartTag("desc") ) {
+            String desc = parser.getElementText();
+            described.setDescription(desc);
+            parser.nextTag();
+        }
     }
 
     /**
@@ -558,19 +629,17 @@ public class EXPathWebParser
                  , TechnicalException
     {
         String elem = parser.getLocalName();
-        if ( elem.equals("xquery") ) {
-            return handleXQuery(parser, ctxt);
+        switch (elem) {
+            case "xquery":
+                return handleXQuery(parser, ctxt);
+            case "xslt":
+                return handleXSLT(parser, ctxt);
+            case "xproc":
+                return handleXProc(parser, ctxt);
+            default:
+                parser.parseError("Unkown component type: " + elem);
+                return null; // cannot happen, to make javac happy
         }
-        else if ( elem.equals("xslt") ) {
-            return handleXSLT(parser, ctxt);
-        }
-        else if ( elem.equals("xproc") ) {
-            return handleXProc(parser, ctxt);
-        }
-        else {
-            parser.parseError("Unkown component type: " + elem);
-        }
-        return null; // cannot happen, to make javac happy
     }
 
     /**

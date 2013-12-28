@@ -13,6 +13,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
@@ -37,7 +41,14 @@ import org.expath.servlex.WebRepository;
  *                        $pkg  as xs:base64Binary,
  *                        $root as xs:string) as xs:string?
  *
- * The parameter $repo must be a {@link RepositoryItem}.
+ *     web:install-webapp($repo   as item(),
+ *                        $pkg    as xs:base64Binary,
+ *                        $root   as xs:string,
+ *                        $config as xs:string*) as xs:string?
+ *
+ * The parameter $repo must be a {@link RepositoryItem}.  The parameter $config
+ * must be an even sequence of strings: a config name then its value, then a
+ * config name then its value, etc., one pair for each config parameter.
  * 
  * If the function returns no string, then it installed a regular library
  * package (not a webapp).
@@ -54,6 +65,9 @@ import org.expath.servlex.WebRepository;
  * - web:invalid-context-root: if the provided context root is not syntactically
  *   valid.
  * 
+ * - web:invalid-config-list: if the list of config parameters is not valid (if
+ *   it does not contain an even number of members).
+ * 
  * - web:unexpected: for any other error.
  * 
  * @author Florent Georges
@@ -67,28 +81,51 @@ public class InstallWebappCall
             throws XPathException
     {
         // the params
-        FunParams params = new FunParams(orig_params, 2, 3);
-        WebRepository repo = params.asRepository(0, false);
-        byte[]        pkg  = params.asBinary(1, false);
-        String        root = null;
-        if ( params.number() == 3 ) {
+        FunParams params = new FunParams(orig_params, 2, 4);
+        WebRepository repo   = params.asRepository(0, false);
+        byte[]        pkg    = params.asBinary(1, false);
+        String        root   = null;
+        if ( params.number() >= 3 ) {
             root = params.asString(2, false);
         }
+        List<String>  config = null;
+        if ( params.number() == 4 ) {
+            config = params.asStringList(3, true);
+        }
         // log it
-        LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME).param(repo).param(pkg).param(root).value());
+        LOG.debug(params.format(InstallWebappFunction.LOCAL_NAME)
+                .param(repo).param(pkg).param(root).param(config).value());
         // do it
-        String value = doit(repo, pkg, root);
+        String value = doit(repo, pkg, root, config);
         return FunReturn.value(value);
     }
 
-    private String doit(WebRepository repo, byte[] pkg, String root)
+    static Map<String, String> configParams(List<String> list)
             throws XPathException
     {
+        int size = list.size();
+        if ( (size % 2) != 0 ) {
+            throw FunErrors.invalidConfigList("Not an even number of strings for config parameters: " + size);
+        }
+        Map<String, String> map = new HashMap<>();
+        Iterator<String> iter = list.iterator();
+        while ( iter.hasNext() ) {
+            String name  = iter.next();
+            String value = iter.next();
+            map.put(name, value);
+        }
+        return map;
+    }
+
+    private String doit(WebRepository repo, byte[] pkg, String root, List<String> config)
+            throws XPathException
+    {
+        Map<String, String> params = configParams(config);
         File file = save(pkg);
         try {
             // TODO: Set whether to override an existing package (instead of false),
             // from an extra param...?
-            return repo.install(file, root, false);
+            return repo.install(file, root, false, params);
         }
         catch ( WebRepository.CannotInstall ex ) {
             throw FunErrors.cannotInstall(ex);

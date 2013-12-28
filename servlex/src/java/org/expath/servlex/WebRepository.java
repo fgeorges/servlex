@@ -12,6 +12,7 @@ package org.expath.servlex;
 import java.io.File;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.log4j.Logger;
@@ -23,7 +24,9 @@ import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
 import org.expath.servlex.model.Application;
+import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.parser.EXPathWebParser;
+import org.expath.servlex.parser.WebappDecl;
 import org.expath.servlex.parser.WebappsParser;
 import org.expath.servlex.tools.ProcessorsMap;
 import org.expath.servlex.tools.WebappsXmlFile;
@@ -116,35 +119,51 @@ public class WebRepository
     /**
      * Install a webapp (or a library) in the repository.
      *
-     * Return the name of the newly installed webapp, or null if the package
+     * @return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * @param ctxt_root The context where to make the webapp available.
+     * @param archive The package for the webapp, as a {@link File) object.
+     * 
+     * @param root The context where to make the webapp available.
+     * 
+     * @param force Whether or not to override the existing package with the
+     * same name if one is already installed.
+     * 
+     * @param config The config parameters to install, instead of the values
+     * contained in the web descriptor.
      */
-    public synchronized String install(File archive, String ctxt_root, boolean force)
+    public synchronized String install(File archive, String root, boolean force, Map<String, String> config)
             throws TechnicalException
                  , PackageException
     {
-        installPreconditions(ctxt_root);
+        installPreconditions(root);
         Package pkg = myUnderlying.installPackage(archive, force, new LoggingUserInteraction());
-        return doInstall(pkg, ctxt_root);
+        return doInstall(pkg, root, config);
     }
 
     /**
      * Install a webapp (or a library) in the repository.
      *
-     * Return the name of the newly installed webapp, or null if the package
+     * @return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * @param ctxt_root The context where to make the webapp available.
+     * @param uri The package for the webapp, as a {@link URI) object.
+     * 
+     * @param root The context where to make the webapp available.
+     * 
+     * @param force Whether or not to override the existing package with the
+     * same name if one is already installed.
+     * 
+     * @param config The config parameters to install, instead of the values
+     * contained in the web descriptor.
      */
-    public synchronized String install(URI uri, String ctxt_root, boolean force)
+    public synchronized String install(URI uri, String root, boolean force, Map<String, String> config)
             throws TechnicalException
                  , PackageException
     {
-        installPreconditions(ctxt_root);
+        installPreconditions(root);
         Package pkg = myUnderlying.installPackage(uri, force, new LoggingUserInteraction());
-        return doInstall(pkg, ctxt_root);
+        return doInstall(pkg, root, config);
     }
 
     /**
@@ -179,26 +198,31 @@ public class WebRepository
         // the webapps.xml parser
         WebappsParser webapps_parser = new WebappsParser(myUnderlying);
         // the application URI names mapping to context roots
-        Map<URI, String> roots = webapps_parser.parse();
+        List<WebappDecl> decls = webapps_parser.parse();
         // the .expath-web.xml's parser
         EXPathWebParser expath_parser = new EXPathWebParser(myProcs);
         // the application map
-        Map<String, Application> applications = new HashMap<String, Application>();
+        Map<String, Application> applications = new HashMap<>();
         // parse and save the result in the map
-        for ( URI app_name : roots.keySet() ) {
-            String root = roots.get(app_name);
-            Packages packages = myUnderlying.getPackages(app_name.toString());
+        for ( WebappDecl decl : decls ) {
+            URI    name = decl.getName();
+            String root = decl.getRoot();
+            // resolve the package
+            Packages packages = myUnderlying.getPackages(name.toString());
             if ( packages == null ) {
                 // TODO: Maybe log it as an error instead, but not fatal (webapps.xml
                 // is corrupted, but that does not prevent to continue with other
                 // applications).
-                throw new TechnicalException("Package " + app_name + " not installed (but in .expath-web/webapps.xml).");
+                throw new TechnicalException("Package " + name + " not installed (but in .expath-web/webapps.xml).");
             }
             org.expath.pkg.repo.Package pkg = packages.latest();
+            // parse the application
             Application app = expath_parser.loadPackage(pkg);
             if ( app == null ) {
-                throw new TechnicalException("Not an application: " + app_name + " / " + pkg);
+                throw new TechnicalException("Not an application: " + name + " / " + pkg);
             }
+            // override the config parameters from expath-web.xml with .expath-web/webapps.xml
+            overrideConfigParams(app, decl.getConfigParams());
             LOG.info("Add the application to the store: " + root + " / " + app.getName());
             applications.put(root, app);
         }
@@ -226,7 +250,7 @@ public class WebRepository
     /**
      * Implements the installation methods.
      */
-    private String doInstall(Package pkg, String ctxt_root)
+    private String doInstall(Package pkg, String ctxt_root, Map<String, String> config)
             throws TechnicalException
                  , PackageException
     {
@@ -236,14 +260,32 @@ public class WebRepository
             // not a webapp
             return null;
         }
-        else {
-            // by default use the webapp's own abbrev
-            String root = ctxt_root == null ? app.getName() : ctxt_root;
-            // package is a webapp
-            myApps.put(root, app);
-            // update [repo]/.expath-web/webapps.xml
-            myWebappsXml.addWebapp(root, pkg.getName());
-            return root;
+        // override the config parameters from expath-web.xml with 'config'
+        overrideConfigParams(app, config);
+        // by default use the webapp's own abbrev
+        String root = ctxt_root == null ? app.getName() : ctxt_root;
+        // package is a webapp
+        myApps.put(root, app);
+        // update [repo]/.expath-web/webapps.xml
+        myWebappsXml.addWebapp(root, pkg.getName(), config);
+        return root;
+    }
+
+    private void overrideConfigParams(Application app, Map<String, String> config)
+    {
+        for ( Map.Entry<String, String> entry : config.entrySet() ) {
+            String id  = entry.getKey();
+            String val = entry.getValue();
+            ConfigParam cp = app.getConfigParam(id);
+            if ( cp == null ) {
+                LOG.error("Value given in webapps declarations for the config parameter " + id
+                        + ", which is not declared in the web descriptor for: " + app.getName());
+                cp = new ConfigParam(id, null, null, val);
+                app.addConfigParam(cp);
+            }
+            else {
+                cp.setValue(val);
+            }
         }
     }
 

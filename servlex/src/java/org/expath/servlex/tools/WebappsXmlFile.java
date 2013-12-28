@@ -12,6 +12,7 @@ package org.expath.servlex.tools;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Map;
 import javax.xml.transform.Transformer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.tools.UpdatableXmlFile;
@@ -39,15 +40,24 @@ public class WebappsXmlFile
     /**
      * Add a webapp to webapps.xml.
      * 
-     * @param root The context root of the webapp.
-     * @param pkg  The webapp package name (the name URI).
+     * @param root   The context root of the webapp.
+     * @param pkg    The webapp package name (the name URI).
+     * @param config The config parameters.
      */
-    public void addWebapp(String root, String pkg)
+    public void addWebapp(String root, String pkg, Map<String, String> config)
             throws PackageException
     {
         Transformer trans = compile(ADD_WEBAPP_XSL);
         trans.setParameter("root", root);
         trans.setParameter("pkg",  pkg);
+        int i = 1;
+        for ( Map.Entry<String, String> cfg : config.entrySet() ) {
+            String name  = cfg.getKey();
+            String value = cfg.getValue();
+            trans.setParameter("config-name-" + i,   name);
+            trans.setParameter("config-value-" + i,  value);
+            ++i;
+        }
         transform(trans);
     }
 

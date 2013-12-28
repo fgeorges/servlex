@@ -9,6 +9,8 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.Sequence;
@@ -92,6 +94,41 @@ class FunParams
             throw new XPathException("The " + ordinal(pos) + " param is not a string");
         }
         return item.getStringValue();
+    }
+
+    /**
+     * Return the pos-th parameter, checking it is a list of strings.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.
+     * 
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public List<String> asStringList(int pos, boolean optional)
+            throws XPathException
+    {
+        if ( pos < 0 || pos >= number() ) {
+            throw new XPathException("Asked for the " + ordinal(pos) + " param of " + number());
+        }
+        Sequence param = myParams[pos];
+        SequenceIterator it = param.iterate();
+        Item item = it.next();
+        if ( item == null ) {
+            if ( ! optional ) {
+                throw new XPathException("The " + ordinal(pos) + " param is an empty sequence");
+            }
+        }
+        List<String> result = new ArrayList<>();
+        while ( item != null ) {
+            if ( ! ( item instanceof StringValue ) ) {
+                throw new XPathException("Some value in the " + ordinal(pos) + " param is not a string");
+            }
+            String value = item.getStringValue();
+            result.add(value);
+            item = it.next();
+        }
+        return result;
     }
 
     /**
@@ -350,6 +387,28 @@ class FunParams
                     myBuf.append(value);
                     myBuf.append(">");
                 }
+            }
+            return this;
+        }
+
+        public Formatter param(List<String> value)
+            throws XPathException
+        {
+            if ( checkPos() ) {
+                myBuf.append("(");
+                if ( value != null ) {
+                    boolean first = true;
+                    for ( String v : value ) {
+                        if ( ! first ) {
+                            myBuf.append(",");
+                        }
+                        myBuf.append("'");
+                        myBuf.append(v.replace("'", "''"));
+                        myBuf.append("'");
+                        first = false;
+                    }
+                }
+                myBuf.append(")");
             }
             return this;
         }

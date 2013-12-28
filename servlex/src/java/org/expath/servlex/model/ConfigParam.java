@@ -1,71 +1,68 @@
 /****************************************************************************/
-/*  File:       ConfigParamCall.java                                        */
+/*  File:       ConfigParam.java                                            */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-08-22                                                  */
+/*  Date:       2013-12-27                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon.functions;
+package org.expath.servlex.model;
 
-import net.sf.saxon.expr.XPathContext;
-import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Sequence;
-import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
-import org.expath.servlex.Servlex;
-import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.Application;
-import org.expath.servlex.model.ConfigParam;
 
 /**
- * Implements web:config-param().
- * 
- * Two different arities exist:
- *
- *     web:config-param($name as xs:string) as xs:string?
- * 
- *     web:config-param($name    as xs:string,
- *                      $default as xs:string?) as xs:string?
+ * A config parameter.
  *
  * @author Florent Georges
- * @date   2013-08-22
  */
-public class ConfigParamCall
-        extends ExtensionFunctionCall
+public class ConfigParam
 {
-
-    @Override
-    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
-            throws XPathException
+    public ConfigParam(String id, String name, String desc, String value)
     {
-        // the params
-        FunParams params = new FunParams(orig_params, 1, 2);
-        String name = params.asString(0, false);
-        String dflt = null;
-        if ( params.number() == 2 ) {
-            dflt = params.asString(1, true);
-        }
-        // log it
-        LOG.debug(params.format(ConfigParamFunction.LOCAL_NAME).param(name).param(dflt).value());
-        // do it
-        try {
-            Application app    = Servlex.getCurrentWebapp();
-            ConfigParam config = app.getConfigParam(name);
-            String      value  = config == null ? null : config.getValue();
-            if ( value == null ) {
-                value = dflt;
-            }
-            return FunReturn.value(value);
-        }
-        catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the Servlex webapp management", ex);
-        }
+        myId    = id;
+        myName  = name;
+        myDesc  = desc;
+        myValue = value;
     }
 
-    /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ConfigParamCall.class);
+    public String getId()
+    {
+        return myId;
+    }
+
+    public String getName()
+    {
+        return myName;
+    }
+
+    public String getDesc()
+    {
+        return myDesc;
+    }
+
+    public String getValue()
+    {
+        return myValue;
+    }
+
+    public void setValue(String value)
+    {
+        myValue = value;
+    }
+
+    public void logApplication(Logger log)
+    {
+        log.debug("      Config param: " + myId);
+        log.debug("         Name : " + myName);
+        log.debug("         Desc : " + myDesc);
+        log.debug("         Value: " + myValue);
+    }
+
+    private final String myId;
+    private final String myName;
+    private final String myDesc;
+    private String myValue;
 }
 
 

@@ -10,6 +10,7 @@
 package org.expath.servlex.parser;
 
 import java.io.InputStream;
+import java.net.URI;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.expath.pkg.repo.Package;
@@ -212,6 +213,13 @@ public class EXPathWebParserTest
         @Override
         public Source resolveComponent(String string)
                 throws PackageException, Storage.NotExistException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getContentDirBaseURI()
+                throws PackageException
         {
             throw new UnsupportedOperationException();
         }

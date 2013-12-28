@@ -11,8 +11,8 @@ package org.expath.servlex.parser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.transform.Source;
@@ -44,17 +44,17 @@ public class WebappsParser
         return ROOT_PATTERN.matcher(ctxt_root).matches();
     }
 
-    public Map<URI, String> parse()
+    public List<WebappDecl> parse()
             throws TechnicalException
     {
-        Map<URI, String> result;
+        List<WebappDecl> result;
         // the streaming parser
         StreamParser parser = new StreamParser(mySource, EXPATH_WEB_NS);
         // the root element
         parser.ensureNextElement("webapps");
         try {
             // parse it!
-            result = parse(parser);
+            result = handletWebapps(parser);
         }
         catch ( ParseException ex ) {
             throw new TechnicalException("Error parsing " + WEBAPPS_FILE, ex);
@@ -91,11 +91,11 @@ public class WebappsParser
         }
     }
 
-    private Map<URI, String> parse(StreamParser parser)
+    private List<WebappDecl> handletWebapps(StreamParser parser)
             throws ParseException
     {
         // the result map
-        Map<URI, String> result = new HashMap<>();
+        List<WebappDecl> result = new ArrayList<>();
 
         // the "webapp" elements
         for ( ; /* ever */; ) {
@@ -117,7 +117,7 @@ public class WebappsParser
         return result;
     }
 
-    private void handleWebapp(StreamParser parser, Map<URI, String> map)
+    private void handleWebapp(StreamParser parser, List<WebappDecl> decls)
             throws ParseException
     {
         // <webapp root="myapp" enabled="false">
@@ -157,20 +157,41 @@ public class WebappsParser
 
         // package/@name
         parser.ensureNextElement("package");
-        String pkg = parser.getAttribute("name");
-        if ( ctxt_root == null ) {
+        String name_str = parser.getAttribute("name");
+        if ( name_str == null ) {
             parser.parseError("No @name on /webapps/webapp/package in " + WEBAPPS_PATH);
         }
+        URI name = null;
         try {
-            map.put(new URI(pkg), ctxt_root);
+            name = new URI(name_str);
         }
         catch ( URISyntaxException ex ) {
-            parser.parseError("/webapps/webapp/package/@name in " + WEBAPPS_PATH + " is not a valid URI: " + pkg, ex);
+            parser.parseError("/webapps/webapp/package/@name in " + WEBAPPS_PATH + " is not a valid URI: " + name_str, ex);
         }
 
-        parser.nextTag();
+        // create the webapp declaration object
+        WebappDecl decl = new WebappDecl(name, ctxt_root);
+        decls.add(decl);
+        parser.nextTag(); // </package>
         parser.ensureEndTag("package");
-        parser.nextTag();
+
+        // add the config parameters
+        parser.nextTag(); // <config-param> or </webapp>
+        while ( parser.getLocalName().equals("config-param") ) {
+            String cfg_name  = parser.getAttribute("name");
+            if ( cfg_name == null ) {
+                parser.parseError("/webapps/webapp/config-param with no name, in root: " + ctxt_root);
+            }
+            String cfg_value = parser.getAttribute("value");
+            if ( cfg_value == null ) {
+                parser.parseError("/webapps/webapp/config-param with no value, in root: "
+                        + ctxt_root + ", name: " + cfg_name);
+            }
+            decl.setConfigParam(cfg_name, cfg_value);
+            parser.nextTag(); // </config-param>
+            parser.nextTag(); // <config-param> or </webapp>
+        }
+
         parser.ensureEndTag("webapp");
     }
 

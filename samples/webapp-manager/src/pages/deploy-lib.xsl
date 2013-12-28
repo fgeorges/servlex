@@ -52,11 +52,33 @@
             <xsl:when test="exists($web-desc)">
                <fields>
                   <field label="Context root">
-                     <text name="root" size="20">
+                     <text name="root" size="20" title="Where to deploy the webapp at, and make it accessible from.">
                         <xsl:value-of select="$web-desc/@abbrev"/>
                      </text>
                   </field>
                </fields>
+               <xsl:if test="exists($web-desc/web:config-param)">
+                  <para/>
+                  <subtitle>Config parameters:</subtitle>
+                  <fields>
+                     <xsl:for-each select="$web-desc/web:config-param">
+                        <field label="{ @id }">
+                           <text name="config-name-{ position() }" hidden="true">
+                              <xsl:value-of select="@id"/>
+                           </text>
+                           <text name="config-value-{ position() }" size="50">
+                              <xsl:if test="exists(web:desc)">
+                                 <xsl:attribute name="title" select="normalize-space(web:desc)"/>
+                              </xsl:if>
+                              <xsl:value-of select="web:value|web:uri"/>
+                           </text>
+                           <xsl:text> </xsl:text>
+                           <xsl:value-of select="web:name"/>
+                        </field>
+                     </xsl:for-each>
+                  </fields>
+               </xsl:if>
+               <para/>
                <para>
                   <button label="Deploy"/>
                </para>

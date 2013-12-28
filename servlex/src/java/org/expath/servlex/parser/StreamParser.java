@@ -97,7 +97,7 @@ public class StreamParser
     }
 
     /**
-     * Get the value of the attribute.
+     * @return the current event type.
      */
     public int getEventType()
     {
@@ -105,7 +105,16 @@ public class StreamParser
     }
 
     /**
-     * Get the value of the attribute.
+     * @return the current event name.
+     */
+    public String getEventName()
+            throws ParseException
+    {
+        return getEventName(getEventType());
+    }
+
+    /**
+     * @return the content of the text-only current element.
      */
     public String getElementText()
             throws ParseException
@@ -193,6 +202,33 @@ public class StreamParser
             String uri    = namespaces.getNamespaceURI(prefix);
             return new QName(uri, local, prefix);
         }
+    }
+
+    /**
+     * @return whether the current event is a start tag.
+     */
+    public boolean isStartTag()
+    {
+        int event = myParser.getEventType();
+        return event == XMLStreamConstants.START_ELEMENT;
+    }
+
+    /**
+     * @return whether the current event is a start tag, with a given name.
+     */
+    public boolean isStartTag(String local_name)
+    {
+        return isStartTag() && hasName(local_name);
+    }
+
+    /**
+     * @return whether the current event has a given name.
+     */
+    public boolean hasName(String local_name)
+    {
+        QName ref    = new QName(myTargetNs, local_name);
+        QName actual = myParser.getName();
+        return ref.equals(actual);
     }
 
     /**
@@ -337,10 +373,26 @@ public class StreamParser
         }
     }
 
+    private String errorMessage(String msg)
+            throws ParseException
+    {
+        int event = getEventType();
+        StringBuilder buf = new StringBuilder(myParser.getLocation().toString());
+        buf.append("(event: ");
+        buf.append(getEventName(event));
+        if ( event == XMLStreamConstants.START_ELEMENT || event == XMLStreamConstants.END_ELEMENT ) {
+            buf.append(", ");
+            buf.append(getLocalName());
+        }
+        buf.append("): ");
+        buf.append(msg);
+        return buf.toString();
+    }
+
     public void parseError(String msg)
             throws ParseException
     {
-        String m = myParser.getLocation() + ": " + msg;
+        String m = errorMessage(msg);
         LOG.error(m);
         throw new ParseException(m);
     }
@@ -348,7 +400,7 @@ public class StreamParser
     public void parseError(String msg, Throwable ex)
             throws ParseException
     {
-        String m = myParser.getLocation() + ": " + msg;
+        String m = errorMessage(msg);
         LOG.error(m, ex);
         throw new ParseException(m, ex);
     }
@@ -356,9 +408,9 @@ public class StreamParser
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
     /** The underlying parser. */
-    private XMLStreamReader myParser;
+    private final XMLStreamReader myParser;
     /** THE namespace the parsed document uses. */
-    private String myTargetNs;
+    private final String myTargetNs;
 }
 
 

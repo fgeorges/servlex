@@ -127,6 +127,19 @@ public class Servlex
     }
 
     /**
+     * Get the current webapp in scope in this thread (serving the current request).
+     */
+    public static Application getCurrentWebapp()
+            throws TechnicalException
+    {
+        Application app = myCurrentApplication.get();
+        if ( app == null ) {
+            throw new TechnicalException("No current application when trying to access it");
+        }
+        return app;
+    }
+
+    /**
      * Get the server properties.
      */
     public static StringsProperties getServerMap()

@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -47,6 +48,8 @@ import org.expath.servlex.WebRepository;
  * TODO: Define a specific content type for XAR and XAW files? (instead of
  * application/octet-stream, something like application/x-expath-xar+zip, and
  * maybe application/x-expath-xaw+zip as well)
+ * 
+ * TODO: Define a way to set config parameters as well.
  *
  * @author Florent Georges
  * @date   2010-02-19
@@ -184,7 +187,9 @@ public class DeployWebapp
         try {
             // TODO: Set whether to override an existing package (instead of
             // false), from a request URI query parameter.
-            return myRepo.install(archive, root, false);
+            // TODO: Define a way to pass config parameters as well (instead of
+            // an empty map).
+            return myRepo.install(archive, root, false, new HashMap<String, String>());
         }
         catch ( Repository.AlreadyInstalledException ex ) {
             error(409, "Conflict", "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);

@@ -11,6 +11,8 @@ package org.expath.servlex.processors.saxon.functions;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
@@ -119,9 +121,11 @@ public class InstallFromCxanCall
         }
         // do it
         try {
+            // no config parameter are set when installing from CXAN
+            Map<String, String> config = new HashMap<>();
             // TODO: Set whether to override an existing package (instead of false),
             // from an extra param...?
-            return repo.install(new URI(url), root, false);
+            return repo.install(new URI(url), root, false, config);
         }
         catch ( URISyntaxException ex ) {
             throw FunErrors.invalidParam("Parameters resulted in an invalid URL: " + url, ex);
@@ -144,10 +148,7 @@ public class InstallFromCxanCall
         catch ( Repository.OnlineException ex ) {
             throw FunErrors.onlineError(ex);
         }
-        catch ( TechnicalException ex ) {
-            throw FunErrors.unexpected(ex);
-        }
-        catch ( PackageException ex ) {
+        catch ( TechnicalException | PackageException ex ) {
             throw FunErrors.unexpected(ex);
         }
     }
