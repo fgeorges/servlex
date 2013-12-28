@@ -36,6 +36,9 @@ import org.expath.servlex.tools.StringsProperties;
 import static org.expath.servlex.ServlexConstants.PRIVATE_PROPS_PREFIX;
 import static org.expath.servlex.ServlexConstants.PROP_PRODUCT;
 import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_HTML;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_NAME;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_REVISION;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_VERSION;
 import static org.expath.servlex.ServlexConstants.PROP_REQUEST_ID;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
@@ -158,10 +161,13 @@ public class Servlex
                 String ver = versions.getVersion();
                 String rev = versions.getRevision();
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
-                props.setPrivate(PROP_PRODUCT, product);
+                props.setPrivate(PROP_PRODUCT,          product);
+                props.setPrivate(PROP_PRODUCT_NAME,     "Servlex");
+                props.setPrivate(PROP_PRODUCT_VERSION,  ver);
+                props.setPrivate(PROP_PRODUCT_REVISION, rev);
                 String product_html
-                        = "<a href='https://servlex.net/'>Servlex</a> version "
-                        + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
+                        = "<a href='http://servlex.net/'>Servlex</a> version "
+                        + ver + " (revision #<a href='http://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
                 props.setPrivate(PROP_PRODUCT_HTML, product_html);
                 String vendor = "Florent Georges, H2O Consulting, for EXPath";

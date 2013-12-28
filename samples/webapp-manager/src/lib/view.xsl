@@ -61,19 +61,24 @@
                   </div>
                </div>
                <div id="footer">
+                  <xsl:variable name="ver" select="web:get-container-field('web:product-version')"/>
+                  <xsl:variable name="rev" select="web:get-container-field('web:product-revision')"/>
                   <div class="right">
-                     <!-- TODO: Have a HTML version of this, with links... -->
-                     <xsl:value-of select="web:get-container-field('web:product')"/>
+                     <a href="http://servlex.net/">Servlex</a>
+                     <xsl:text> version </xsl:text>
+                     <xsl:value-of select="$ver"/>
+                     <xsl:text> (revision #</xsl:text>
+                     <a href="http://github.com/fgeorges/servlex/commit/{ $rev }">
+                        <xsl:value-of select="$rev"/>
+                     </a>
+                     <xsl:text>)</xsl:text>
                      <br/>
                      <xsl:text>By </xsl:text>
-                     <xsl:value-of select="web:get-container-field('web:vendor')"/>
-                     
-                     <!-- TODO: Parse the values... (WTF, why would we need to parse standard
-                          properties...?!?) -->
-                     <!--xsl:sequence select="web:get-container-field('web:product-html')"/>
-                     <br/>
-                     <xsl:text>By </xsl:text>
-                     <xsl:sequence select="web:get-container-field('web:vendor-html')"/-->
+                     <a href="http://fgeorges.org/">Florent Georges</a>
+                     <xsl:text>, </xsl:text>
+                     <a href="http://h2oconsulting.be/">H2O Consulting</a>
+                     <xsl:text> for </xsl:text>
+                     <a href="http://expath.org/">EXPath</a>
                   </div>
                </div>
             </div>
