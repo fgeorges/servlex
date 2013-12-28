@@ -247,73 +247,79 @@ public class Result
         }
         Iterator<Attribute> attributes = body.attributes();
         while ( attributes.hasNext() ) {
-            Attribute attr = attributes.next();
-            QName name = attr.name();
+            Attribute attr  = attributes.next();
+            QName     name  = attr.name();
+            String    value = attr.stringValue();
             if ( LOG.isDebugEnabled() ) {
-                LOG.debug("body attribute: " + name + " = " + attr.stringValue());
+                LOG.debug("body attribute: " + name + " = " + value);
             }
             if ( name.equals(TYPE_NAME) ) {
-                b.serializer.setMediaType(attr.stringValue());
+                b.serializer.setMediaType(value);
             }
             else if ( name.equals(ID_NAME) ) {
-                b.id = attr.stringValue();
+                b.id = value;
             }
             else if ( name.equals(DESC_NAME) ) {
-                b.description = attr.stringValue();
+                b.description = value;
             }
             else if ( name.equals(SRC_NAME) ) {
-                b.src = attr.stringValue();
+                b.src = value;
             }
             else if ( name.equals(METHOD_NAME) ) {
-                b.serializer.setMethod(attr.stringValue());
+                b.serializer.setMethod(value);
             }
             else if ( name.equals(ENC_NAME) ) {
-                b.serializer.setEncoding(attr.stringValue());
+                b.serializer.setEncoding(value);
             }
             else if ( name.equals(BYTE_ORDER_NAME) ) {
-                b.serializer.setByteOrderMark(attr.stringValue());
+                b.serializer.setByteOrderMark(value);
             }
             else if ( name.equals(CDATA_ELEMENTS_NAME) ) {
-                b.serializer.setCdataSectionElements(attr.stringValue());
+                b.serializer.setCdataSectionElements(value);
             }
             else if ( name.equals(PUBID_NAME) ) {
-                b.serializer.setDoctypePublic(attr.stringValue());
+                b.serializer.setDoctypePublic(value);
             }
             else if ( name.equals(SYSID_NAME) ) {
-                b.serializer.setDoctypeSystem(attr.stringValue());
+                b.serializer.setDoctypeSystem(value);
             }
             else if ( name.equals(ESCAPE_URI_NAME) ) {
-                b.serializer.setEscapeUriAttributes(attr.stringValue());
+                b.serializer.setEscapeUriAttributes(value);
             }
             else if ( name.equals(INCLUDE_CT_NAME) ) {
-                b.serializer.setIncludeContentType(attr.stringValue());
+                b.serializer.setIncludeContentType(value);
             }
             else if ( name.equals(INDENT_NAME) ) {
-                b.serializer.setIndent(attr.stringValue());
+                b.serializer.setIndent(value);
             }
             else if ( name.equals(NORM_FORM_NAME) ) {
-                b.serializer.setNormalizationForm(attr.stringValue());
+                b.serializer.setNormalizationForm(value);
             }
             else if ( name.equals(OMIT_XML_DECL_NAME) ) {
-                b.serializer.setOmitXmlDeclaration(attr.stringValue());
+                b.serializer.setOmitXmlDeclaration(value);
             }
             else if ( name.equals(STANDALONE_NAME) ) {
-                b.serializer.setStandalone(attr.stringValue());
+                b.serializer.setStandalone(value);
             }
             else if ( name.equals(UNDECL_PREFIXES_NAME) ) {
-                b.serializer.setUndeclarePrefixes(attr.stringValue());
+                b.serializer.setUndeclarePrefixes(value);
             }
             else if ( name.equals(USE_CHAR_MAPS_NAME) ) {
-                b.serializer.setUseCharacterMaps(attr.stringValue());
+                b.serializer.setUseCharacterMaps(value);
             }
             else if ( name.equals(VERSION_NAME) ) {
-                b.serializer.setVersion(attr.stringValue());
+                b.serializer.setVersion(value);
             }
             else if ( "xml".equals(name.getPrefix()) ) {
                 // nothing (ignore standard XML attributes, like xml:base, xml:id...)
             }
             else {
-                error(500, "Unknown attribute on web:body: " + name);
+                try {
+                    b.serializer.setExtension(name, value);
+                }
+                catch ( TechnicalException ex ) {
+                    error(500, "Unknown attribute on web:body: " + name, ex);
+                }
             }
         }
         Iterator<Item> children = body.children();
@@ -441,30 +447,30 @@ public class Result
     private static final QName BODY_NAME   = new QName(WEB_NS, "body");
     private static final QName MULTI_NAME  = new QName(WEB_NS, "multipart");
     // attribute names
-    private static final QName STATUS_NAME = new QName("status");
-    private static final QName MSG_NAME    = new QName("message");
-    private static final QName NAME_NAME   = new QName("name");
-    private static final QName VALUE_NAME  = new QName("value");
-    private static final QName TYPE_NAME   = new QName("content-type");
-    private static final QName BOUND_NAME  = new QName("boundary");
-    private static final QName ENC_NAME    = new QName("encoding");
-    private static final QName ID_NAME     = new QName("id");
-    private static final QName DESC_NAME   = new QName("description");
-    private static final QName SRC_NAME    = new QName("src");
-    private static final QName METHOD_NAME = new QName("method");
-    private static final QName BYTE_ORDER_NAME = new QName("byte-order-mark");
-    private static final QName CDATA_ELEMENTS_NAME = new QName("cdata-section-elements");
-    private static final QName PUBID_NAME  = new QName("doctype-public");
-    private static final QName SYSID_NAME  = new QName("doctype-system");
-    private static final QName ESCAPE_URI_NAME = new QName("escape-uri-attributes");
-    private static final QName INCLUDE_CT_NAME = new QName("include-content-type");
-    private static final QName INDENT_NAME = new QName("indent");
-    private static final QName NORM_FORM_NAME = new QName("normalization-form");
-    private static final QName OMIT_XML_DECL_NAME = new QName("omit-xml-declaration");
-    private static final QName STANDALONE_NAME = new QName("standalone");
+    private static final QName STATUS_NAME          = new QName("status");
+    private static final QName MSG_NAME             = new QName("message");
+    private static final QName NAME_NAME            = new QName("name");
+    private static final QName VALUE_NAME           = new QName("value");
+    private static final QName TYPE_NAME            = new QName("content-type");
+    private static final QName BOUND_NAME           = new QName("boundary");
+    private static final QName ENC_NAME             = new QName("encoding");
+    private static final QName ID_NAME              = new QName("id");
+    private static final QName DESC_NAME            = new QName("description");
+    private static final QName SRC_NAME             = new QName("src");
+    private static final QName METHOD_NAME          = new QName("method");
+    private static final QName BYTE_ORDER_NAME      = new QName("byte-order-mark");
+    private static final QName CDATA_ELEMENTS_NAME  = new QName("cdata-section-elements");
+    private static final QName PUBID_NAME           = new QName("doctype-public");
+    private static final QName SYSID_NAME           = new QName("doctype-system");
+    private static final QName ESCAPE_URI_NAME      = new QName("escape-uri-attributes");
+    private static final QName INCLUDE_CT_NAME      = new QName("include-content-type");
+    private static final QName INDENT_NAME          = new QName("indent");
+    private static final QName NORM_FORM_NAME       = new QName("normalization-form");
+    private static final QName OMIT_XML_DECL_NAME   = new QName("omit-xml-declaration");
+    private static final QName STANDALONE_NAME      = new QName("standalone");
     private static final QName UNDECL_PREFIXES_NAME = new QName("undeclare-prefixes");
-    private static final QName USE_CHAR_MAPS_NAME = new QName("use-character-maps");
-    private static final QName VERSION_NAME = new QName("version");
+    private static final QName USE_CHAR_MAPS_NAME   = new QName("use-character-maps");
+    private static final QName VERSION_NAME         = new QName("version");
 
     private static final Logger LOG = Logger.getLogger(Result.class);
 

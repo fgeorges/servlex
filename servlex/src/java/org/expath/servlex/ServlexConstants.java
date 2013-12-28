@@ -34,17 +34,23 @@ public class ServlexConstants
     public static final String OPTION_MESSAGE   = "message";
 
     /** The prefix for the private webapp properties. */
-    public static final String PRIVATE_PROPS_PREFIX = "web:";
+    public static final String PRIVATE_PROPS_PREFIX  = "web:";
     /** The name of the property with a unique ID for the request. */
-    public static final String PROP_REQUEST_ID   = "web:request-id";
+    public static final String PROP_REQUEST_ID       = "web:request-id";
     /** The name of the property with the product name and version. */
-    public static final String PROP_PRODUCT      = "web:product";
+    public static final String PROP_PRODUCT          = "web:product";
+    /** The name of the property with the product name. */
+    public static final String PROP_PRODUCT_NAME     = "web:product-name";
+    /** The name of the property with the product version. */
+    public static final String PROP_PRODUCT_VERSION  = "web:product-version";
+    /** The name of the property with the product revision. */
+    public static final String PROP_PRODUCT_REVISION = "web:product-revision";
     /** The name of the property with the product name and version, formatted in HTML. */
-    public static final String PROP_PRODUCT_HTML = "web:product-html";
+    public static final String PROP_PRODUCT_HTML     = "web:product-html";
     /** The name of the property with the vendor description. */
-    public static final String PROP_VENDOR       = "web:vendor";
+    public static final String PROP_VENDOR           = "web:vendor";
     /** The name of the property with the vendor description, formatted in HTML. */
-    public static final String PROP_VENDOR_HTML  = "web:vendor-html";
+    public static final String PROP_VENDOR_HTML      = "web:vendor-html";
 
     /** The system property name for the processors implementation class. */
     public static final String PROCESSORS_PROPERTY      = "org.expath.servlex.processors";

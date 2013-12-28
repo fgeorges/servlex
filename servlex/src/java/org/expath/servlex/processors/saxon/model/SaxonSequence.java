@@ -14,8 +14,10 @@ import java.util.Iterator;
 import java.util.List;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
@@ -66,7 +68,24 @@ public class SaxonSequence
         init(seq.iterator());
     }
 
+    public SaxonSequence(net.sf.saxon.om.Sequence seq)
+            throws TechnicalException
+    {
+        if ( seq == null ) {
+            throw new NullPointerException("Sequence is null for Saxon sequence");
+        }
+        SequenceIterator it;
+        try {
+            it = seq.iterate();
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error getting an iterator out of the sequence", ex);
+        }
+        init(it);
+    }
+
     public SaxonSequence(SequenceIterator iter)
+            throws TechnicalException
     {
         if ( iter == null ) {
             throw new NullPointerException("Iterator is null for Saxon sequence");
@@ -76,7 +95,7 @@ public class SaxonSequence
 
     private void init(Iterator<Item> iter)
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         while ( iter.hasNext() ) {
             items.add(iter.next());
         }
@@ -85,7 +104,7 @@ public class SaxonSequence
 
     private void init(XdmSequenceIterator iter)
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         while ( iter.hasNext() ) {
             XdmItem item = iter.next();
             items.add(new SaxonItem(item));
@@ -94,11 +113,17 @@ public class SaxonSequence
     }
 
     private void init(SequenceIterator iter)
+            throws TechnicalException
     {
-        List<Item> items = new ArrayList<Item>();
+        List<Item> items = new ArrayList<>();
         net.sf.saxon.om.Item item;
-        while ( (item = iter.current()) != null ) {
-            items.add(new SaxonItem(item));
+        try {
+            while ( (item = iter.next()) != null ) {
+                items.add(new SaxonItem(item));
+            }
+        }
+        catch ( XPathException ex ) {
+            throw new TechnicalException("Error iterating the Saxon sequence", ex);
         }
         myItems = items;
     }
@@ -129,35 +154,48 @@ public class SaxonSequence
     public Element elementAt(int position)
             throws TechnicalException
     {
-        Item item = itemAt(position);
-        SaxonElement elem;
-        try {
+        // If the item at that position is exactly one document node, and its
+        // children are exactly one element node (ignoring whitespace-only text
+        // nodes), then it is returned directly instead.
+        SaxonDocument doc = isDocument(position);
+        if ( doc == null ) {
+            Item item = itemAt(position);
             return SaxonHelper.toSaxonElement(item);
         }
-        catch ( TechnicalException ex ) {
-            SaxonDocument doc = SaxonHelper.toSaxonDocument(item);
-            return doc.getRootElement();
+        else {
+            XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
+            return new SaxonElement(elem);
         }
     }
 
+    @Override
     public Sequence subSequence(int start)
     {
-        // if index is < 0, return ()
-        if ( start < 0 ) {
-            return SaxonEmptySequence.getInstance();
+        // If the sequence is exactly one document node, then its children
+        // nodes are used directly instead.
+        SaxonDocument doc = isSingleDocument();
+        if ( doc == null ) {
+            // if index is < 0, return ()
+            if ( start < 0 ) {
+                return SaxonEmptySequence.getInstance();
+            }
+            // get an iterator and iterate 'start' times
+            Iterator<Item> iter = iterator();
+            while ( start > 0 && iter.hasNext() ) {
+                iter.next();
+                --start;
+            }
+            // if reached the end, return ()
+            if ( ! iter.hasNext() ) {
+                return SaxonEmptySequence.getInstance();
+            }
+            // if not, return the sub-sequence, till the end
+            return new SaxonSequence(iter);
         }
-        // get an iterator and iterate 'start' times
-        Iterator<Item> iter = iterator();
-        while ( start > 0 && iter.hasNext() ) {
-            iter.next();
-            --start;
+        else {
+            Sequence seq = doc.getChildren();
+            return seq.subSequence(start);
         }
-        // if reached the end, return ()
-        if ( ! iter.hasNext() ) {
-            return SaxonEmptySequence.getInstance();
-        }
-        // if not, return the sub-sequence, till the end
-        return new SaxonSequence(iter);
     }
 
     // TODO: Should be package visible, but is used in XdmConnector (which
@@ -168,6 +206,51 @@ public class SaxonSequence
         return new XdmValue(impl);
     }
 
+    /**
+     * Test whether the item at that position is a document node.
+     */
+    private SaxonDocument isDocument(int position)
+    {
+        Item at = itemAt(position);
+        if ( at == null ) {
+            // no item at that position
+            return null;
+        }
+        XdmItem item = SaxonItem.getXdmItem(at);
+        if ( item.isAtomicValue() ) {
+            // if the item is atomic
+            return null;
+        }
+        XdmNode node = (XdmNode) item;
+        try {
+            // try to convert to SaxonDocument...
+            return new SaxonDocument(node);
+        }
+        catch ( TechnicalException ex ) {
+            // ... ctor raises an exception if 'node' is not a node
+            return null;
+        }
+    }
+
+    /**
+     * Test whether this sequence is a single document node.
+     * 
+     * If the sequence is empty or has 2 or more items, it returns null.  If it
+     * contains 1 single item which is not a document node, it returns null as
+     * well.  If the sequence is a single item which is a document node, then
+     * this node is returned as a {@link SaxonDocument}.
+     */
+    private SaxonDocument isSingleDocument()
+    {
+        Item second = itemAt(1);
+        if ( second != null ) {
+            // if 2 or more items in the sequence
+            return null;
+        }
+        return isDocument(0);
+    }
+
+    /** The items. */
     private Iterable<Item> myItems;
 
     private static class ItemIterable
@@ -184,7 +267,7 @@ public class SaxonSequence
             return new ItemIterator(myOriginal.iterator());
         }
 
-        private Iterable<Item> myOriginal;
+        private final Iterable<Item> myOriginal;
     }
 
     private static class ItemIterator
@@ -205,10 +288,7 @@ public class SaxonSequence
         public XdmItem next()
         {
             Item item = myOriginal.next();
-            if ( ! (item instanceof SaxonItem) ) {
-                throw new IllegalStateException("Not a Saxon item: " + item);
-            }
-            return ((SaxonItem) item).getSaxonItem();
+            return SaxonItem.getXdmItem(item);
         }
 
         @Override
@@ -217,7 +297,7 @@ public class SaxonSequence
             myOriginal.remove();
         }
 
-        private Iterator<Item> myOriginal;
+        private final Iterator<Item> myOriginal;
     }
 }
 

@@ -36,6 +36,9 @@ import org.expath.servlex.tools.StringsProperties;
 import static org.expath.servlex.ServlexConstants.PRIVATE_PROPS_PREFIX;
 import static org.expath.servlex.ServlexConstants.PROP_PRODUCT;
 import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_HTML;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_NAME;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_REVISION;
+import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_VERSION;
 import static org.expath.servlex.ServlexConstants.PROP_REQUEST_ID;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
@@ -127,6 +130,19 @@ public class Servlex
     }
 
     /**
+     * Get the current webapp in scope in this thread (serving the current request).
+     */
+    public static Application getCurrentWebapp()
+            throws TechnicalException
+    {
+        Application app = myCurrentApplication.get();
+        if ( app == null ) {
+            throw new TechnicalException("No current application when trying to access it");
+        }
+        return app;
+    }
+
+    /**
      * Get the server properties.
      */
     public static StringsProperties getServerMap()
@@ -145,17 +161,20 @@ public class Servlex
                 String ver = versions.getVersion();
                 String rev = versions.getRevision();
                 String product = "Servlex version " + ver + " (revision #" + rev + ")";
-                props.setPrivate(PROP_PRODUCT, product);
+                props.setPrivate(PROP_PRODUCT,          product);
+                props.setPrivate(PROP_PRODUCT_NAME,     "Servlex");
+                props.setPrivate(PROP_PRODUCT_VERSION,  ver);
+                props.setPrivate(PROP_PRODUCT_REVISION, rev);
                 String product_html
-                        = "<a href='https://servlex.net/'>Servlex</a> version "
-                        + ver + " (revision #<a href='https://github.com/fgeorges/servlex/commit/"
+                        = "<a href='http://servlex.net/'>Servlex</a> version "
+                        + ver + " (revision #<a href='http://github.com/fgeorges/servlex/commit/"
                         + rev + "'>" + rev + "</a>)";
                 props.setPrivate(PROP_PRODUCT_HTML, product_html);
-                String vendor = "Florent Georges, from H2O Consulting, for EXPath";
+                String vendor = "Florent Georges, H2O Consulting, for EXPath";
                 props.setPrivate(PROP_VENDOR, vendor);
                 String vendor_html
                         = "<a href='http://fgeorges.org/'>Florent Georges</a>,"
-                        + " from <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
+                        + " <a href='http://h2oconsulting.be/'>H2O Consulting</a>,"
                         + " for <a href='http://expath.org/'>EXPath</a>";
                 props.setPrivate(PROP_VENDOR_HTML, vendor_html);
             }
@@ -235,8 +254,8 @@ public class Servlex
             ex.sendError(resp);
         }
         finally {
-            myCurrentRequest.set(null);
-            myCurrentApplication.set(null);
+            myCurrentRequest.remove();
+            myCurrentApplication.remove();
         }
     } 
 
@@ -257,7 +276,7 @@ public class Servlex
             out.println("      <h1>Servlex</h1>");
             out.println("      <p>Welcome!  Your Servlex server has been installed.");
             out.println("      You can go to the applications you already installed,");
-            out.println("      or go to the Servlex <a href='manager/home'>manager</a>.</p>");
+            out.println("      or go to the Servlex <a href='manager/'>manager</a>.</p>");
             out.println("   </body>");
             out.println("</html>");
         }
@@ -279,29 +298,37 @@ public class Servlex
         Application app     = info.getApplication();
         Processors  procs   = app.getProcessors();
         req.setAttribute("servlex.webapp", app);
+        Auditor auditor = new Auditor(ourConfig, procs);
         // resolve the component
-        RequestConnector request = new RequestConnector(req, path, appname, procs);
+        RequestConnector request = new RequestConnector(req, path, appname, procs, auditor);
         Invocation invoc = app.resolve(path, req.getMethod(), request);
         // log request and profiling info
-        Auditor auditor = new Auditor(ourConfig, procs);
         auditor.begin(request);
         // invoke the component
-        Connector result;
+        Connector result = null;
         try {
-            result = invoc.invoke(request, ourConfig, auditor);
+            result = invoc.invoke(request, app, ourConfig, auditor);
         }
         catch ( ComponentError ex ) {
             // TODO: Shouldn't we set the result even in this case...?
             throw new ServlexException(500, "Internal error", ex);
         }
+        finally {
+            invoc.cleanup(auditor);
+            // end the audit in case of exception (if result is null)
+            if ( result == null ) {
+                auditor.end();
+            }
+        }
         // connect the result to the client
         result.connectToResponse(resp, ourConfig, procs);
+        // clean everything
+        result.cleanup(auditor);
         // end the audit
         auditor.end();
     }
 
     /** The name of the attributes used in this class (on the requests, sessions, and contexts). */
-    private static final String WEBAPP_ATTR      = "servlex.webapp";
     private static final String REQUEST_MAP_ATTR = "servlex.request.map";
     private static final String SESSION_MAP_ATTR = "servlex.session.map";
     private static final String SERVER_MAP_ATTR  = "servlex.server.map";

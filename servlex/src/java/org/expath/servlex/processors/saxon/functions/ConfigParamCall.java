@@ -11,11 +11,13 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
+import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.model.Application;
+import org.expath.servlex.model.ConfigParam;
 
 /**
  * Implements web:config-param().
@@ -33,8 +35,9 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 public class ConfigParamCall
         extends ExtensionFunctionCall
 {
+
     @Override
-    public SequenceIterator call(SequenceIterator[] orig_params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
         // the params
@@ -44,21 +47,21 @@ public class ConfigParamCall
         if ( params.number() == 2 ) {
             dflt = params.asString(1, true);
         }
+        // log it
+        LOG.debug(params.format(ConfigParamFunction.LOCAL_NAME).param(name).param(dflt).value());
         // do it
-        LOG.debug(params.format("web:config-param").param(name).param(dflt).value());
-        String value = doit(name, dflt);
         try {
-            return SaxonHelper.toSequenceIterator(value);
+            Application app    = Servlex.getCurrentWebapp();
+            ConfigParam config = app.getConfigParam(name);
+            String      value  = config == null ? null : config.getValue();
+            if ( value == null ) {
+                value = dflt;
+            }
+            return FunReturn.value(value);
         }
         catch ( TechnicalException ex ) {
-            throw new XPathException("Error in the data model", ex);
+            throw new XPathException("Error in the Servlex webapp management", ex);
         }
-    }
-
-    private String doit(String name, String dflt)
-            throws XPathException
-    {
-        throw new XPathException("Not implemented yet, getting config param: " + name);
     }
 
     /** The logger. */

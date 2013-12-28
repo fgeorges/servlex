@@ -18,6 +18,7 @@ import org.expath.servlex.components.ComponentInstance;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * Connect an XPath error to component implementations.
@@ -31,10 +32,25 @@ public class ErrorConnector
     /**
      * Build a new object, based on the XPath error (name, message and sequence).
      */
-    public ErrorConnector(ComponentError error, RequestConnector request)
+    public ErrorConnector(ComponentError error, RequestConnector request, Auditor auditor)
     {
         myError   = error;
         myRequest = request;
+        myAuditor = auditor;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("error");
+        myRequest.cleanup(auditor);
+    }
+
+    @Override
+    public Auditor getAuditor()
+    {
+        return myAuditor;
     }
 
     /**
@@ -83,7 +99,14 @@ public class ErrorConnector
     public void connectToStylesheet(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        myAuditor.connect("error", "style");
+        try {
+            Document request = myRequest.getWebRequest(config);
+            comp.error(myError, request);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
     }
 
     /**
@@ -93,6 +116,7 @@ public class ErrorConnector
     public void connectToPipeline(ComponentInstance comp, ServerConfig config)
             throws ServlexException
     {
+        myAuditor.connect("error", "pipeline");
         try {
             Document request = myRequest.getWebRequest(config);
             comp.error(myError, request);
@@ -115,6 +139,8 @@ public class ErrorConnector
 
     private ComponentError   myError;
     private RequestConnector myRequest;
+    /** The auditor object. */
+    private Auditor          myAuditor;
 }
 
 

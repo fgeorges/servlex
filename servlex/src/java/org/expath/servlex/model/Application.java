@@ -10,7 +10,9 @@
 package org.expath.servlex.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
@@ -86,6 +88,29 @@ public class Application
     }
 
     /**
+     * Add one config parameter to the application.
+     * 
+     * TODO: Support document nodes as values, in addition to strings.
+     */
+    public void addConfigParam(ConfigParam c)
+    {
+        myConfigParams.put(c.getId(), c);
+    }
+
+    /**
+     * Get one config parameter to the application.
+     * 
+     * TODO: Support document nodes as values, in addition to strings.
+     * 
+     * @return the corresponding value, or null if there is no such value.
+     * There is no way to distinguish between a null value and no value.
+     */
+    public ConfigParam getConfigParam(String id)
+    {
+        return myConfigParams.get(id);
+    }
+
+    /**
      * Return the application processors object.
      */
     public Processors getProcessors()
@@ -124,15 +149,27 @@ public class Application
         throw new ServlexException(404, "Page not found");
     }
 
+    public void logApplication()
+    {
+        // TODO: Create a property to control logging the applicaiton structure
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("*** Application: " + myName);
+            for ( AddressHandler h : myHandlers ) {
+                h.logApplication(LOG);
+            }
+        }
+    }
+
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(Application.class);
 
-    private String myName;
-    private String myTitle;
-    private Package myPkg;
-    private Processors myProcessors;
-    private SequenceProperties myProperties;
-    private List<AddressHandler> myHandlers = new ArrayList<AddressHandler>();
+    private final String myName;
+    private final String myTitle;
+    private final Package myPkg;
+    private final Processors myProcessors;
+    private final SequenceProperties myProperties;
+    private final List<AddressHandler>     myHandlers     = new ArrayList<>();
+    private final Map<String, ConfigParam> myConfigParams = new HashMap<>();
 }
 
 

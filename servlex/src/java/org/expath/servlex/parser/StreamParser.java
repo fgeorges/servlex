@@ -9,13 +9,13 @@
 
 package org.expath.servlex.parser;
 
-import java.io.InputStream;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.Source;
 import org.apache.log4j.Logger;
 
 /**
@@ -30,7 +30,7 @@ public class StreamParser
      * TODO: Is it possible to validate on-the-fly with an XMLStreamReader?
      * That would be handy!
      */
-    public StreamParser(InputStream input, String target_ns)
+    public StreamParser(Source input, String target_ns)
             throws ParseException
     {
         myTargetNs = target_ns;
@@ -40,7 +40,7 @@ public class StreamParser
             myParser = factory.createXMLStreamReader(input);
         }
         catch ( XMLStreamException ex ) {
-            throw new ParseException("Error opening the webapp descriptor", ex);
+            throw new ParseException("Error opening the input stream", ex);
         }
         // check the first event ia a start document event
         int event = myParser.getEventType();
@@ -54,12 +54,18 @@ public class StreamParser
      * whole element...
      */
     public void debug_skipElement()
-            throws XMLStreamException
+            throws ParseException
     {
         LOG.warn("expath-web.xml parser: IGNORING element '" + getLocalName() + "': not supported yet!");
         int open = 1;
         do {
-            int e = myParser.next();
+            int e;
+            try {
+                e = myParser.next();
+            }
+            catch ( XMLStreamException ex ) {
+                throw new ParseException("Error skipping an element, open=" + open, ex);
+            }
             if ( e == XMLStreamConstants.START_ELEMENT ) {
                 open++;
             }
@@ -79,19 +85,19 @@ public class StreamParser
     public String resolvePrefix(String prefix)
             throws ParseException
     {
+        String res = null;
         try {
             NamespaceContext ctxt = myParser.getNamespaceContext();
-            return ctxt.getNamespaceURI(prefix);
+            res = ctxt.getNamespaceURI(prefix);
         }
         catch ( IllegalArgumentException ex ) {
             parseError("Prefix '" + prefix + "' not bound", ex);
-            // cannot happen, parseError() never return
-            return null;
         }
+        return res;
     }
 
     /**
-     * Get the value of the attribute.
+     * @return the current event type.
      */
     public int getEventType()
     {
@@ -99,12 +105,26 @@ public class StreamParser
     }
 
     /**
-     * Get the value of the attribute.
+     * @return the current event name.
+     */
+    public String getEventName()
+            throws ParseException
+    {
+        return getEventName(getEventType());
+    }
+
+    /**
+     * @return the content of the text-only current element.
      */
     public String getElementText()
-            throws XMLStreamException
+            throws ParseException
     {
-        return myParser.getElementText();
+        try {
+            return myParser.getElementText();
+        }
+        catch ( XMLStreamException ex ) {
+            throw new ParseException("Error getting the element text", ex);
+        }
     }
 
     /**
@@ -112,7 +132,7 @@ public class StreamParser
      */
     public String getAttribute(String attr)
     {
-        return myParser.getAttributeValue(null, attr);
+        return myParser.getAttributeValue("", attr);
     }
 
     /**
@@ -134,18 +154,11 @@ public class StreamParser
     /**
      * Go to the next tag, ensure it is a start tag, and ensure the element name.
      */
-    public boolean ensureNextElement(String local_name, boolean error)
+    public void ensureNextElement(String local_name)
             throws ParseException
     {
-        try {
-            nextTag();
-            return ensureStartTag(local_name, error);
-        }
-        catch ( XMLStreamException ex ) {
-            parseError("Error parsing the webapp descriptor", ex);
-            // to make the compiler happy, it does not know parseError never returns
-            return false;
-        }
+        nextTag();
+        ensureStartTag(local_name);
     }
 
     /**
@@ -153,7 +166,6 @@ public class StreamParser
      */
     public QName parseLiteralQName(String literal)
             throws ParseException
-                 , XMLStreamException
     {
         NamespaceContext namespaces = myParser.getNamespaceContext();
         return parseLiteralQName(namespaces, literal);
@@ -170,7 +182,6 @@ public class StreamParser
      */
     public QName parseLiteralQName(NamespaceContext namespaces, String literal)
             throws ParseException
-                 , XMLStreamException
     {
         if ( literal.startsWith("{") ) {
             int closing = literal.indexOf('}');
@@ -194,96 +205,99 @@ public class StreamParser
     }
 
     /**
+     * @return whether the current event is a start tag.
+     */
+    public boolean isStartTag()
+    {
+        int event = myParser.getEventType();
+        return event == XMLStreamConstants.START_ELEMENT;
+    }
+
+    /**
+     * @return whether the current event is a start tag, with a given name.
+     */
+    public boolean isStartTag(String local_name)
+    {
+        return isStartTag() && hasName(local_name);
+    }
+
+    /**
+     * @return whether the current event has a given name.
+     */
+    public boolean hasName(String local_name)
+    {
+        QName ref    = new QName(myTargetNs, local_name);
+        QName actual = myParser.getName();
+        return ref.equals(actual);
+    }
+
+    /**
      * Ensure the current event is a start tag.
      */
-    public boolean ensureStartTag(boolean error)
+    public void ensureStartTag()
             throws ParseException
     {
         int event = myParser.getEventType();
         if ( event != XMLStreamConstants.START_ELEMENT ) {
-            return error
-                ? eventError("The current event is not START_ELEMENT", event)
-                : false;
+            eventError("The current event is not START_ELEMENT", event);
         }
-        return true;
     }
 
     /**
      * Ensure the current event is a start tag, and ensure its name.
      */
-    public boolean ensureStartTag(String local_name, boolean error)
+    public void ensureStartTag(String local_name)
             throws ParseException
     {
-        boolean res = ensureStartTag(error);
-        if ( res ) {
-            res = ensureName(local_name, error);
-        }
-        return res;
+        ensureStartTag();
+        ensureName(local_name);
     }
 
     /**
      * Ensure the current event is an end tag.
      */
-    public boolean ensureEndTag(boolean error)
+    public void ensureEndTag()
             throws ParseException
     {
         int event = myParser.getEventType();
         if ( event != XMLStreamConstants.END_ELEMENT ) {
-            return error
-                ? eventError("The current event is not END_ELEMENT", event)
-                : false;
+            eventError("The current event is not END_ELEMENT", event);
         }
-        return true;
     }
 
     /**
      * Ensure the current event is an end tag, and ensure its name.
      */
-    public boolean ensureEndTag(String local_name, boolean error)
+    public void ensureEndTag(String local_name)
             throws ParseException
     {
-        boolean res = ensureEndTag(error);
-        if ( res ) {
-            res = ensureName(local_name, error);
-        }
-        return res;
+        ensureEndTag();
+        ensureName(local_name);
     }
 
     /**
      * Ensure the name of the current event.
      */
-    public boolean ensureName(String local_name, boolean error)
+    public void ensureName(String local_name)
             throws ParseException
     {
         QName ref    = new QName(myTargetNs, local_name);
         QName actual = myParser.getName();
         if ( ! ref.equals(actual) ) {
-            if ( error ) {
-                parseError("The element is not a web:" + local_name + " (" + actual + ")");
-            }
-            else {
-                return false;
-            }
+            parseError("The element is not a web:" + local_name + " (" + actual + ")");
         }
-        return true;
     }
 
     /**
      * Ensure the current event is a start tag, and ensure its namespace.
      */
-    public boolean ensureNamespace(boolean error)
+    public void ensureNamespace()
             throws ParseException
     {
-        ensureStartTag(error);
+        ensureStartTag();
         if ( ! myTargetNs.equals(myParser.getNamespaceURI()) ) {
-            if ( error ) {
-                parseError("The element is not in the webapp namespace");
-            }
-            else {
-                return false;
-            }
+            parseError("The element is not in the webapp namespace");
         }
-        return true;
     }
 
     /**
@@ -292,10 +306,15 @@ public class StreamParser
      * TODO: As we are here, log the exception...
      */
     public int nextTag()
-            throws XMLStreamException
-                 , ParseException
+            throws ParseException
     {
-        int event = myParser.nextTag();
+        int event;
+        try {
+            event = myParser.nextTag();
+        }
+        catch ( XMLStreamException ex ) {
+            throw new ParseException("Error getting the next tag", ex);
+        }
         if ( LOG.isTraceEnabled() ) {
             LOG.trace("PARSER EVENT: " + getEventName(event) + " - " + myParser.getName());
         }
@@ -354,10 +373,26 @@ public class StreamParser
         }
     }
 
+    private String errorMessage(String msg)
+            throws ParseException
+    {
+        int event = getEventType();
+        StringBuilder buf = new StringBuilder(myParser.getLocation().toString());
+        buf.append("(event: ");
+        buf.append(getEventName(event));
+        if ( event == XMLStreamConstants.START_ELEMENT || event == XMLStreamConstants.END_ELEMENT ) {
+            buf.append(", ");
+            buf.append(getLocalName());
+        }
+        buf.append("): ");
+        buf.append(msg);
+        return buf.toString();
+    }
+
     public void parseError(String msg)
             throws ParseException
     {
-        String m = myParser.getLocation() + ": " + msg;
+        String m = errorMessage(msg);
         LOG.error(m);
         throw new ParseException(m);
     }
@@ -365,7 +400,7 @@ public class StreamParser
     public void parseError(String msg, Throwable ex)
             throws ParseException
     {
-        String m = myParser.getLocation() + ": " + msg;
+        String m = errorMessage(msg);
         LOG.error(m, ex);
         throw new ParseException(m, ex);
     }
@@ -373,9 +408,9 @@ public class StreamParser
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
     /** The underlying parser. */
-    private XMLStreamReader myParser;
+    private final XMLStreamReader myParser;
     /** THE namespace the parsed document uses. */
-    private String myTargetNs;
+    private final String myTargetNs;
 }
 
 

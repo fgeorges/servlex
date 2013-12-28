@@ -10,6 +10,7 @@
 package org.expath.servlex.processors;
 
 import java.io.OutputStream;
+import javax.xml.namespace.QName;
 import org.expath.servlex.TechnicalException;
 
 /**
@@ -24,30 +25,121 @@ import org.expath.servlex.TechnicalException;
  */
 public interface Serializer
 {
-    public String getMediaType();
-    public String getEncoding();
-
-    public void setMethod(String v);
-    public void setMediaType(String v);
-    public void setEncoding(String v);
-    public void setByteOrderMark(String v);
-    public void setCdataSectionElements(String v);
-    public void setDoctypePublic(String v);
-    public void setDoctypeSystem(String v);
-    public void setEscapeUriAttributes(String v);
-    public void setIncludeContentType(String v);
-    public void setIndent(String v);
-    public void setNormalizationForm(String v);
-    public void setOmitXmlDeclaration(String v);
-    public void setStandalone(String v);
-    public void setUndeclarePrefixes(String v);
-    public void setUseCharacterMaps(String v);
-    public void setVersion(String v);
-
+    /**
+     * Serialize a document to an output stream.
+     * 
+     * The serializer uses the values of the various output properties.
+     */
     public void serialize(Document doc, OutputStream out)
             throws TechnicalException;
+
+    /**
+     * Serialize a sequence to an output stream.
+     * 
+     * The serializer uses the values of the various output properties.
+     */
     public void serialize(Sequence sequence, OutputStream out)
             throws TechnicalException;
+
+    /**
+     * Return the output property {@code media-type}.
+     */
+    public String getMediaType();
+
+    /**
+     * Return the output property {@code encoding}.
+     */
+    public String getEncoding();
+
+    /**
+     * Set an extension output property.
+     * 
+     * The name of the property is the name of the attribute on the element
+     * web:body on the result.  If the property is not known by the specific
+     * serializer implementation, it must raise a technical exception.
+     */
+    public void setExtension(QName n, String v)
+            throws TechnicalException;
+
+    /**
+     * Set the output property {@code method}.
+     */
+    public void setMethod(String v);
+
+    /**
+     * Set the output property {@code media-type}.
+     */
+    public void setMediaType(String v);
+
+    /**
+     * Set the output property {@code encoding}.
+     */
+    public void setEncoding(String v);
+
+    /**
+     * Set the output property {@code byte-order-mark}.
+     */
+    public void setByteOrderMark(String v);
+
+    /**
+     * Set the output property {@code cdata-section-elements}.
+     */
+    public void setCdataSectionElements(String v);
+
+    /**
+     * Set the output property {@code doctype-public}.
+     */
+    public void setDoctypePublic(String v);
+
+    /**
+     * Set the output property {@code doctype-system}.
+     */
+    public void setDoctypeSystem(String v);
+
+    /**
+     * Set the output property {@code escape-uri-attributes}.
+     */
+    public void setEscapeUriAttributes(String v);
+
+    /**
+     * Set the output property {@code include-content-type}.
+     */
+    public void setIncludeContentType(String v);
+
+    /**
+     * Set the output property {@code indent}.
+     */
+    public void setIndent(String v);
+
+    /**
+     * Set the output property {@code normalization-form}.
+     */
+    public void setNormalizationForm(String v);
+
+    /**
+     * Set the output property {@code omit-xml-declaration}.
+     */
+    public void setOmitXmlDeclaration(String v);
+
+    /**
+     * Set the output property {@code standalone}.
+     */
+    public void setStandalone(String v);
+
+    /**
+     * Set the output property {@code undeclare-prefixes}.
+     */
+    public void setUndeclarePrefixes(String v);
+
+    /**
+     * Set the output property {@code use-character-maps}.
+     */
+    public void setUseCharacterMaps(String v);
+
+    /**
+     * Set the output property {@code version}.
+     */
+    public void setVersion(String v);
 }
 
 

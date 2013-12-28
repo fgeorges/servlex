@@ -9,18 +9,11 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.pattern.NameTest;
 import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
-import net.sf.saxon.type.Type;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.processors.Processors;
 
 /**
@@ -48,35 +41,19 @@ public class ParseBasicAuthFunction
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
-    }
-
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 1;
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        SequenceType   stype = SequenceType.makeSequenceType(itype, one);
-        return new SequenceType[]{ stype };
+        return FunTypes.types(FunTypes.SINGLE_STRING);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      one   = StaticProperty.EXACTLY_ONE;
-        final int      kind  = Type.ELEMENT;
-        final String   uri   = ServlexConstants.WEBAPP_NS;
-        final NamePool pool  = mySaxon.getUnderlyingConfiguration().getNamePool();
-        final ItemType itype = new NameTest(kind, uri, ELEMENT_NAME, pool);
-        return SequenceType.makeSequenceType(itype, one);
+        return FunTypes.single_element(ELEMENT_NAME, mySaxon);
     }
 
     @Override
@@ -85,7 +62,8 @@ public class ParseBasicAuthFunction
         return new ParseBasicAuthCall(myProcs);
     }
 
-    private static final String LOCAL_NAME   = "parse-basic-auth";
+    static final String LOCAL_NAME = "parse-basic-auth";
+
     private static final String ELEMENT_NAME = "basic-auth";
     private Processors myProcs;
     private Processor mySaxon;

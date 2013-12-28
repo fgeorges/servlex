@@ -10,6 +10,7 @@
 package org.expath.servlex.processors.saxon.components;
 
 import java.io.IOException;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -55,10 +56,25 @@ public class SaxonXQueryModule
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xquery module");
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XQuery Module");
+        log.debug("         uri: " + myUri);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
+        auditor.run("query");
         XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();
         ComponentInstance instance = new MyInstance(eval);
@@ -71,7 +87,8 @@ public class SaxonXQueryModule
             LOG.error("User error in XQuery main module at URI: '" + myUri + "'", ex);
             throw SaxonHelper.makeError(ex);
         }
-        return new XdmConnector(new SaxonSequence(result));
+        Sequence seq = new SaxonSequence(result);
+        return new XdmConnector(seq, auditor);
     }
 
     /**
@@ -115,7 +132,7 @@ public class SaxonXQueryModule
     private StreamSource resolve()
             throws ServlexException
     {
-        StreamSource src = null;
+        Source src = null;
         try {
             src = myRepo.resolve(myUri, URISpace.XQUERY);
         }
@@ -125,7 +142,14 @@ public class SaxonXQueryModule
         if ( src == null ) {
             error("Query URI does not resolve in repo");
         }
-        return src;
+        StreamSource stream = null;
+        if ( src instanceof StreamSource ) {
+            stream = (StreamSource) src;
+        }
+        else {
+            error("The resource is not a StreamSource: " + src.getClass());
+        }
+        return stream;
     }
 
     private void error(String msg)

@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+      <title>Filtered application</title>
+   </head>
+   <body>
+      <h2>Filtered application</h2>
+      <p>Welcome!  Type down your name to see the result using an XSLT
+        stylesheet servlet.  The servlet itself has two filters applied,
+        and the application has one.  The order of evaluation must be:
+        app filter in, servlet filter #1 in, servlet filter #2 in, servlet
+        filter #2 out, servlet filter #1 out, and app filter out.</p>
+      <h3>Plain</h3>
+      <p>
+         <form action="servlet" method="get">
+            <span>Name:</span>
+            <input type="text" name="who"/>
+            <input type="submit" value="Invoke"/>
+         </form>
+      </p>
+   </body>
+</html>

@@ -1,0 +1,76 @@
+<webapp xmlns="http://expath.org/ns/webapp"
+        xmlns:app="http://servlex.net/ns/webapp-manager"
+        name="http://servlex.net/app/manager"
+        abbrev="manager"
+        version="0.3.0"
+        spec="1.0">
+
+   <title>Web application manager for a web container.</title>
+
+   <application filters="web-errors"/>
+
+   <filter name="view">
+      <out>
+         <xslt uri="http://servlex.net/ns/webapp-manager/view.xsl"/>
+      </out>
+   </filter>
+
+   <error name="web-errors" catch="*">
+      <xslt uri="http://servlex.net/ns/webapp-manager/web-errors.xsl"/>
+   </error>
+
+   <resource pattern="/"       rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/home"   rewrite="pages/index.xml"  media-type="text/xml" filters="view"/>
+   <resource pattern="/reload" rewrite="pages/reset.xml"  media-type="text/xml" filters="view"/>
+
+   <resource pattern="/style/.+.css"  media-type="text/css"/>
+   <resource pattern="/images/.+.png" media-type="image/png"/>
+   <resource pattern="/images/.+.gif" media-type="image/gif"/>
+
+   <servlet name="list" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/webapps.xsl"/>
+      <url pattern="/webapps"/>
+   </servlet>
+
+   <!--
+      - /deploy gives forms to /deploy-file (to upload a XAR/XAW file) and to
+        /deploy-cxan (to download a XAR/XAW from CXAN).
+      - /deploy-file and /deploy-cxan save the package into the session and
+        present the user with a confirmation page (with the root context and
+        other config option forms)
+      - /deploy-at actually implements the deployment
+   -->
+   <servlet name="deploy" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy.xsl"/>
+      <url pattern="/deploy"/>
+   </servlet>
+
+   <servlet name="deploy-file" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-file.xsl"/>
+      <url pattern="/deploy-file"/>
+   </servlet>
+
+   <servlet name="deploy-cxan" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-cxan.xsl"/>
+      <url pattern="/deploy-cxan"/>
+   </servlet>
+
+   <servlet name="deploy-at" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/deploy-at.xsl"/>
+      <url pattern="/deploy-at"/>
+   </servlet>
+
+   <servlet name="remove" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/remove.xsl"/>
+      <!-- TODO: The current draft says a context root must be an NCName... -->
+      <url pattern="/remove/([-a-zA-Z0-9]+)">
+         <match group="1" name="root"/>
+      </url>
+   </servlet>
+
+   <servlet name="do-reload" filters="view">
+      <xslt uri="http://servlex.net/app/manager/pages/reload.xsl"/>
+      <url pattern="/do-reload"/>
+   </servlet>
+
+</webapp>

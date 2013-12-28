@@ -17,6 +17,7 @@ import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
@@ -42,6 +43,7 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.processors.saxon.model.SaxonDocument;
 
 /**
  * ...
@@ -59,10 +61,25 @@ public class SaxonXSLTTransform
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xslt transform");
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XSLT Transform");
+        log.debug("         style: " + myStyle);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError
     {
+        auditor.run("style");
         try {
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
@@ -76,7 +93,8 @@ public class SaxonXSLTTransform
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            return new XdmConnector(new SaxonSequence(it));
+            Sequence seq = new SaxonSequence(it);
+            return new XdmConnector(seq, auditor);
         }
         catch ( PackageException ex ) {
             LOG.error("Internal error", ex);
@@ -239,13 +257,69 @@ public class SaxonXSLTTransform
             }
         }
 
+        // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
+        // and the several constants are mostly duplicated from CalabashPipeline...
         public void error(ComponentError error, Document request)
+                throws TechnicalException
         {
-            throw new UnsupportedOperationException("Not supported yet.");
+            setErrorOptions(error);
+            writeErrorRequest(request);
+            writeErrorData(error);
         }
 
-        private static QName NAME = new QName(ServlexConstants.WEBAPP_NS, "input");
-        private XsltTransformer myTrans;
+        private void setErrorOptions(ComponentError error)
+                throws TechnicalException
+        {
+            // the code
+            QName code = null;
+            javax.xml.namespace.QName name = error.getName();
+            if ( name != null ) {
+                String prefix = name.getPrefix();
+                String local  = name.getLocalPart();
+                String ns     = name.getNamespaceURI();
+                code = new QName(prefix, ns, local);
+            }
+            // the message
+            String msg = error.getMsg();
+            // set them as options
+            myTrans.setParameter(CODE_NAME, code == null ? null : new XdmAtomicValue(code));
+            myTrans.setParameter(MESSAGE,   new XdmAtomicValue(msg));
+        }
+
+        private void writeErrorRequest(Document request)
+                throws TechnicalException
+        {
+            if ( ! (request instanceof SaxonDocument) ) {
+                throw new TechnicalException("Not a Saxon doc: " + request);
+            }
+            SaxonDocument doc = (SaxonDocument) request;
+            XdmNode node = doc.getSaxonNode();
+            // connect the web request as the context node
+            myTrans.setInitialContextNode(node);
+            // connect the web request to the web:input parameter
+            // TODO: What about the bodies?
+            myTrans.setParameter(NAME, node);
+        }
+
+        private void writeErrorData(ComponentError error)
+                throws TechnicalException
+        {
+            // connect the user sequence to the user-data port
+            Sequence sequence = error.getSequence();
+            XdmValue userdata = SaxonHelper.toXdmValue(sequence);
+            if ( userdata != null ) {
+                myTrans.setParameter(ERROR, userdata);
+            }
+        }
+
+        private static final String PREFIX    = ServlexConstants.WEBAPP_PREFIX;
+        private static final String NS        = ServlexConstants.WEBAPP_NS;
+        private static final QName  NAME      = new QName(PREFIX, NS, "input");
+        private static final QName  ERROR     = new QName(PREFIX, NS, "error-data");
+        private static final QName  CODE_NAME = new QName(PREFIX, NS, "error-code");
+        private static final QName  MESSAGE   = new QName(PREFIX, NS, "error-message");
+
+        private final XsltTransformer myTrans;
     }
 }
 

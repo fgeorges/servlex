@@ -14,36 +14,51 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.apache.log4j.Logger;
-import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 
 /**
  * Properties (either server, webapp, session or request properties).
+ * 
+ * A set of properties, of a given type.  In addition to those properties, this
+ * object also stores "private" properties, always of type string, that all
+ * begin with the same prefix (keys of non-private properties in this object
+ * cannot start with the same prefix.  Interfaces providing access to the
+ * properties to the outside world (like extension functions for XPath) should
+ * not provide access to the private properties.
  *
  * @author Florent Georges
- * @date   2013-02-26
+ * 
+ * @param <Value> The type of value stored by this property set (private
+ *     properties are always strings).
  */
 public abstract class Properties<Value>
 {
     /**
      * Constructs a new Properties object with a private property name prefix.
+     * 
+     * @param private_prefix The prefix to use for the keys of private properties.
      */
     public Properties(String private_prefix)
     {
         myPrivatePrefix = private_prefix;
-        myMap = new HashMap<String, Iterable<Value>>();
+        myMap = new HashMap<>();
     }
 
     /**
      * Get a property value.
+     * 
+     * @return The value of the property with the key {@code key}. Or null if
+     *     there is no such property.
+     * 
+     * @param key The key of the property to retrieve.
+     * 
+     * @throws TechnicalException In case of any error.
      */
     public Iterable<Value> get(String key)
             throws TechnicalException
     {
         Iterable<Value> value = myMap.get(key);
-        if ( LOG.isDebugEnabled() ) {
-            logGetValue(key, value);
-        }
+        logValue("get", key, value);
         return value;
     }
 
@@ -55,9 +70,6 @@ public abstract class Properties<Value>
     public String getPrivate(String key)
             throws TechnicalException
     {
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Properties.getPrivate: " + key);
-        }
         if ( key == null ) {
             throw new NullPointerException("Key is null");
         }
@@ -73,7 +85,9 @@ public abstract class Properties<Value>
         if ( iter.hasNext() ) {
             throw new TechnicalException("The value of " + key + " contains more than one item (second is: " + iter.next() + ".");
         }
-        return valueAsString(key, first);
+        String result = valueAsString(key, first);
+        logValue("getPrivate", key, result);
+        return result;
     }
 
     protected abstract String valueAsString(String key, Value value)
@@ -82,14 +96,22 @@ public abstract class Properties<Value>
     protected abstract Iterable<Value> valueFromString(String value)
             throws TechnicalException;
 
-    private void logGetValue(String key, Iterable<Value> value)
-            throws TechnicalException
+    private void logValue(String op, String key, Iterable<Value> value)
     {
-        LOG.debug("Properties.get: " + key + ", " + value);
-        if ( LOG.isTraceEnabled() ) {
-            for ( Value v : value ) {
-                LOG.trace("          .get: " + v);
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("Properties." + op + ": " + key + ", " + value);
+            if ( LOG.isTraceEnabled() ) {
+                for ( Value v : value ) {
+                    LOG.trace("          ." + op + ": " + v);
+                }
             }
+        }
+    }
+
+    private void logValue(String op, String key, String value)
+    {
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debug("Properties." + op + ": " + key + ", " + value);
         }
     }
 
@@ -99,9 +121,7 @@ public abstract class Properties<Value>
     public Iterable<Value> set(String key, Iterable<Value> value)
             throws TechnicalException
     {
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Properties.set: " + key + ", " + value);
-        }
+        logValue("set", key, value);
         if ( key == null ) {
             throw new NullPointerException("Key is null");
         }
@@ -117,9 +137,7 @@ public abstract class Properties<Value>
     public Iterable<Value> setPrivate(String key, String value)
             throws TechnicalException
     {
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Properties.setPrivate: " + key + ", " + value);
-        }
+        logValue("setPrivate", key, value);
         if ( key == null ) {
             throw new NullPointerException("Key is null");
         }
@@ -151,7 +169,7 @@ public abstract class Properties<Value>
     }
 
     /** The logger. */
-    protected static final Logger LOG = Logger.getLogger(Servlex.class);
+    protected static final Logger LOG = Logger.getLogger(Properties.class);
     /** The private property name prefix, if any. */
     private String myPrivatePrefix;
     /** The store map. */

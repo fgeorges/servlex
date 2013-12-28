@@ -8,13 +8,17 @@ die() {
 
 deploy_pkg() {
     pkg="$1"
+    root="$2"
     if [[ ! -f "$pkg" ]]; then
         die "Package file does not exist: $pkg"
     fi
-    if [[ -n "$2" ]]; then
-        die "Extra param to deploy_pkg(): $2 (all: $@)"
+    if [[ -z "$root" ]]; then
+        die "Root not given to deploy_pkg()"
     fi
-    curl --form "xawfile=@$pkg" "$DEPLOY" 2>/dev/null
+    if [[ -n "$3" ]]; then
+        die "Extra param to deploy_pkg(): $3 (all: $@)"
+    fi
+    curl --request POST --data-binary "@$pkg" "$DEPLOY"/$root 2>/dev/null
 }
 
 start_tomcat() {
@@ -41,7 +45,7 @@ if [[ ! -d "${BASEDIR}" ]]; then
 fi
 
 # the Tomcat dir
-TOMCAT=${BASEDIR}/apache-tomcat-7.0.35
+TOMCAT=${BASEDIR}/apache-tomcat-7.0.47
 if [[ ! -d "${TOMCAT}" ]]; then
     die "INTERNAL ERROR: The install directory does not look to be correct?!?";
 fi
@@ -62,6 +66,8 @@ if [[ -d "${REPO}" ]]; then
 fi
 echo "Create repo dir"
 mkdir "${REPO}"
+mkdir "${REPO}/.expath-web"
+echo '<webapps xmlns="http://expath.org/ns/webapp"/>' > "${REPO}/.expath-web/webapps.xml"
 
 # the context config (specific to Tomcat, contains the context root and the repo dir)
 CTXT=$1
@@ -109,7 +115,7 @@ echo "</Context>" >> $CTXT;
 # the text manager URI from Tomcat
 MANAGER=http://localhost:9090/manager/text
 # the deploy URI from the Servlex manager
-DEPLOY=http://localhost:9090/${ROOT}/manager/deploy
+DEPLOY=http://localhost:9090/${ROOT}/~rest/deploy
 
 # start Tomcat up
 start_tomcat
@@ -183,9 +189,10 @@ while [[ -n "$1" ]]
 do
     pkg=$1
     shift
-    echo "Deploying $pkg"
-    res=`deploy_pkg $pkg`
-    #res=`curl --form "xawfile=@$pkg" "$DEPLOY" 2>/dev/null`
+    root=$1
+    shift
+    echo "Deploying $pkg at $root"
+    res=`deploy_pkg $pkg $root`
     echo $res | grep "has been successfully installed" >/dev/null \
         || die "Servlex failed to deploy $pkg
 Output: $res"

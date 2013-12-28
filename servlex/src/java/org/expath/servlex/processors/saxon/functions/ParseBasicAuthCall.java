@@ -11,13 +11,10 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.Base64BinaryValue;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
@@ -41,29 +38,32 @@ public class ParseBasicAuthCall
     }
 
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
-        // num of params
-        if ( params.length != 1 ) {
-            throw new XPathException("There is not exactly 1 param: " + params.length);
-        }
-        // the first param
-        Item first = params[0].next();
-        if ( first == null ) {
-            throw new XPathException("The 1st param is an empty sequence");
-        }
-        if ( params[0].next() != null ) {
-            throw new XPathException("The 1st param sequence has more than one item");
-        }
-        if ( ! ( first instanceof StringValue ) ) {
-            throw new XPathException("The 1st param is not a string");
-        }
-        String header = first.getStringValue();
-        // parsing the header
+        // the params
+        FunParams params = new FunParams(orig_params, 1, 1);
+        String header = params.asString(0, false);
+        // log it
         // TODO: FIXME: Don't log it in prod, it contains password unencrypted!
-        LOG.debug("Parse basic auth value: '" + header + "'");
-        header = header.trim();
+        LOG.debug(params.format(ParseBasicAuthFunction.LOCAL_NAME).param(header).value());
+        // parse the header
+        Credentials creds = parse(header.trim());
+        try {
+            Document doc = buildResult(creds);
+            // return the element, inside the document node
+            XdmNode elem = SaxonHelper.getDocumentRootElement(doc);
+            return FunReturn.value(elem);
+        }
+        catch ( TechnicalException ex ) {
+            String msg = "Technical exception occured extracting the root element";
+            throw new XPathException(msg, ex);
+        }
+    }
+
+    private Credentials parse(String header)
+            throws XPathException
+    {
         if ( ! header.startsWith("Basic ") ) {
             throw new XPathException("Basic auth string wrong format, does not start with 'Basic '");
         }
@@ -75,20 +75,24 @@ public class ParseBasicAuthCall
         if ( colon < 0 ) {
             throw new XPathException("Basic auth string wrong format, does not contain ':'");
         }
-        String username = decoded.substring(0, colon);
-        String password = decoded.substring(colon + 1);
+        String user = decoded.substring(0, colon);
+        String pwd  = decoded.substring(colon + 1);
+        return new Credentials(user, pwd);
+    }
+
+    private Document buildResult(Credentials creds)
+            throws XPathException
+    {
         try {
             // build the resulting element
             TreeBuilder b = myProcs.makeTreeBuilder(NS, PREFIX);
             b.startElem("basic-auth");
-            b.attribute("username", username);
-            b.attribute("password", password);
+            b.attribute("username", creds.myUser);
+            b.attribute("password", creds.myPwd);
             b.startContent();
             b.endElem();
             // return the basic-auth element, inside the document node
-            Document doc = b.getRoot();
-            XdmNode root = SaxonHelper.getDocumentRootElement(doc);
-            return SingletonIterator.makeIterator(root.getUnderlyingNode());
+            return b.getRoot();
         }
         catch ( TechnicalException ex ) {
             String msg = "Technical exception occured in Saxon extension function";
@@ -102,7 +106,18 @@ public class ParseBasicAuthCall
     private static final String NS     = ServlexConstants.WEBAPP_NS;
     private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
     /** The processors. */
-    private Processors myProcs;
+    private final Processors myProcs;
+
+    private static class Credentials
+    {
+        public Credentials(String user, String pwd)
+        {
+            myUser = user;
+            myPwd  = pwd;
+        }
+        public final String myUser;
+        public final String myPwd;
+    }
 }
 
 

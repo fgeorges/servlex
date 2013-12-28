@@ -9,12 +9,13 @@
 
 package org.expath.servlex.model;
 
-import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ResourceInvocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexPattern;
 
 
 /**
@@ -26,17 +27,34 @@ import org.expath.servlex.connectors.RequestConnector;
 public class Resource
         extends AddressHandler
 {
-    public Resource(Pattern url_pattern, String java_regex, String rewrite, String type)
+    public Resource(RegexPattern regex, String rewrite, String type)
     {
-        super(url_pattern);
+        super(regex);
         myType = type;
-        myJavaRegex = java_regex;
         myRewrite = rewrite;
     }
 
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        super.cleanup(auditor);
+        auditor.cleanup("resource " + myRegex);
+    }
+
+    
     public String getType()
     {
         return myType;
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        super.logApplication(log);
+        log.debug("   (is a Resource):");
+        log.debug("      type   : " + myType);
+        log.debug("      rewrite: " + myRewrite);
     }
 
     @Override
@@ -49,14 +67,13 @@ public class Resource
             ex.addHeader("Allow", "GET");
             throw ex;
         }
-        return new ResourceInvocation(this, path, connector, myJavaRegex, myRewrite);
+        return new ResourceInvocation(this, path, connector, myRegex, myRewrite);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(Application.class);
 
     private String myType;
-    private String myJavaRegex;
     private String myRewrite;
 }
 

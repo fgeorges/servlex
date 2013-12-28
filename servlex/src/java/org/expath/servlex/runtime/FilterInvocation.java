@@ -14,6 +14,7 @@ import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 
 /**
@@ -25,19 +26,37 @@ import org.expath.servlex.tools.Auditor;
 public class FilterInvocation
         extends Invocation
 {
-    public FilterInvocation(Component in, Component out, Invocation wrapped, String path, RequestConnector request)
+    public FilterInvocation(String name, Component in, Component out, Invocation wrapped, String path, RequestConnector request)
     {
-        super(path, request);
+        super(name, path, request);
         myIn = in;
         myOut = out;
         myWrapped = wrapped;
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("filter invocation");
+        myWrapped.cleanup(auditor);
+        if ( myIn != null ) {
+            myIn.cleanup(auditor);
+        }
+        if ( myOut != null ) {
+            myOut.cleanup(auditor);
+        }
+    }
+
+    @Override
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke(
+                "filter", getName(), getPath(),
+                myIn  == null ? "" : myIn.toString(),
+                myOut == null ? "" : myOut.toString());
         // inbound filter
         if ( myIn != null ) {
             // TODO: If this returns a web:response, we should return straight
@@ -47,7 +66,7 @@ public class FilterInvocation
             connector = myIn.run(connector, config, auditor);
         }
         // the filtered component
-        connector = myWrapped.invoke(connector, config, auditor);
+        connector = myWrapped.invoke(connector, app, config, auditor);
         // outbound filter
         if ( myOut != null ) {
             connector = myOut.run(connector, config, auditor);
@@ -56,9 +75,9 @@ public class FilterInvocation
         return connector;
     }
 
-    private Component myIn;
-    private Component myOut;
-    private Invocation myWrapped;
+    private final Component  myIn;
+    private final Component  myOut;
+    private final Invocation myWrapped;
 }
 
 

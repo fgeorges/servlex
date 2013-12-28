@@ -9,20 +9,26 @@
 
 package org.expath.servlex.parser;
 
-import java.io.File;
-import java.util.Set;
-import org.expath.pkg.repo.FileSystemStorage;
+import java.io.InputStream;
+import java.net.URI;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
-import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.AddressHandler;
+import org.expath.servlex.components.Component;
 import org.expath.servlex.model.Application;
-import org.expath.servlex.model.Servlet;
-import org.expath.servlex.model.Wrapper;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
-import org.expath.servlex.processors.saxon.SaxonCalabash;
+import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.processors.TreeBuilder;
+import org.expath.servlex.processors.XProcProcessor;
+import org.expath.servlex.processors.XQueryProcessor;
+import org.expath.servlex.processors.XSLTProcessor;
+import org.expath.servlex.tools.ProcessorsMap;
 import org.junit.Test;
 //import static org.junit.Assert.*;
 
@@ -40,43 +46,35 @@ public class EXPathWebParserTest
     /**
      * Test of parseDescriptors method, of class EXPathWebParser, when
      * everything is ok.
+     * 
+     * @throws Exception if any error.
      */
     @Test
     public void testParseDescriptors_ok()
-            throws TechnicalException
-                 , PackageException
+            throws Exception
     {
-        File repo_dir = new File(System.getProperty("user.home"), "tmp/servlex/repo");
-        Storage storage = new FileSystemStorage(repo_dir);
-        Repository repo = new Repository(storage);
-        ServerConfig fake = new FakeConfig(storage, repo);
+        ProcessorsMap fake = new FakeProcessorsMap();
+        Package pkg = new FakePackage("test-pkg-name");
+        // the descriptor
+        ClassLoader loader = EXPathWebParserTest.class.getClassLoader();
+        InputStream rsrc = loader.getResourceAsStream(FILTERS_ORDER_RSRC);
+        Source desc = new StreamSource(rsrc);
         // the System Under Test
         EXPathWebParser sut = new EXPathWebParser(fake);
-        Set<Application> result = sut.parseDescriptors(repo.listPackages());
+        // parse the descriptor
+        Application result = sut.parseDescriptorFile(desc, pkg, EXPathWebParser.DESC_NS);
         System.err.println("RESULT: " + result);
-        for ( Application app : result ) {
-            System.err.println("  APP: " + app.getName());
-            for ( AddressHandler h : app.getHandlers() ) {
-                System.err.println("    AddressHandler: " + h);
-                if ( h instanceof Servlet ) {
-                    Servlet s =  (Servlet) h;
-                    Wrapper w = s.getWrapper();
-                    if ( w != null ) {
-                        System.err.println("      Wrapper: " + w);
-                    }
-                }
-            }
-        }
+        result.logApplication();
     }
 
-    private static class FakeConfig
-            extends ServerConfig
+    private static class FakeProcessorsMap
+            extends ProcessorsMap
     {
-        public FakeConfig(Storage storage, Repository repo)
+        public FakeProcessorsMap()
                 throws TechnicalException
                      , PackageException
         {
-            super(storage, repo, new SaxonCalabash(repo, null));
+            super(new FakeProcessors(), null, null);
         }
 
         @Override
@@ -86,6 +84,149 @@ public class EXPathWebParserTest
             throw new TechnicalException("Must not be called in test...!");
         }
     }
+
+    private static class FakeProcessors
+            implements Processors
+    {
+        @Override
+        public XSLTProcessor getXSLT()
+                throws TechnicalException
+        {
+            return new FakeXSLT();
+        }
+
+        @Override
+        public XQueryProcessor getXQuery()
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public XProcProcessor getXProc()
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Serializer makeSerializer()
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public TreeBuilder makeTreeBuilder(String uri, String prefix)
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Sequence emptySequence()
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Sequence buildSequence(Iterable<Item> items)
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Document buildDocument(Source src)
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Item buildString(String value)
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Item buildBinary(byte[] value)
+                throws TechnicalException
+        {
+            throw new UnsupportedOperationException();
+        }
+        
+    }
+
+    private static class FakeXSLT
+            implements XSLTProcessor
+    {
+        @Override
+        public Component makeTransform(String uri)
+        {
+            return null;
+        }
+
+        @Override
+        public Component makeFunction(String uri, String ns, String localname)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Component makeTemplate(String uri, String ns, String localname)
+        {
+            throw new UnsupportedOperationException();
+        }
+        
+    }
+    private static class FakePackage
+            extends Package
+    {
+        public FakePackage(String name)
+        {
+            super(null, new FakeResolver(), name, null, null, null, null);
+        }
+    }
+
+    private static class FakeResolver
+            extends Storage.PackageResolver
+    {
+        @Override
+        public String getResourceName()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Source resolveResource(String string)
+                throws PackageException, Storage.NotExistException
+        {
+            if ( "servlex.xml".equals(string) ) {
+                return null;
+            }
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Source resolveComponent(String string)
+                throws PackageException, Storage.NotExistException
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getContentDirBaseURI()
+                throws PackageException
+        {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static final String FILTERS_ORDER_RSRC =
+            "org/expath/servlex/parser/descriptors/filters-order.xml";
 }
 
 

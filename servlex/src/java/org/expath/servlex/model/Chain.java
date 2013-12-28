@@ -9,9 +9,11 @@
 
 package org.expath.servlex.model;
 
-import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.Invocation;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * A sequence of wrappers (filters and error handlers).
@@ -22,23 +24,51 @@ import org.expath.servlex.runtime.Invocation;
 public class Chain
         extends Wrapper
 {
-    public Chain(QName name, Wrapper[] wrappers)
+    public Chain(String name, Wrapper[] wrappers)
     {
         super(name);
         myWrappers = wrappers;
+        int len = wrappers.length;
+        myReverse  = new Wrapper[len];
+        for ( int i = 0; i < len; ++i ) {
+            myReverse[i] = myWrappers[len - 1 - i];
+        }
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("chain");
+        for ( Wrapper w : myWrappers ) {
+            w.cleanup(auditor);
+        }
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Chain");
+        log.debug("         wrappers: " + myWrappers);
+        if ( myWrappers != null ) {
+            for ( Wrapper w : myWrappers ) {
+                w.logApplication(log);
+            }
+        }
     }
 
     @Override
     public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
     {
         // chain all invocations, beginning by wrapped, to the outermost
-        for ( int i = myWrappers.length - 1; i >= 0; --i ) {
-            wrapped = myWrappers[i].makeInvocation(path, request, wrapped);
+        for ( Wrapper w : myReverse ) {
+            wrapped = w.makeInvocation(path, request, wrapped);
         }
         return wrapped;
     }
 
-    private Wrapper[] myWrappers;
+    private final Wrapper[] myWrappers;
+    private final Wrapper[] myReverse;
 }
 
 

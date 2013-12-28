@@ -11,15 +11,11 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.processors.Sequence;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 import org.expath.servlex.tools.SequenceProperties;
 
 /**
@@ -32,31 +28,18 @@ public class GetRequestFieldCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
-        // num of params
-        if ( params.length != 1 ) {
-            throw new XPathException("There is not exactly 1 param: " + params.length);
-        }
-        // the first param
-        Item first = params[0].next();
-        if ( first == null ) {
-            throw new XPathException("The 1st param is an empty sequence");
-        }
-        if ( params[0].next() != null ) {
-            throw new XPathException("The 1st param sequence has more than one item");
-        }
-        if ( ! ( first instanceof StringValue ) ) {
-            throw new XPathException("The 1st param is not a string");
-        }
-        String name = first.getStringValue();
-        // getting the sequence in the request
+        // the params
+        FunParams params = new FunParams(orig_params, 1, 1);
+        String name = params.asString(0, false);
+        // log it
+        LOG.debug(params.format(GetRequestFieldFunction.LOCAL_NAME).param(name).value());
+        // getting the sequence in the request properties
         try {
-            LOG.debug("Get request field: '" + name + "'");
             SequenceProperties props = Servlex.getRequestMap();
-            Sequence seq = props.get(name);
-            return SaxonHelper.toSequenceIterator(seq);
+            return FunReturn.value(props.get(name));
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex request management", ex);

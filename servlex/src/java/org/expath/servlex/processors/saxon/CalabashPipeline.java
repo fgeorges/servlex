@@ -10,12 +10,16 @@
 package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.util.Input;
+import com.xmlcalabash.util.Output;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.saxon.s9api.Axis;
@@ -49,6 +53,7 @@ import org.expath.servlex.tools.Auditor;
 
 import static org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Abstract an XProc pipeline.
@@ -57,6 +62,7 @@ import org.expath.servlex.processors.saxon.model.SaxonDocument;
  * @date   2013-02-12
  */
 public class CalabashPipeline
+        implements Cleanable
 {
     public CalabashPipeline(CalabashXProc calabash, ServerConfig config, Auditor auditor, Processors procs)
     {
@@ -64,6 +70,16 @@ public class CalabashPipeline
         myConfig = config;
         myAuditor = auditor;
         myProcs = procs;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("calabash pipleline, close the runtime object");
+        if ( myRuntime != null ) {
+            myRuntime.close();
+        }
     }
 
     /**
@@ -99,15 +115,16 @@ public class CalabashPipeline
         myAuditor.compilationStarts("xproc");
         try {
             // instantiate the runtime
-            XProcRuntime runtime = getRuntime();
+            myRuntime = getRuntime();
             // compile the pipeline
             if ( node == null ) {
                 LOG.debug("About to href the pipeline: " + href);
-                myCompiled = runtime.load(href);
+                Input in = new Input(href);
+                myCompiled = myRuntime.load(in);
             }
             else {
                 LOG.debug("About to compile the pipeline document: " + node.getBaseURI());
-                myCompiled = runtime.use(node);
+                myCompiled = myRuntime.use(node);
             }
         }
         catch ( SaxonApiException ex ) {
@@ -135,15 +152,23 @@ public class CalabashPipeline
     {
         Processor saxon = myCalabash.getSaxon();
         XProcConfiguration xconf = new XProcConfiguration(saxon);
-        XProcProcessor proc = new XProcProcessor(xconf);
+        XProcRuntime runtime = new XProcRuntime(xconf);
         SaxonRepository repo = myCalabash.getRepository();
-        PkgConfigurer configurer = new PkgConfigurer(repo.getUnderlyingRepo());
-        proc.setConfigurer(configurer);
-        XProcRuntime runtime = new XProcRuntime(proc);
+        PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
+        runtime.setConfigurer(configurer);
         // runtime.setMessageListener(new MsgListener());
         File profiling = myConfig.getProfileFile("xproc-profile");
         if ( profiling != null ) {
-            runtime.setProfileOutput(profiling);
+            try {
+                OutputStream stream = new FileOutputStream(profiling);
+                Output out = new Output(stream);
+                runtime.setProfile(out);
+            }
+            catch ( FileNotFoundException ex ) {
+                // there is no point in stopping processing if the profile
+                // file is not writable
+                LOG.error("Error opening the profile file for Calabash: " + profiling);
+            }
         }
         // FIXME: Have to reconfigure the Saxon processor, because Calabash
         // install its own resolvers.  Should be ok though, but double-check!
@@ -191,8 +216,10 @@ public class CalabashPipeline
         }
         ReadablePipe response_port = myCompiled.readFrom(OUTPUT_PORT_NAME);
         try {
-            XdmValue result = decodeResponse(response_port);
-            return new XdmConnector(new SaxonSequence(result));
+            XdmValue result  = decodeResponse(response_port);
+            Sequence seq     = new SaxonSequence(result);
+            Auditor  auditor = connector.getAuditor();
+            return new XdmConnector(seq, auditor);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("Error decoding the response whilst evaluating pipeline", ex);
@@ -352,7 +379,8 @@ public class CalabashPipeline
     private Auditor myAuditor;
     /** The processors object. */
     private Processors myProcs;
-
+    /** The Calabash runtime object. */
+    private XProcRuntime myRuntime;
     /**
      * An instance of an XProc component.
      */
@@ -375,6 +403,8 @@ public class CalabashPipeline
             CalabashHelper.writeTo(myPipe, NAME, seq.makeSaxonValue(), myProcs);
         }
 
+        // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
+        // and the several constants are mostly duplicated in SaxonXSLTTransform...
         public void error(ComponentError error, Document request)
                 throws TechnicalException
         {

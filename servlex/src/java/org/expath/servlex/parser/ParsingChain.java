@@ -9,9 +9,7 @@
 
 package org.expath.servlex.parser;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.namespace.QName;
+import org.expath.servlex.model.Chain;
 import org.expath.servlex.model.Wrapper;
 
 /**
@@ -21,35 +19,21 @@ import org.expath.servlex.model.Wrapper;
  * @date   2012-05-08
  */
 class ParsingChain
+        extends ParsingWrapper
 {
-    public ParsingChain(QName name)
+    public ParsingChain(String name)
     {
-        myName = name;
+        super(name);
     }
 
-    public QName getName()
-    {
-        return myName;
-    }
-
-    public void addFilter(QName f)
-    {
-        myFilters.add(f);
-    }
-
-    public List<Wrapper> makeFilters(ParsingContext ctxt)
+    @Override
+    public Chain instantiate(ParsingContext ctxt)
             throws ParseException
     {
-        List<Wrapper> wrappers = new ArrayList<Wrapper>();
-        for ( QName n : myFilters ) {
-            Wrapper w = ctxt.getWrapper(n);
-            wrappers.add(w);
-        }
-        return wrappers;
+        String    name     = getName();
+        Wrapper[] wrappers = getWrappers(ctxt);
+        return new Chain(name, wrappers);
     }
-
-    private QName       myName;
-    private List<QName> myFilters = new ArrayList<QName>();
 }
 
 

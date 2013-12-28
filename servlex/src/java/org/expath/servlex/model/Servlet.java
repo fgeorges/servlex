@@ -9,11 +9,15 @@
 
 package org.expath.servlex.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.expath.servlex.components.Component;
-import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ServletInvocation;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexPattern;
 
 
 /**
@@ -25,12 +29,21 @@ import org.expath.servlex.connectors.RequestConnector;
 public class Servlet
         extends AddressHandler
 {
-    public Servlet(String name, Component implem, Pattern url_pattern, String[] groups)
+    public Servlet(String name, Component implem, RegexPattern regex, String[] groups)
     {
-        super(url_pattern);
+        super(regex);
         myName = name;
         myImpl = implem;
         myGroups = groups;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        super.cleanup(auditor);
+        auditor.cleanup("servlet " + myName);
+        myImpl.cleanup(auditor);
     }
 
     public String getName()
@@ -43,43 +56,37 @@ public class Servlet
         return myImpl;
     }
 
-    /**
-     * Set a wrapper (filter, error handler, etc.)
-     * 
-     * If more than one filter has to be set on this servlet, you can wrap them
-     * all within a chain, then set this one single chain as the wrapper.
-     */
-    public void setWrapper(Wrapper w)
-    {
-        myWrapper = w;
-    }
-
-    public Wrapper getWrapper()
-    {
-        return myWrapper;
-    }
-
     public String[] getGroupNames()
     {
         return myGroups;
     }
 
     @Override
+    public void logApplication(Logger log)
+    {
+        super.logApplication(log);
+        if ( log.isDebugEnabled() ) {
+            log.debug("   (is a Servlet):");
+            log.debug("      name   : " + myName);
+            log.debug("      groups : " + StringUtils.join(myGroups, ", "));
+            log.debug("      impl   : " + myImpl);
+        }
+        if ( myImpl != null ) {
+            myImpl.logApplication(log);
+        }
+    }
+
+    @Override
     protected Invocation makeInvocation(String path, String method, RequestConnector connector)
     {
         connector.setServlet(this);
-        Invocation invoc = new ServletInvocation(myImpl, path, connector);
-        if ( myWrapper != null ) {
-            invoc = myWrapper.makeInvocation(path, connector, invoc);
-        }
-        return invoc;
+        return new ServletInvocation(myName, myImpl, path, connector);
     }
 
-    private String myName;
-    private Component myImpl;
-    private Wrapper myWrapper = null;
-    // match group names (null if group[i] not set)
-    private String[] myGroups;
+    private final String    myName;
+    private final Component myImpl;
+    /** Match group names (group[i] is null if it is not set). */
+    private final String[]  myGroups;
 }
 
 

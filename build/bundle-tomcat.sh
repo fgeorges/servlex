@@ -32,7 +32,7 @@ fi
 IZPACK=/Applications/IzPack/bin/compile
 
 # the Tomcat base name (both .tar.gz and dir must have the same name)
-TOMCAT_NAME=apache-tomcat-7.0.37
+TOMCAT_NAME=apache-tomcat-7.0.47
 
 # the dir containing this script
 BASEDIR=`dirname $0`
@@ -47,9 +47,20 @@ TOMCAT=${BASEDIR}/${TOMCAT_NAME}
 rm -r "${TOMCAT}"
 ( cd "${BASEDIR}"; tar zxf "${TOMCAT_NAME}.tar.gz" )
 
-# creating the repo and adding the repo property to conf/catalina.properties
+# creating the repo and the profiling directory
 mkdir "${TOMCAT}/repo"
+mkdir "${TOMCAT}/repo/.expath-web"
 mkdir "${TOMCAT}/profiling"
+
+# empty webapps.xml file
+cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
+
+# deploy the webapp manager
+xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
+xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-http-client-saxon-0.11.0dev.xar"
+xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-zip-saxon-0.7.0pre1.xar"
+
+# adding properties to conf/catalina.properties
 PROPS="${TOMCAT}/conf/catalina.properties"
 echo >> "${PROPS}"
 echo >> "${PROPS}"
@@ -87,4 +98,7 @@ perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
     -pi izpack-tomcat.xml
 
 # create the installer
-"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-installer.jar"
+# TODO: IzPack outputs a lot of helpless warnings, hope it will be fixed in a future version...
+"${IZPACK}" izpack-tomcat.xml -o "servlex-${VERSION}-installer.jar" 2>&1 \
+    | grep -v "com.sun.java.util.jar.pack.Utils$Pack200Logger warning"   \
+    | grep -v "bytes of LocalVariableTable attribute in"

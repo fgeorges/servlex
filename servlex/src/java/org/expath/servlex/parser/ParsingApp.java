@@ -11,8 +11,6 @@ package org.expath.servlex.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.namespace.QName;
-import org.expath.servlex.model.Wrapper;
 
 /**
  * Represent an application element while parsing.
@@ -21,27 +19,22 @@ import org.expath.servlex.model.Wrapper;
  * @date   2012-07-08
  */
 class ParsingApp
+        extends ParsingFiltered
 {
-    public void addFilter(QName name)
-    {
-        myFilters.add(name);
-    }
-
-    public List<Wrapper> getFilters(ParsingContext ctxt)
+    public List<ParsingWrapper> getFilters(ParsingContext ctxt)
             throws ParseException
     {
         if ( myWrappers == null ) {
-            myWrappers = new ArrayList<Wrapper>();
-            for ( QName n : myFilters ) {
-                Wrapper w = ctxt.getWrapper(n);
+            myWrappers = new ArrayList<ParsingWrapper>();
+            for ( String n : myFilters ) {
+                ParsingWrapper w = ctxt.getWrapper(n);
                 myWrappers.add(w);
             }
         }
         return myWrappers;
     }
 
-    private List<QName>   myFilters  = new ArrayList<QName>();
-    private List<Wrapper> myWrappers = null;
+    private List<ParsingWrapper> myWrappers = null;
 }
 
 

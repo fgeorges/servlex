@@ -9,11 +9,14 @@
 
 package org.expath.servlex.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
+import org.expath.servlex.tools.RegexMatcher;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Abstract class that represents either a servlet or a resource.
@@ -25,10 +28,21 @@ import org.expath.servlex.connectors.RequestConnector;
  * @date   2010-08-17
  */
 public abstract class AddressHandler
+        implements Cleanable
 {
-    public AddressHandler(Pattern url_pattern)
+    public AddressHandler(RegexPattern regex)
     {
-        myPattern = url_pattern;
+        myRegex = regex;
+    }
+
+    @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("address handler");
+        if ( myWrapper != null ) {
+            myWrapper.cleanup(auditor);
+        }
     }
 
     public Application getApplication()
@@ -44,21 +58,48 @@ public abstract class AddressHandler
     public Invocation resolve(String path, String method, RequestConnector connector)
             throws ServlexException
     {
-        Matcher m = myPattern.matcher(path);
-        if ( m.matches() ) {
-            connector.setMatcher(m);
-            return makeInvocation(path, method, connector);
+        RegexMatcher matcher = myRegex.matcher(path);
+        if ( matcher.matches() ) {
+            connector.setMatcher(matcher);
+            Invocation invoc = makeInvocation(path, method, connector);
+            if ( myWrapper != null ) {
+                invoc = myWrapper.makeInvocation(path, connector, invoc);
+            }
+            return invoc;
         }
         else {
             return null;
         }
     }
 
+    /**
+     * Set a wrapper (filter, error handler, etc).
+     * 
+     * If more than one filter has to be set on this servlet, they can be all
+     * wrapped within a chain, then this one single chain can be set as the
+     * one wrapper.
+     */
+    public void setWrapper(Wrapper w)
+    {
+        myWrapper = w;
+    }
+
+    public void logApplication(Logger log)
+    {
+        log.debug("   Address Handler:");
+        log.debug("      regex  : " + myRegex);
+        log.debug("      wrapper: " + myWrapper);
+        if ( myWrapper != null ) {
+            myWrapper.logApplication(log);
+        }
+    }
+
     protected abstract Invocation makeInvocation(String path, String method, RequestConnector connector)
             throws ServlexException;
 
-    private Pattern myPattern;
+    protected final RegexPattern myRegex;
     private Application myApp;
+    private Wrapper myWrapper = null;
 }
 
 

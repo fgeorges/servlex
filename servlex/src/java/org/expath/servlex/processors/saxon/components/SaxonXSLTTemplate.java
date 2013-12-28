@@ -56,10 +56,27 @@ public class SaxonXSLTTemplate
     }
 
     @Override
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("saxon xslt template");
+    }
+
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      XSLT Template");
+        log.debug("         uri  : " + myImportUri);
+        log.debug("         ns   : " + myNS);
+        log.debug("         local: " + myLocal);
+    }
+
+    @Override
     public Connector run(Connector connector, ServerConfig config, Auditor auditor)
         throws ServlexException
              , ComponentError
     {
+        auditor.run("template");
         try {
             XsltExecutable exec = getCompiled();
             XsltTransformer trans = exec.load();
@@ -74,7 +91,8 @@ public class SaxonXSLTTemplate
             // TODO: BTW, check this is a document node...
             XdmNode doc = dest.getXdmNode();
             XdmSequenceIterator it = doc.axisIterator(Axis.CHILD);
-            return new XdmConnector(new SaxonSequence(it));
+            Sequence seq = new SaxonSequence(it);
+            return new XdmConnector(seq, auditor);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);

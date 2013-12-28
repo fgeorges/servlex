@@ -13,7 +13,9 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * Represent an invocation of either a servlet or a resource.
@@ -26,11 +28,18 @@ import org.expath.servlex.tools.Auditor;
  * @date   2010-08-17
  */
 public abstract class Invocation
+        implements Cleanable
 {
-    public Invocation(String path, RequestConnector request)
+    public Invocation(String name, String path, RequestConnector request)
     {
+        myName = name;
         myPath = path;
         myRequest = request;
+    }
+
+    public String getName()
+    {
+        return myName;
     }
 
     public String getPath()
@@ -43,12 +52,13 @@ public abstract class Invocation
         return myRequest;
     }
 
-    public abstract Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public abstract Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError;
 
-    private String myPath;
-    private RequestConnector myRequest;
+    private final String           myName;
+    private final String           myPath;
+    private final RequestConnector myRequest;
 }
 
 

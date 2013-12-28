@@ -9,32 +9,22 @@
 
 package org.expath.servlex.parser;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.net.URI;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Source;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
-import org.expath.pkg.repo.Packages;
-import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.Storage.PackageResolver;
-import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.model.Application;
 import org.expath.servlex.components.Component;
-import org.expath.servlex.model.Resource;
-import org.expath.servlex.model.Servlet;
-import org.expath.servlex.model.*;
+import org.expath.servlex.model.AddressHandler;
+import org.expath.servlex.model.Application;
+import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.processors.Processors;
-import org.expath.servlex.tools.RegexHelper;
+import org.expath.servlex.tools.ProcessorsMap;
 
 /**
  * Facade class for this package, to parse EXPath Webapp descriptors.
@@ -44,66 +34,59 @@ import org.expath.servlex.tools.RegexHelper;
  */
 public class EXPathWebParser
 {
-    public EXPathWebParser(ServerConfig config)
+    public EXPathWebParser(ProcessorsMap procs)
     {
-        myConfig = config;
-    }
-
-    /**
-     * Parse all webapp descriptors in the repository.
-     *
-     * TODO: For now, only get the "latest" version of a package.  See comments
-     * of {@link Repository#resolve(String,URISpace)} about that (versionning
-     * scheme is not always SemVer -- or could we impose it for webapps?)
-     */
-    public Set<Application> parseDescriptors(Collection<Packages> packages)
-            throws ParseException
-                 , TechnicalException
-    {
-        // the result
-        Set<Application> apps = new HashSet<Application>();
-        // iterate on every sub-directories of the repo (i.e. on each package)
-        for ( Packages pp : packages ) {
-            Package pkg = pp.latest();
-            Application app = loadPackage(pkg);
-            if ( app != null ) {
-                apps.add(app);
-            }
-        }
-        // return the application maps
-        return apps;
+        myProcs = procs;
     }
 
     /**
      * Parse the webapp descriptor of a given package, if any.
      * 
-     * Return null if the package is not a webapp.
+     * @return th application corresponding to a package, if any, or null if the
+     * package is not a webapp.
+     * 
+     * @param pkg The package to parse as a webapp.
+     * 
+     * @throws ParseException in case of any parsing error (for both
+     * {@code expath-web.xml} and {@code servlex.xml}).
+     * 
+     * @throws TechnicalException in case of any other technical error.
      */
     public Application loadPackage(Package pkg)
             throws ParseException
                  , TechnicalException
     {
-        InputStream descriptor = getDescriptor(pkg, DESC_FILENAME);
+        Source descriptor = getDescriptor(pkg, DESC_FILENAME);
         if ( descriptor == null ) {
             LOG.debug("Package does not have any web descriptor, must be a library, ignore it: " + pkg.getName());
             return null;
         }
-        return parseDescriptorFile(descriptor, pkg);
+        Application app;
+        try {
+            app = parseDescriptorFile(descriptor, pkg, DESC_NS);
+        }
+        catch ( ParseException ex ) {
+            // TODO: For compatibility reason, try to parse using the legacy namespace
+            descriptor = getDescriptor(pkg, DESC_FILENAME);
+            LOG.error("Parsing the web descriptor for " + pkg.getName() + " failed, trying the legacy namespace.");
+            app = parseDescriptorFile(descriptor, pkg, LEGACY_DESC_NS);
+        }
+        app.logApplication();
+        return app;
     }
 
     /**
      * Return a descriptor from the package, like {@code expath-web.xml} or {@code servlex.xml}.
      */
-    private InputStream getDescriptor(Package pkg, String name)
+    private Source getDescriptor(Package pkg, String name)
             throws ParseException
     {
         try {
             PackageResolver resolver = pkg.getResolver();
-            StreamSource    source   = resolver.resolveResource(name);
-            return source.getInputStream();
+            return resolver.resolveResource(name);
         }
         catch ( Storage.NotExistException ex ) {
-                String msg = "No descriptor '" + name + "' in " + pkg.getName();
+                String msg = "No web descriptor '" + name + "' in " + pkg.getName();
                 LOG.debug(msg + " (" + ex + ")");
                 return null;
         }
@@ -127,49 +110,59 @@ public class EXPathWebParser
     {
         // the parsing context, with the default processors
         ParsingContext ctxt = new ParsingContext();
-        ctxt.setProcessors(myConfig.getDefaultProcessors());
+        ctxt.setProcessors(myProcs.getDefault());
+
+        // set the base URI
+        try {
+            URI base = pkg.getResolver().getContentDirBaseURI();
+            ctxt.setBase(base);
+        }
+        catch ( PackageException ex ) {
+            // do nothing, will be an error only if we need the base URI and it is null
+            LOG.debug("Impossible to get the content base URI for: " + pkg.getName(), ex);
+        }
 
         // try servlex.xml
-        InputStream extensions = getDescriptor(pkg, SERVLEX_FILENAME);
+        Source extensions = getDescriptor(pkg, SERVLEX_FILENAME);
         if ( extensions == null ) {
-            LOG.debug("Package does not have Servlex extension descriptor: " + pkg.getName());
+            LOG.info("Package does not have Servlex extension descriptor: " + pkg.getName());
             return ctxt;
         }
 
+        LOG.info("Parse Servlex extension descriptor for app " + pkg.getName());
+
         // parser on servlex.xml, and position on the root 'webapp' element
         StreamParser parser = new StreamParser(extensions, SERVLEX_NS);
-        parser.ensureNextElement("webapp", true);
+        parser.ensureNextElement("webapp");
 
-        try {
-            for ( ; /* ever */; ) {
-                parser.nextTag();
-                if ( XMLStreamConstants.START_ELEMENT != parser.getEventType() ) {
-                    // TODO: Check consistency...!
-                    break;
+        for ( ; /* ever */; ) {
+            parser.nextTag();
+            if ( XMLStreamConstants.START_ELEMENT != parser.getEventType() ) {
+                // TODO: Check consistency...!
+                break;
+            }
+            parser.ensureNamespace();
+            String elem = parser.getLocalName();
+            if ( elem.equals("processors") ) {
+                String clazz = parser.getAttribute("class");
+                try {
+                    Processors procs = myProcs.getProcessors(clazz);
+                    ctxt.setProcessors(procs);
                 }
-                parser.ensureNamespace(true);
-                String elem = parser.getLocalName();
-                if ( elem.equals("processors") ) {
-                    String clazz = parser.getAttribute("class");
-                    try {
-                        Processors procs = myConfig.getProcessors(clazz);
-                        ctxt.setProcessors(procs);
-                    }
-                    catch ( TechnicalException ex ) {
-                        // this is a non-fatal error (and we can have several such elements)
-                        LOG.warn("Error instantiating Processors implementation: " + clazz, ex);
-                    }
-                }
-                else {
-                    String msg = "Unkown element in the servlex extensions for webapp ";
-                    parser.parseError(msg + pkg.getName() + ": " + elem);
+                catch ( TechnicalException ex ) {
+                    // this is a non-fatal error (and we can have several such elements)
+                    LOG.warn("Error instantiating Processors implementation: " + clazz, ex);
                 }
             }
-            // TODO: Check we consumed everything...
+            else {
+                String msg = "Unkown element in the servlex extensions for webapp ";
+                parser.parseError(msg + pkg.getName() + ": " + elem);
+            }
         }
-        catch ( XMLStreamException ex ) {
-            parser.parseError("Error parsing the servlex extension descriptor", ex);
-        }
+
+        // must be on </webapp>
+        parser.ensureEndTag("webapp");
+        // TODO: Check we consumed everything...
 
         return ctxt;
     }
@@ -178,17 +171,22 @@ public class EXPathWebParser
      * Parse one webapp descriptor file.
      * 
      * TODO: Plug schema validation of expath-web.xml.
+     * 
+     * Note: it is private, but is package-level to be unit-testable.
+     * 
+     * @param ns The namespace of the web descriptor.
      */
-    private Application parseDescriptorFile(InputStream descriptor, Package pkg)
+    Application parseDescriptorFile(Source descriptor, Package pkg, String ns)
             throws ParseException
                  , TechnicalException
     {
         LOG.info("Parse webapp descriptor for app " + pkg.getName());
 
-        StreamParser parser = new StreamParser(descriptor, DESC_NS);
+        StreamParser parser = new StreamParser(descriptor, ns);
 
         // position the parser on the root 'webapp' element
-        parser.ensureNextElement("webapp", true);
+        parser.ensureNextElement("webapp");
+        validateSpecNumber(parser);
 
         // the values used to build the application object
         ParsingContext ctxt = initContext(pkg);
@@ -197,117 +195,184 @@ public class EXPathWebParser
         ctxt.setAbbrev(abbrev);
         LOG.info("  webapp abbrev:" + abbrev);
 
-        try {
-            for ( ; /* ever */; ) {
+        for ( ; /* ever */; ) {
+            parser.nextTag();
+            // consume any </group>
+            while ( XMLStreamConstants.END_ELEMENT == parser.getEventType() && parser.getLocalName().equals("group") ) {
+                ctxt.popGroup();
                 parser.nextTag();
-                // consume any </group>
-                while ( XMLStreamConstants.END_ELEMENT == parser.getEventType() && parser.getLocalName().equals("group") ) {
-                    ctxt.popGroup();
-                    parser.nextTag();
-                }
-                if ( XMLStreamConstants.START_ELEMENT != parser.getEventType() ) {
-                    // TODO: Check consistency...!
-                    break;
-                }
-                parser.ensureNamespace(true);
-                String elem = parser.getLocalName();
-                if ( elem.equals("title") ) {
+            }
+            if ( XMLStreamConstants.START_ELEMENT != parser.getEventType() ) {
+                // TODO: Check consistency...!
+                break;
+            }
+            parser.ensureNamespace();
+            String elem = parser.getLocalName();
+            switch ( elem ) {
+                case "title": {
                     String title = parser.getElementText();
                     ctxt.setTitle(title);
+                    break;
                 }
-                else if ( elem.equals("application") ) {
+                case "config-param": {
+                    ParsingConfigParam c = handleConfigParam(parser);
+                    ctxt.addConfigParam(c);
+                    break;
+                }
+                case "application": {
                     ParsingApp a = handleApplication(parser);
                     ctxt.setApplication(a);
+                    break;
                 }
-                else if ( elem.equals("error") ) {
-                    ErrorHandler h = handleError(parser, ctxt);
-                    ctxt.addWrapper(h);
+                case "error": {
+                    ParsingError e = handleError(parser, ctxt);
+                    ctxt.addWrapper(e);
+                    break;
                 }
-                else if ( elem.equals("group") ) {
+                case "group": {
                     ParsingGroup g = handleGroup(parser, ctxt);
                     ctxt.pushGroup(g);
+                    break;
                 }
-                else if ( elem.equals("filter") ) {
-                    Filter f = handleFilter(parser, ctxt);
+                case "filter": {
+                    ParsingFilter f = handleFilter(parser, ctxt);
                     ctxt.addWrapper(f);
+                    break;
                 }
-                else if ( elem.equals("chain") ) {
+                case "chain": {
                     ParsingChain c = handleChain(parser);
-                    ctxt.addChain(c);
+                    ctxt.addWrapper(c);
+                    break;
                 }
-                else if ( elem.equals("servlet") ) {
+                case "servlet": {
                     ParsingServlet s = handleServlet(parser, ctxt);
-                    ctxt.addServlet(s);
+                    ctxt.addHandler(s);
+                    break;
                 }
-                else if ( elem.equals("resource") ) {
-                    Resource rsrc = handleResource(parser);
-                    ctxt.addResource(rsrc);
+                case "resource": {
+                    ParsingResource rsrc = handleResource(parser, ctxt);
+                    ctxt.addHandler(rsrc);
+                    break;
                 }
-                else {
+                default: {
                     String msg = "Unkown element in the descriptor for webapp ";
                     parser.parseError(msg + pkg.getName() + ": " + elem);
+                    break;
                 }
             }
-            // TODO: Check we consumed everything...
         }
-        catch ( XMLStreamException ex ) {
-            parser.parseError("Error parsing the webapp descriptor", ex);
-        }
+
+        // must be on </webapp>
+        parser.ensureEndTag("webapp");
+        // TODO: Check we consumed everything...
 
         // build the application object
         return createApplication(pkg, ctxt);
     }
 
+    /**
+     * Validate that /webapp/@spec is the correct number.
+     * 
+     * @throws ParseException If @spec is not exactly "1.0".
+     * 
+     * TODO: For now, for compatibility reason, it accepts webapp descriptors
+     * without the @spec attribute.  That is deprecated and will be removed
+     * once the Webapp Module is published as version 1.0.
+     */
+    private void validateSpecNumber(StreamParser parser)
+            throws ParseException
+    {
+        String spec = parser.getAttribute("spec");
+        if ( spec == null ) {
+            LOG.error("  webapp/@spec is missing! (ignored for now, for compatibility reason)");
+        }
+        else if ( ! spec.equals("1.0") ) {
+            throw new ParseException("webapp/@spec is not exactly 1.0, it is: '" + spec + "'");
+        }
+    }
+
     private Application createApplication(Package pkg, ParsingContext ctxt)
             throws ParseException
     {
-        // create actual chains and push them into wrappers
-        createChains(ctxt);
+        for ( ParsingWrapper w : ctxt.getWrappers() ) {
+            w.makeIt(ctxt);
+        }
         // get values and build the app object
         String      abbrev = ctxt.getAbbrev();
         String      title  = ctxt.getTitle();
         Processors  procs  = ctxt.getProcessors();
         Application app    = new Application(abbrev, title, pkg, procs);
         // build the servlets
-        for ( ParsingServlet s : ctxt.getServlets() ) {
-            try {
-                String    name    = s.getName();
-                Component implem  = s.getImplem();
-                String    pattern = s.getPattern();
-                String    java_re = RegexHelper.xpathToJava(pattern, LOG);
-                Pattern   regex   = Pattern.compile(java_re);
-                String[]  groups  = s.getMatchGroups();
-                Servlet   servlet = new Servlet(name, implem, regex, groups);
-                Wrapper   wrapper = s.makeWrapper(ctxt);
-                servlet.setWrapper(wrapper);
-                app.addHandler(servlet);
-            }
-            catch ( TechnicalException ex ) {
-                throw new ParseException("The pattern is not a valid XPath regex", ex);
-            }
+        for ( ParsingHandler h : ctxt.getHandlers()) {
+            AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
+            app.addHandler(handler);
         }
-        // TODO: FIXME: If I am right, all the servlets are added first, then
-        // all the resources.  But they should preserve the order from the 
-        // descriptor, because of the regex precedence...
-        // add the resources
-        for ( Resource rsrc : ctxt.getResources() ) {
-            app.addHandler(rsrc);
+        // add config params
+        for ( ParsingConfigParam c : ctxt.getConfigParams()) {
+            ConfigParam config = c.makeConfigParam(ctxt);
+            app.addConfigParam(config);
         }
         return app;
     }
 
     /**
-     * Create the chain objects and push them into wrappers.
+     * Handle an element 'config-param' in the webapp descriptor.
      */
-    private void createChains(ParsingContext ctxt)
+    private ParsingConfigParam handleConfigParam(StreamParser parser)
             throws ParseException
     {
-        for ( ParsingChain c : ctxt.getChains() ) {
-            QName         name  = c.getName();
-            List<Wrapper> list  = c.makeFilters(ctxt);
-            Wrapper[]     array = list.toArray(new Wrapper[]{});
-            Chain         chain = new Chain(name, array);
-            ctxt.addWrapper(chain);
+        parser.ensureStartTag("config-param");
+        String id = parser.getAttribute("id");
+        if ( id == null ) {
+            parser.parseError("/webapp/config-param/@id is null");
+        }
+        LOG.debug("expath-web parser: config param: " + id);
+        ParsingConfigParam cfg = new ParsingConfigParam(id);
+        parser.nextTag();
+        // consume <name> and <desc> if any
+        handleDescription(parser, cfg);
+        // now, current event must be either <value> or <uri>
+        if ( parser.isStartTag("value") ) {
+            String value = parser.getElementText();
+            cfg.setValue(value);
+            parser.nextTag();
+        }
+        else if ( parser.isStartTag("uri") ) {
+            String uri = parser.getElementText();
+            cfg.setURI(uri);
+            parser.nextTag();
+        }
+        else {
+            parser.parseError("Expecting element 'value' or 'uri'");
+        }
+        // the end of the element
+        parser.ensureEndTag("config-param");
+        return cfg;
+    }
+
+    /**
+     * Handle an element with optional {@code <name>} and {@code <desc>}.
+     * 
+     * TODO: Plug it into other elements as well, like for instance servlet and
+     * filter elements.
+     * 
+     * Precondition: the parser must be on {@code <name>} if there is one, or on
+     * {@code <desc>} if there is one and no name, or on the next tag event if
+     * there is neither of them. Postcondition: the parser is on the next tag
+     * event (the next sibling element start or the parent end).
+     */
+    private void handleDescription(StreamParser parser, ParsingDescribed described)
+            throws ParseException
+    {
+        if ( parser.isStartTag("name") ) {
+            String name = parser.getElementText();
+            described.setName(name);
+            parser.nextTag();
+        }
+        if ( parser.isStartTag("desc") ) {
+            String desc = parser.getElementText();
+            described.setDescription(desc);
+            parser.nextTag();
         }
     }
 
@@ -316,14 +381,9 @@ public class EXPathWebParser
      */
     private ParsingApp handleApplication(StreamParser parser)
             throws ParseException
-                 , XMLStreamException
     {
         ParsingApp app = new ParsingApp();
-        String[] names = handleFiltersAttr(parser);
-        for ( String name : names ) {
-            QName f = parser.parseLiteralQName(name);
-            app.addFilter(f);
-        }
+        handleFiltersAttr(parser, app);
         parser.nextTag();
         return app;
     }
@@ -331,45 +391,54 @@ public class EXPathWebParser
     /**
      * Handle an element 'error' in the webapp descriptor.
      */
-    private ErrorHandler handleError(StreamParser parser, ParsingContext ctxt)
+    private ParsingError handleError(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("error", true);
+        parser.ensureStartTag("error");
         String name = parser.getAttribute("name");
         String catc = parser.getAttribute("catch");
         LOG.debug("expath-web parser: error: " + name + " catching " + catc);
-        QName   qname = parser.parseLiteralQName(name);
-        boolean every = false;
-        QName   code  = null;
-        String  ns    = null;
-        String  local = null;
+        ParsingError error = new ParsingError(name);
+        handleFiltersAttr(parser, error);
         if ( catc.equals("*") ) {
-            every = true;
+            // nothing
         }
         else if ( catc.startsWith("*:") ) {
-            local = catc.substring(2);
+            error.setLocal(catc.substring(2));
         }
         else if ( catc.endsWith(":*") ) {
             String prefix = catc.substring(0, catc.length() - 2);
-            ns = parser.resolvePrefix(prefix);
+            error.setNs(parser.resolvePrefix(prefix));
         }
         else {
-            code  = parser.parseLiteralQName(catc);
-            ns    = code.getNamespaceURI();
-            local = code.getLocalPart();
+            QName code = parser.parseLiteralQName(catc);
+            error.setCode(code);
+            error.setNs(code.getNamespaceURI());
+            error.setLocal(code.getLocalPart());
         }
         parser.nextTag();
-        parser.ensureNamespace(true);
+        parser.ensureNamespace();
         Component implem = handleComponent(parser, ctxt);
+        error.setImplem(implem);
         parser.nextTag();
-        if ( every ) {
-            return new ErrorHandler(qname, implem);
-        }
-        else {
-            return new ErrorHandler(qname, implem, code, ns, local);
-        }
+        return error;
+    }
+
+    /**
+     * Handle common attributes on elements 'resource' or 'servlet'.
+     *
+     * Unlike other handleXXX() functions, this one does not consume any new
+     * events in the parsing event stream.  It only looks at attributes.
+     */
+    private void handleAdressHandler(ParsingHandler handler, StreamParser parser, ParsingContext ctxt)
+            throws ParseException
+    {
+        // the current group
+        ParsingGroup group = ctxt.getCurrentGroup();
+        handler.setGroup(group);
+        // the filters
+        handleFiltersAttr(parser, handler);
     }
 
     /**
@@ -379,23 +448,24 @@ public class EXPathWebParser
      * at the end of the function (the end tag 'resource' corresponding to the
      * open tag 'resource' when the function is called).
      */
-    private Resource handleResource(StreamParser parser)
+    private ParsingResource handleResource(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
     {
-        parser.ensureStartTag("resource", true);
+        parser.ensureStartTag("resource");
+        ParsingResource rsrc = new ParsingResource();
+        handleAdressHandler(rsrc, parser, ctxt);
+        // the pattern
         String pattern = parser.getAttribute("pattern");
+        rsrc.setPattern(pattern);
+        // the rewrite rule
         String rewrite = parser.getAttribute("rewrite");
-        String type    = parser.getAttribute("media-type");
+        rsrc.setRewrite(rewrite);
+        // the media type
+        String type = parser.getAttribute("media-type");
+        rsrc.setMediaType(type);
         parser.nextTag();
-        parser.ensureEndTag(true);
-        try {
-            String java_regex = RegexHelper.xpathToJava(pattern, LOG);
-            return new Resource(Pattern.compile(java_regex), java_regex, rewrite, type);
-        }
-        catch ( TechnicalException ex ) {
-            throw new ParseException("The pattern is not a valid XPath regex", ex);
-        }
+        parser.ensureEndTag();
+        return rsrc;
     }
 
     /**
@@ -405,15 +475,14 @@ public class EXPathWebParser
      * optional out, and must have at least one of them.  The parsing algorithm
      * must be rework to guarantee exactly that and handle all possible errors.
      */
-    private Filter handleFilter(StreamParser parser, ParsingContext ctxt)
+    private ParsingFilter handleFilter(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("filter", true);
+        parser.ensureStartTag("filter");
         String name = parser.getAttribute("name");
         parser.nextTag();
-        parser.ensureNamespace(true);
+        parser.ensureNamespace();
         String elem = parser.getLocalName();
         Component in  = null;
         Component out = null;
@@ -430,8 +499,7 @@ public class EXPathWebParser
             parser.nextTag(); // </out>
             parser.nextTag(); // </filter>
         }
-        QName qname = parser.parseLiteralQName(name);
-        return new Filter(qname, in, out);
+        return new ParsingFilter(name, in, out);
     }
 
     /**
@@ -442,23 +510,20 @@ public class EXPathWebParser
      */
     private ParsingChain handleChain(StreamParser parser)
             throws ParseException
-                 , XMLStreamException
     {
-        parser.ensureStartTag("chain", true);
-        String name_s = parser.getAttribute("name");
-        QName name = parser.parseLiteralQName(name_s);
+        parser.ensureStartTag("chain");
+        String name = parser.getAttribute("name");
         ParsingChain chain = new ParsingChain(name);
         parser.nextTag();
         while ( parser.getLocalName().equals("filter") ) {
-            parser.ensureStartTag("filter", true);
+            parser.ensureStartTag("filter");
             String ref = parser.getAttribute("ref");
-            QName qname = parser.parseLiteralQName(ref);
-            chain.addFilter(qname);
+            chain.addFilter(ref);
             parser.nextTag(); // </filter>
             parser.nextTag(); // <filter> or </chain>
         }
         // ensuring end tag only (without the name) should be enough...
-        parser.ensureEndTag("chain", true);
+        parser.ensureEndTag("chain");
         return chain;
     }
 
@@ -479,33 +544,27 @@ public class EXPathWebParser
      */
     private ParsingServlet handleServlet(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("servlet", true);
+        parser.ensureStartTag("servlet");
         String name = parser.getAttribute("name");
         LOG.debug("expath-web parser: servlet: " + name);
-        ParsingGroup   group   = ctxt.getCurrentGroup();
-        ParsingServlet servlet = new ParsingServlet(name, group);
-        String[]       filters = handleFiltersAttr(parser);
-        for ( String filter : filters ) {
-            QName f = parser.parseLiteralQName(filter);
-            servlet.addFilter(f);
-        }
+        ParsingServlet servlet = new ParsingServlet(name);
+        handleAdressHandler(servlet, parser, ctxt);
         parser.nextTag();
-        parser.ensureNamespace(true);
+        parser.ensureNamespace();
         Component implem = handleComponent(parser, ctxt);
         servlet.setImplem(implem);
         // FIXME: TODO: There can be several URL element ! (to bind a servlet
         // to several URL patterns)
         // go to the next element: 'url'
         parser.nextTag();
-        parser.ensureStartTag("url", true);
+        parser.ensureStartTag("url");
         String pattern = parser.getAttribute("pattern");
         servlet.setPattern(pattern);
         int last_group = 0;
         while ( XMLStreamConstants.START_ELEMENT == parser.nextTag() ) {
-            parser.ensureStartTag("match", true);
+            parser.ensureStartTag("match");
             String re_group = parser.getAttribute("group");
             int num = Integer.parseInt(re_group);
             while ( last_group + 1 < num ) {
@@ -524,10 +583,11 @@ public class EXPathWebParser
             // go to the 'url' end tag (check this is the case?)
             parser.nextTag();
         }
-        parser.ensureEndTag(true);
+        parser.ensureEndTag();
         while ( XMLStreamConstants.START_ELEMENT == parser.nextTag() ) {
-            parser.ensureStartTag("param", true);
+            parser.ensureStartTag("param");
             // FIXME: ignore for now
+            LOG.error("FIXME: Element PARAM ignored in expath-web.xml...");
             parser.debug_skipElement();
         }
         return servlet;
@@ -538,31 +598,27 @@ public class EXPathWebParser
      */
     private ParsingGroup handleGroup(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
     {
         ParsingGroup parent = ctxt.getCurrentGroup();
         ParsingGroup group  = new ParsingGroup(parent);
-        String[] names = handleFiltersAttr(parser);
-        for ( String name : names ) {
-            QName f = parser.parseLiteralQName(name);
-            group.addFilter(f);
-        }
+        handleFiltersAttr(parser, group);
         return group;
     }
 
-    private String[] handleFiltersAttr(StreamParser parser)
+    private void handleFiltersAttr(StreamParser parser, ParsingFiltered filtered)
             throws ParseException
-                 , XMLStreamException
     {
         String filters = parser.getAttribute("filters");
         if ( filters == null ) {
-            return new String[]{};
+            return;
         }
         String[] names = filters.split("\\s");
         if ( names.length == 0 ) {
             parser.parseError("Filter attribtue is empty");
         }
-        return names;
+        for ( String name : names ) {
+            filtered.addFilter(name);
+        }
     }
 
     /**
@@ -570,23 +626,20 @@ public class EXPathWebParser
      */
     private Component handleComponent(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
         String elem = parser.getLocalName();
-        if ( elem.equals("xquery") ) {
-            return handleXQuery(parser, ctxt);
+        switch (elem) {
+            case "xquery":
+                return handleXQuery(parser, ctxt);
+            case "xslt":
+                return handleXSLT(parser, ctxt);
+            case "xproc":
+                return handleXProc(parser, ctxt);
+            default:
+                parser.parseError("Unkown component type: " + elem);
+                return null; // cannot happen, to make javac happy
         }
-        else if ( elem.equals("xslt") ) {
-            return handleXSLT(parser, ctxt);
-        }
-        else if ( elem.equals("xproc") ) {
-            return handleXProc(parser, ctxt);
-        }
-        else {
-            parser.parseError("Unkown component type: " + elem);
-        }
-        return null; // cannot happen, to make javac happy
     }
 
     /**
@@ -598,10 +651,9 @@ public class EXPathWebParser
      */
     private Component handleXQuery(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("xquery", true);
+        parser.ensureStartTag("xquery");
         String uri      = parser.getAttribute("uri");
         String function = parser.getAttribute("function");
         String file     = parser.getAttribute("file");
@@ -630,7 +682,7 @@ public class EXPathWebParser
         }
         // go to the end element event
         parser.nextTag();
-        parser.ensureEndTag(true);
+        parser.ensureEndTag();
         // return the implem
         return result;
     }
@@ -644,10 +696,9 @@ public class EXPathWebParser
      */
     private Component handleXSLT(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("xslt", true);
+        parser.ensureStartTag("xslt");
         String uri      = parser.getAttribute("uri");
         String function = parser.getAttribute("function");
         String template = parser.getAttribute("template");
@@ -683,7 +734,7 @@ public class EXPathWebParser
         }
         // go to the end element event
         parser.nextTag();
-        parser.ensureEndTag(true);
+        parser.ensureEndTag();
         // return the implem
         return result;
     }
@@ -697,10 +748,9 @@ public class EXPathWebParser
      */
     private Component handleXProc(StreamParser parser, ParsingContext ctxt)
             throws ParseException
-                 , XMLStreamException
                  , TechnicalException
     {
-        parser.ensureStartTag("xproc", true);
+        parser.ensureStartTag("xproc");
         String uri  = parser.getAttribute("uri");
         String step = parser.getAttribute("step");
         String file = parser.getAttribute("file");
@@ -725,13 +775,16 @@ public class EXPathWebParser
         }
         // go to the end element event
         parser.nextTag();
-        parser.ensureEndTag(true);
+        parser.ensureEndTag();
         // return the implem
         return result;
     }
 
     /** The webapp descriptor namespace. */
-    private static final String DESC_NS = "http://expath.org/ns/webapp/descriptor";
+    static final String DESC_NS = "http://expath.org/ns/webapp";
+    /** The legacy webapp descriptor namespace (in some drafts before Webapp 1.0). */
+    @Deprecated
+    static final String LEGACY_DESC_NS = "http://expath.org/ns/webapp/descriptor";
     /** The servlex extension file name. */
     private static final String SERVLEX_FILENAME = "servlex.xml";
     /** The servlex extension namespace. */
@@ -741,8 +794,8 @@ public class EXPathWebParser
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
 
-    /** The config object. */
-    private ServerConfig myConfig;
+    /** The map of Processors objects. */
+    private final ProcessorsMap myProcs;
 }
 
 

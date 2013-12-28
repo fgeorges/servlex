@@ -11,10 +11,12 @@ package org.expath.servlex.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.namespace.QName;
+import java.util.regex.Pattern;
 import org.expath.servlex.components.Component;
-import org.expath.servlex.model.Chain;
-import org.expath.servlex.model.Wrapper;
+import org.expath.servlex.model.AddressHandler;
+import org.expath.servlex.model.Servlet;
+import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Represent a servlet while parsing.
@@ -23,86 +25,33 @@ import org.expath.servlex.model.Wrapper;
  * @date   2012-05-07
  */
 class ParsingServlet
+        extends ParsingHandler
 {
-    public ParsingServlet(String name, ParsingGroup group)
+    public ParsingServlet(String name)
     {
-        myName        = name;
-        myGroup       = group;
-        myFilters     = new ArrayList<QName>();
-        myMatchGroups = new ArrayList<String>();
+        myName = name;
     }
 
-    public Wrapper makeWrapper(ParsingContext ctxt)
-            throws ParseException
+    public void setImplem(Component implem)
     {
-        // initiate the list with the wrappers from application, if any
-        ParsingApp app = ctxt.getApplication();
-        List<Wrapper> wrappers;
-        if ( app == null ) {
-            wrappers = new ArrayList<Wrapper>();
-        }
-        else {
-            List<Wrapper> from_app = app.getFilters(ctxt);
-            wrappers = new ArrayList<Wrapper>(from_app);
-        }
-        // add filters from group, if any
-        if ( myGroup != null ) {
-            List<Wrapper> from_group = myGroup.getInScopeFilters(ctxt);
-            wrappers.addAll(from_group);
-        }
-        // resolve and add filters declared on this servlet
-        for ( QName n : myFilters ) {
-            Wrapper w = ctxt.getWrapper(n);
-            wrappers.add(w);
-        }
-        // make the final wrapper (null, single wrapper, or wrapping chain)
-        if ( wrappers.isEmpty() ) {
-            return null;
-        }
-        else if ( wrappers.size() == 1 ) {
-            return wrappers.get(0);
-        }
-        else {
-            // return an anonymous chain
-            return new Chain(null, wrappers.toArray(new Wrapper[]{}));
-        }
-    }
-
-    public String getName() {
-        return myName;
-    }
-
-    public void addFilter(QName filter) {
-        myFilters.add(filter);
-    }
-
-    public Component getImplem() {
-        return myImplem;
-    }
-    public void setImplem(Component implem) {
         myImplem = implem;
     }
 
-    public String getPattern() {
-        return myPattern;
-    }
-    public void setPattern(String pattern) {
-        myPattern = pattern;
-    }
-
-    public String[] getMatchGroups() {
-        return myMatchGroups.toArray(new String[]{});
-    }
-    public void addMatchGroup(String g) {
+    public void addMatchGroup(String g)
+    {
         myMatchGroups.add(g);
     }
 
-    private String       myName;
-    private ParsingGroup myGroup;
-    private List<QName>  myFilters;
-    private Component    myImplem;
-    private String       myPattern;
-    private List<String> myMatchGroups;
+    @Override
+    protected AddressHandler makeIt(ParsingContext ctxt, RegexPattern regex)
+    {
+        String[] groups = myMatchGroups.toArray(new String[]{ });
+        return new Servlet(myName, myImplem, regex, groups);
+    }
+
+    private String       myName        = null;
+    private Component    myImplem      = null;
+    private List<String> myMatchGroups = new ArrayList<>();
 }
 
 

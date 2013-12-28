@@ -9,8 +9,10 @@
 
 package org.expath.servlex.processors.saxon.model;
 
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Element;
@@ -53,6 +55,12 @@ public class SaxonDocument
     public XdmNode getSaxonNode()
     {
         return myDoc;
+    }
+
+    SaxonSequence getChildren()
+    {
+        XdmSequenceIterator children = myDoc.axisIterator(Axis.CHILD);
+        return new SaxonSequence(children);
     }
 
     private XdmNode myDoc;

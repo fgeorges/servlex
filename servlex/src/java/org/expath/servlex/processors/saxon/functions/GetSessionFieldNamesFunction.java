@@ -9,14 +9,10 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.ItemType;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.ServlexConstants;
 
 /**
  * TODO: Doc...
@@ -32,29 +28,19 @@ public class GetSessionFieldNamesFunction
     @Override
     public StructuredQName getFunctionQName()
     {
-        final String uri    = ServlexConstants.WEBAPP_NS;
-        final String prefix = ServlexConstants.WEBAPP_PREFIX;
-        return new StructuredQName(prefix, uri, LOCAL_NAME);
-    }
-
-    @Override
-    public int getMinimumNumberOfArguments()
-    {
-        return 0;
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
     public SequenceType[] getArgumentTypes()
     {
-        return new SequenceType[]{ SequenceType.EMPTY_SEQUENCE };
+        return FunTypes.types();
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        final int      any   = StaticProperty.ALLOWS_ZERO_OR_MORE;
-        final ItemType itype = BuiltInAtomicType.STRING;
-        return SequenceType.makeSequenceType(itype, any);
+        return FunTypes.ANY_STRING;
     }
 
     @Override
@@ -63,7 +49,7 @@ public class GetSessionFieldNamesFunction
         return new GetSessionFieldNamesCall();
     }
 
-    private static final String LOCAL_NAME = "get-session-field-names";
+    static final String LOCAL_NAME = "get-session-field-names";
 }
 
 

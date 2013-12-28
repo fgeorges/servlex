@@ -9,11 +9,13 @@
 
 package org.expath.servlex.model;
 
-import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.FilterInvocation;
 import org.expath.servlex.runtime.Invocation;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * A filter around a servlet (or around another filter, error handler, etc.)
@@ -24,7 +26,7 @@ import org.expath.servlex.runtime.Invocation;
 public class Filter
         extends Wrapper
 {
-    public Filter(QName name, Component in, Component out)
+    public Filter(String name, Component in, Component out)
     {
         super(name);
         myIn = in;
@@ -32,13 +34,40 @@ public class Filter
     }
 
     @Override
-    public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
+    public void cleanup(Auditor auditor)
+            throws ServlexException
     {
-        return new FilterInvocation(myIn, myOut, wrapped, path, request);
+        auditor.cleanup("filter");
+        if ( myIn != null ) {
+            myIn.cleanup(auditor);
+        }
+        if ( myOut != null ) {
+            myOut.cleanup(auditor);
+        }
     }
 
-    private Component myIn;
-    private Component myOut;
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Filter");
+        log.debug("         in : " + myIn);
+        log.debug("         out: " + myOut);
+        if ( myIn != null ) {
+            myIn.logApplication(log);
+        }
+        if ( myOut != null ) {
+            myOut.logApplication(log);
+        }
+    }
+
+    @Override
+    public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
+    {
+        return new FilterInvocation(getName(), myIn, myOut, wrapped, path, request);
+    }
+
+    private final Component myIn;
+    private final Component myOut;
 }
 
 

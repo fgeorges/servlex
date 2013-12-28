@@ -33,8 +33,11 @@ public interface Sequence
      * Return null if {@code position} is outside the sequence.  The sequence
      * can be of any type, but the item at {@code position} (if any) must be an
      * element node (if there is such an item but it is not an element, this is
-     * en error).  If the item is a document node with exactly one child which
-     * is an element, then its element is returned instead.
+     * en error).
+     * 
+     * If the item at that position is exactly one document node, and its
+     * children are exactly one element node (ignoring whitespace-only text
+     * nodes), then it is returned directly instead.
      */
     public Element elementAt(int position)
             throws TechnicalException;
@@ -45,6 +48,9 @@ public interface Sequence
      * Position starts at 0.  So if {@code start} is 1, returns the same
      * sequence without the first item.  If {@code start} is outside the
      * boundaries of the sequence, an empty sequence is returned.
+     * 
+     * If the sequence is exactly one document node, then its children nodes
+     * are used directly instead.
      */
     public Sequence subSequence(int start);
 }

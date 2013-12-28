@@ -10,6 +10,7 @@
 package org.expath.servlex.processors.saxon;
 
 import net.sf.saxon.s9api.Processor;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.processors.saxon.functions.GetRequestFieldFunction;
 import org.expath.servlex.processors.saxon.functions.GetRequestFieldNamesFunction;
 import org.expath.servlex.processors.saxon.functions.GetServerFieldFunction;
@@ -25,6 +26,15 @@ import org.expath.servlex.processors.saxon.functions.SetServerFieldFunction;
 import org.expath.servlex.processors.saxon.functions.SetSessionFieldFunction;
 import org.expath.servlex.processors.saxon.functions.SetWebappFieldFunction;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.processors.saxon.functions.ConfigParamFunction;
+import org.expath.servlex.processors.saxon.functions.ExecuteFunction;
+import org.expath.servlex.processors.saxon.functions.InstallEnabledFunction;
+import org.expath.servlex.processors.saxon.functions.InstallFromCxanFunction;
+import org.expath.servlex.processors.saxon.functions.InstallWebappFunction;
+import org.expath.servlex.processors.saxon.functions.InstalledWebappsFunction;
+import org.expath.servlex.processors.saxon.functions.ReloadWebappsFunction;
+import org.expath.servlex.processors.saxon.functions.RemoveWebappFunction;
+import org.expath.servlex.processors.saxon.functions.RepositoryFunction;
 
 /**
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
@@ -46,8 +56,17 @@ public class WebappFunctions
      * that extension functions are always registered, regardless of the import
      * statements...  Really?!?  Well, it seems there is no technical way to
      * achieve that with Saxon API...
+     * 
+     * @param procs The processors object to pass to the function objects which
+     *     need one.
+     * 
+     * @param saxon The Saxon processor object to pass to the function objects
+     *     which need one.
+     * 
+     * @param config The Servlex config object to pass to the function objects
+     *     which need one.
      */
-    public static void setup(Processors procs, Processor saxon)
+    public static void setup(Processors procs, Processor saxon, ServerConfig config)
     {
         // the request fields management functions
         saxon.registerExtensionFunction(new GetRequestFieldFunction());
@@ -69,6 +88,18 @@ public class WebappFunctions
         saxon.registerExtensionFunction(new ParseBasicAuthFunction(procs, saxon));
         // the parse header function
         saxon.registerExtensionFunction(new ParseHeaderValueFunction(procs, saxon));
+        // the repo and webapps management functions
+        saxon.registerExtensionFunction(new InstallEnabledFunction());
+        saxon.registerExtensionFunction(new InstallFromCxanFunction());
+        saxon.registerExtensionFunction(new InstallWebappFunction());
+        saxon.registerExtensionFunction(new InstalledWebappsFunction());
+        saxon.registerExtensionFunction(new RemoveWebappFunction());
+        saxon.registerExtensionFunction(new ReloadWebappsFunction());
+        saxon.registerExtensionFunction(new RepositoryFunction(config));
+        // the config access and management functions
+        saxon.registerExtensionFunction(new ConfigParamFunction());
+        // the execute function
+        saxon.registerExtensionFunction(new ExecuteFunction(procs, saxon));
     }
 }
 

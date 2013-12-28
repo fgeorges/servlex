@@ -1,0 +1,7 @@
+<page menu="reload">
+   <title>Reload cache</title>
+   <form href="do-reload">
+      Clear the application cache:
+      <button label="Reload"/>
+   </form>
+</page>

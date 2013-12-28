@@ -16,6 +16,7 @@ import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.ErrorConnector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 
 /**
@@ -36,9 +37,9 @@ import org.expath.servlex.tools.Auditor;
 public class ErrorHandlerInvocation
         extends Invocation
 {
-    public ErrorHandlerInvocation(String path, RequestConnector request, Invocation wrapped, Component impl, boolean every, QName code, String ns, String local)
+    public ErrorHandlerInvocation(String name, String path, RequestConnector request, Invocation wrapped, Component impl, boolean every, QName code, String ns, String local)
     {
-        super(path, request);
+        super(name, path, request);
         myWrapped = wrapped;
         myImpl    = impl;
         myEvery   = every;
@@ -48,17 +49,29 @@ public class ErrorHandlerInvocation
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("error handler invocation");
+        myWrapped.cleanup(auditor);
+        myImpl.cleanup(auditor);
+    }
+
+    @Override
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke(
+                "error handler", getName(), getPath(),
+                myImpl == null ? "" : myImpl.toString());
         try {
-            return myWrapped.invoke(connector, config, auditor);
+            return myWrapped.invoke(connector, app, config, auditor);
         }
         catch ( ComponentError ex ) {
             if ( matches(ex.getName()) ) {
                 try {
-                    Connector c = new ErrorConnector(ex, getRequest());
+                    Connector c = new ErrorConnector(ex, getRequest(), auditor);
                     return myImpl.run(c, config, auditor);
                 }
                 catch ( ComponentError ex2 ) {
@@ -76,23 +89,26 @@ public class ErrorHandlerInvocation
         if ( myEvery ) {
             return true;
         }
-        else if ( myNs == null && myLocal.equals(name.getLocalPart()) ) {
+        else if ( myNs == null && myLocal != null && myLocal.equals(name.getLocalPart()) ) {
             return true;
         }
-        else if ( myLocal == null && myNs.equals(name.getNamespaceURI()) ) {
+        else if ( myLocal == null && myNs != null && myNs.equals(name.getNamespaceURI()) ) {
             return true;
+        }
+        else if ( myCode != null ) {
+            return myCode.equals(name);
         }
         else {
-            return myCode.equals(name);
+            return false;
         }
     }
 
-    private Invocation myWrapped;
-    private Component  myImpl;
-    private boolean    myEvery;
-    private QName      myCode;
-    private String     myNs;
-    private String     myLocal;
+    private final Invocation myWrapped;
+    private final Component  myImpl;
+    private final boolean    myEvery;
+    private final QName      myCode;
+    private final String     myNs;
+    private final String     myLocal;
 }
 
 

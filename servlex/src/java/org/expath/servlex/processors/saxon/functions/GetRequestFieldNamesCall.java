@@ -11,13 +11,12 @@ package org.expath.servlex.processors.saxon.functions;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.tools.SequenceProperties;
-import org.expath.servlex.processors.saxon.SaxonHelper;
 
 /**
  * TODO: Doc...
@@ -29,19 +28,18 @@ public class GetRequestFieldNamesCall
         extends ExtensionFunctionCall
 {
     @Override
-    public SequenceIterator call(SequenceIterator[] params, XPathContext ctxt)
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
             throws XPathException
     {
-        // num of params
-        if ( params.length != 0 ) {
-            throw new XPathException("There are actual params: " + params.length);
-        }
-        // returning the name of every fields in the request
+        // the params
+        FunParams params = new FunParams(orig_params, 0, 0);
+        // log it
+        LOG.debug(params.format(GetRequestFieldNamesFunction.LOCAL_NAME).value());
+        // returning the name of every fields in the request properties
         try {
-            LOG.debug("Get request field names");
             SequenceProperties props = Servlex.getRequestMap();
             Iterable<String> keys = props.keys();
-            return SaxonHelper.toSequenceIterator(keys);
+            return FunReturn.value(keys);
         }
         catch ( TechnicalException ex ) {
             throw new XPathException("Error in the Servlex request management", ex);

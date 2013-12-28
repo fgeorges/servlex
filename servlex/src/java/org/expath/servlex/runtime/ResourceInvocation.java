@@ -11,6 +11,7 @@ package org.expath.servlex.runtime;
 
 import org.expath.servlex.model.Resource;
 import java.io.InputStream;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
@@ -22,8 +23,9 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
-import org.expath.servlex.tools.RegexHelper;
+import org.expath.servlex.tools.RegexPattern;
 
 /**
  * Represent a specific invocation of an application's resource, at a specific URI.
@@ -34,29 +36,49 @@ import org.expath.servlex.tools.RegexHelper;
 public class ResourceInvocation
         extends Invocation
 {
-    public ResourceInvocation(Resource rsrc, String path, RequestConnector request, String java_regex, String rewrite)
+    public ResourceInvocation(Resource rsrc, String path, RequestConnector request, RegexPattern regex, String rewrite)
     {
-        super(path, request);
+        super(null, path, request);
         myRsrc = rsrc;
-        myJavaRegex = java_regex;
+        myRegex = regex;
         myRewrite = rewrite;
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public void cleanup(Auditor auditor)
             throws ServlexException
     {
+        auditor.cleanup("resource invocation: " + myRegex);
+        myRsrc.cleanup(auditor);
+    }
+
+    @Override
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
+            throws ServlexException
+    {
+        auditor.invoke(
+                "resource", getName(), getPath(),
+                myRegex == null ? "" : myRegex.toString(),
+                myRewrite);
         String orig_path = getPath();
         try {
-            String path = RegexHelper.replaceMatches(orig_path, myJavaRegex, myRewrite);
+            String path = myRegex.replace(orig_path, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
-            StreamSource rsrc = pkg.getResolver().resolveComponent(path);
+            Source src = pkg.getResolver().resolveComponent(path);
             // return a 404 if the resource does not exist
-            if ( rsrc == null ) {
+            if ( src == null ) {
                 throw new ServlexException(404, "Page not found");
             }
-            InputStream in = rsrc.getInputStream();
-            return new ResourceConnector(in, 200, myRsrc.getType());
+            StreamSource stream = null;
+            if ( src instanceof StreamSource ) {
+                stream = (StreamSource) src;
+            }
+            else {
+                throw new ServlexException(500, "The resource is not a StreamSource: " + src.getClass());
+            }
+            InputStream in = stream.getInputStream();
+            String type = myRsrc.getType();
+            return new ResourceConnector(in, 200, type, app.getProcessors(), auditor);
         }
         catch ( Storage.NotExistException ex ) {
             LOG.error("Page not found: " + orig_path, ex);
@@ -75,9 +97,9 @@ public class ResourceInvocation
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(ResourceInvocation.class);
 
-    private Resource myRsrc;
-    private String   myJavaRegex;
-    private String   myRewrite;
+    private final Resource     myRsrc;
+    private final RegexPattern myRegex;
+    private final String       myRewrite;
 }
 
 

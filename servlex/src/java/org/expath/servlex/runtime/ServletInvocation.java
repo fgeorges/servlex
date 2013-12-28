@@ -14,6 +14,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
+import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
 
 /**
@@ -25,22 +26,33 @@ import org.expath.servlex.tools.Auditor;
 public class ServletInvocation
         extends Invocation
 {
-    public ServletInvocation(Component impl, String path, RequestConnector request)
+    public ServletInvocation(String name, Component impl, String path, RequestConnector request)
     {
-        super(path, request);
+        super(name, path, request);
         myImpl = impl;
     }
 
     @Override
-    public Connector invoke(Connector connector, ServerConfig config, Auditor auditor)
+    public void cleanup(Auditor auditor)
+            throws ServlexException
+    {
+        auditor.cleanup("servlet invocation");
+        myImpl.cleanup(auditor);
+    }
+
+    @Override
+    public Connector invoke(Connector connector, Application app, ServerConfig config, Auditor auditor)
             throws ServlexException
                  , ComponentError
     {
+        auditor.invoke(
+                "servlet", getName(), getPath(),
+                myImpl == null ? "" : myImpl.toString());
         return myImpl.run(connector, config, auditor);
     }
 
-    /** ... */
-    private Component myImpl;
+    /** The implementation of this servlet, a specific component. */
+    private final Component myImpl;
 }
 
 

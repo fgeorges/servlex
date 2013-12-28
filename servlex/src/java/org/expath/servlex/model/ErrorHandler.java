@@ -10,10 +10,13 @@
 package org.expath.servlex.model;
 
 import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
+import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.ErrorHandlerInvocation;
 import org.expath.servlex.runtime.Invocation;
+import org.expath.servlex.tools.Auditor;
 
 /**
  * An error handler.
@@ -31,7 +34,7 @@ public class ErrorHandler
     /**
      * Build a new error handler matching every error.
      */
-    public ErrorHandler(QName name, Component impl)
+    public ErrorHandler(String name, Component impl)
     {
         super(name);
         myImpl  = impl;
@@ -57,7 +60,7 @@ public class ErrorHandler
      * @param local The error code local name matched by this handler.
      *          Can be null (see above).
      */
-    public ErrorHandler(QName name, Component impl, QName code, String namespace, String local)
+    public ErrorHandler(String name, Component impl, QName code, String namespace, String local)
     {
         super(name);
         myImpl  = impl;
@@ -68,16 +71,58 @@ public class ErrorHandler
     }
 
     @Override
-    public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
+    public void cleanup(Auditor auditor)
+            throws ServlexException
     {
-        return new ErrorHandlerInvocation(path, request, wrapped, myImpl, myEvery, myCode, myNs, myLocal);
+        auditor.cleanup("error handler");
+        myImpl.cleanup(auditor);
+        if ( myWrapper != null ) {
+            myWrapper.cleanup(auditor);
+        }
     }
 
-    private Component myImpl;
-    private boolean   myEvery;
-    private QName     myCode;
-    private String    myNs;
-    private String    myLocal;
+    @Override
+    public void logApplication(Logger log)
+    {
+        log.debug("      Error Handler");
+        log.debug("         every: " + myEvery);
+        log.debug("         code : " + myCode);
+        log.debug("         ns   : " + myNs);
+        log.debug("         local: " + myLocal);
+        log.debug("         impl : " + myImpl);
+        if ( myImpl != null ) {
+            myImpl.logApplication(log);
+        }
+    }
+
+    /**
+     * Set a wrapper (filter, error handler, etc).
+     * 
+     * If more than one filter has to be set on this servlet, they can be all
+     * wrapped within a chain, then this one single chain can be set as the
+     * one wrapper.
+     */
+    public void setWrapper(Wrapper w)
+    {
+        myWrapper = w;
+    }
+
+    @Override
+    public Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped)
+    {
+        Invocation invoc = new ErrorHandlerInvocation(getName(), path, request, wrapped, myImpl, myEvery, myCode, myNs, myLocal);
+        if ( myWrapper != null ) {
+            invoc = myWrapper.makeInvocation(path, request, invoc);
+        }
+        return invoc;
+    }
+
+    private final Component myImpl;
+    private final boolean   myEvery;
+    private QName   myCode;
+    private String  myNs;
+    private String  myLocal;
+    private Wrapper myWrapper = null;
 }
 
 

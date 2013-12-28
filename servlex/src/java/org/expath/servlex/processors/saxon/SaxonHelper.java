@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.ValueRepresentation;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -24,12 +24,15 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.ShareableSequence;
+import net.sf.saxon.tree.iter.ListIterator;
+import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.value.BooleanValue;
+import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.Value;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
 import org.expath.pkg.saxon.SaxonRepository;
+import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
@@ -52,13 +55,18 @@ import org.expath.servlex.runtime.ComponentError;
  */
 public class SaxonHelper
 {
-    public static Processor makeSaxon(SaxonRepository repo, Processors procs)
+    public static String clarkName(NodeInfo node)
+    {
+        return "{" + node.getURI() + "}" + node.getLocalPart();
+    }
+
+    public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config)
             throws PackageException
     {
         Processor saxon = new Processor(true);
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
-        WebappFunctions.setup(procs, saxon);
+        WebappFunctions.setup(procs, saxon, config);
         return saxon;
     }
 
@@ -83,8 +91,7 @@ public class SaxonHelper
     public static SaxonElement toSaxonElement(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        XdmItem xdm = sitem.getSaxonItem();
+        XdmItem xdm = SaxonItem.getXdmItem(item);
         if ( ! (xdm instanceof XdmNode) ) {
             throw new TechnicalException("Not a node: " + xdm);
         }
@@ -104,8 +111,7 @@ public class SaxonHelper
     public static SaxonDocument toSaxonDocument(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        XdmItem xdm = sitem.getSaxonItem();
+        XdmItem xdm = SaxonItem.getXdmItem(item);
         if ( ! (xdm instanceof XdmNode) ) {
             throw new TechnicalException("Not a node: " + xdm);
         }
@@ -125,8 +131,7 @@ public class SaxonHelper
     public static XdmValue toXdmValue(Item item)
             throws TechnicalException
     {
-        SaxonItem sitem = toSaxonItem(item);
-        return sitem.getSaxonItem();
+        return SaxonItem.getXdmItem(item);
     }
 
     public static XdmValue toXdmValue(Document doc)
@@ -147,9 +152,9 @@ public class SaxonHelper
             throws TechnicalException
     {
         XdmValue value = toXdmValue(sequence);
-        ValueRepresentation rep = value.getUnderlyingValue();
+        net.sf.saxon.om.Sequence seq = value.getUnderlyingValue();
         try {
-            return Value.asIterator(rep);
+            return seq.iterate();
         }
         catch ( XPathException ex ) {
             throw new TechnicalException("Error getting an iterator out of an XDM value", ex);
@@ -159,28 +164,40 @@ public class SaxonHelper
     public static SequenceIterator toSequenceIterator(String string)
             throws TechnicalException
     {
-        List<StringValue> items = new ArrayList<StringValue>();
+        if ( string == null ) {
+            return EmptySequence.getInstance().iterate();
+        }
         StringValue v = new StringValue(string);
-        items.add(v);
-        return new ShareableSequence(items).iterate();
+        return SingletonIterator.makeIterator(v);
+    }
+
+    public static SequenceIterator toSequenceIterator(boolean bool)
+            throws TechnicalException
+    {
+        BooleanValue v = BooleanValue.get(bool);
+        return SingletonIterator.makeIterator(v);
     }
 
     public static SequenceIterator toSequenceIterator(Iterable<String> strings)
             throws TechnicalException
     {
-        List<StringValue> items = new ArrayList<StringValue>();
+        List<StringValue> items = new ArrayList<>();
         for ( String s : strings ) {
             StringValue v = new StringValue(s);
             items.add(v);
         }
-        return new ShareableSequence(items).iterate();
+        return new ListIterator(items);
     }
 
     /**
      * Return the root element of the document node passed in param.
+     * 
+     * @param doc The document node to return the root element from.
      *
-     * Throw an error is the param is null, is not a document node, or if it
-     * not exactly one child which is an element node.
+     * @return The root element of the document node passed in {@code  doc}.
+     * 
+     * @throws TechnicalException if {@code doc} is null, is not a document node,
+     *     or if it not exactly one child which is an element node.
      */
     public static XdmNode getDocumentRootElement(Document doc)
             throws TechnicalException
@@ -211,7 +228,10 @@ public class SaxonHelper
     /**
      * Return next node, ignoring all whitespace-only text nodes.
      * 
-     * Return null if there is no such next node.
+     * @param it The sequence where ignoring whitespace text nodes from.
+     * 
+     * @return The next node, ignoring all whitespace-only text nodes, or null
+     *     if there is no such next node.
      */
     public static XdmNode ignoreWhitespaceTextNodes(XdmSequenceIterator it)
     {
@@ -238,7 +258,11 @@ public class SaxonHelper
             throw new ServlexException(500, "Internal error", ex);
         }
         XPathException cause = (XPathException) ex.getCause();
-        QName name = cause.getErrorCodeQName().toJaxpQName();
+        // TODO: What to do if the error code name is null?
+        // Is it only possible?
+        QName name = cause.getErrorCodeQName() == null
+                ? null
+                : cause.getErrorCodeQName().toJaxpQName();
         String msg = cause.getMessage();
         XdmValue value = MyValue.wrap(cause.getErrorObject());
         Sequence sequence = value == null
@@ -253,9 +277,9 @@ public class SaxonHelper
     private static class MyValue
             extends XdmValue
     {
-        public static XdmValue wrap(ValueRepresentation v)
+        public static XdmValue wrap(net.sf.saxon.om.Sequence s)
         {
-            return XdmValue.wrap(v);
+            return XdmValue.wrap(s);
         }
     }
 }

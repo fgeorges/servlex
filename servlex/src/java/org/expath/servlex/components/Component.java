@@ -9,11 +9,13 @@
 
 package org.expath.servlex.components;
 
+import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Cleanable;
 
 /**
  * A servlet entry point.
@@ -22,7 +24,10 @@ import org.expath.servlex.tools.Auditor;
  * @date   2009-12-12
  */
 public interface Component
+        extends Cleanable
 {
+    public void logApplication(Logger log);
+
     /**
      * Implement an entry point invocation.
      *
