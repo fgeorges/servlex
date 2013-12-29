@@ -2,7 +2,7 @@
 <installation version="1.0">
    <info>
       <appname>Servlex</appname>
-      <appversion>0.9.0dev</appversion>
+      <appversion>0.9.0</appversion>
       <appsubpath>servlex</appsubpath>
       <authors>
          <author email="fgeorges@servlex.net" name="Florent Georges"/>
