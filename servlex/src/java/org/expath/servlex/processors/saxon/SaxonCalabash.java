@@ -9,6 +9,7 @@
 
 package org.expath.servlex.processors.saxon;
 
+import java.util.regex.Pattern;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.processors.saxon.model.SaxonItem;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
@@ -36,32 +37,57 @@ import org.expath.servlex.processors.XProcProcessor;
 import org.expath.servlex.processors.XQueryProcessor;
 import org.expath.servlex.processors.XSLTProcessor;
 
+import static org.expath.servlex.ServlexConstants.SAXON_CONFIG_FILE_PROPERTY;
+import static org.expath.servlex.ServlexConstants.SAXON_XSLT_VER_DEFAULT;
+import static org.expath.servlex.ServlexConstants.SAXON_XSLT_VER_PROPERTY;
+
 /**
  * XSLT, XQuery and XProc processors based on Saxon and Calabash.
+ * 
+ * The "XSLT version" used here is the XSLT version number (a string, either
+ * "2.0" or "3.0") to use for the "wrapper stylesheets" used for function and
+ * names template components.
  *
  * @author Florent Georges
  */
 public class SaxonCalabash
     implements Processors
 {
+    @SuppressWarnings("LeakingThisInConstructor")
     public SaxonCalabash(Repository repo, ServerConfig config)
             throws TechnicalException
     {
+        String file = System.getProperty(SAXON_CONFIG_FILE_PROPERTY);
         try {
             myRepo = new SaxonRepository(repo);
-            mySaxon = SaxonHelper.makeSaxon(myRepo, this, config);
-            myXslt = new SaxonXSLT(mySaxon);
+            mySaxon = SaxonHelper.makeSaxon(myRepo, this, config, file);
+            myXslt = new SaxonXSLT(this);
             myXQuery = new SaxonXQuery(mySaxon, repo);
             myXProc = new CalabashXProc(mySaxon, myRepo, config, this);
         }
         catch ( PackageException ex ) {
             throw new TechnicalException("Error initializing the saxon and calabash processors", ex);
         }
+        String ver = System.getProperty(SAXON_XSLT_VER_PROPERTY, SAXON_XSLT_VER_DEFAULT);
+        if ( ! XSLT_VERSION_RE.matcher(ver).matches() ) {
+            throw new TechnicalException("Default XSLT version for wrappers is not valid: '" + ver + "'");
+        }
+        myXsltVersion = ver;
     }
 
     public SaxonRepository getRepository()
     {
         return myRepo;
+    }
+
+    public Processor getSaxon()
+    {
+        return mySaxon;
+    }
+
+    public String getWrapperXsltVersion()
+    {
+        return myXsltVersion;
     }
 
     @Override
@@ -159,11 +185,13 @@ public class SaxonCalabash
         }
     }
 
-    private Processor mySaxon;
-    private SaxonRepository myRepo;
-    private SaxonXSLT myXslt;
-    private SaxonXQuery myXQuery;
-    private CalabashXProc myXProc;
+    private final Processor mySaxon;
+    private final SaxonRepository myRepo;
+    private final SaxonXSLT myXslt;
+    private final SaxonXQuery myXQuery;
+    private final CalabashXProc myXProc;
+    private final String myXsltVersion;
+    private final Pattern XSLT_VERSION_RE = Pattern.compile("^[0-9]\\.[0-9]$");
 }
 
 

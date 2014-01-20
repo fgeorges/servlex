@@ -33,6 +33,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.SaxonCalabash;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
@@ -46,12 +47,13 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 public class SaxonXSLTTemplate
         implements Component
 {
-    public SaxonXSLTTemplate(Processor saxon, String import_uri, String ns, String localname)
+    public SaxonXSLTTemplate(SaxonCalabash procs, String import_uri, String ns, String localname)
     {
-        mySaxon = saxon;
+        mySaxon = procs.getSaxon();
         myImportUri = import_uri;
         myNS = ns;
         myLocal = localname;
+        myXsltVersion = procs.getWrapperXsltVersion();
     }
 
     @Override
@@ -109,7 +111,7 @@ public class SaxonXSLTTemplate
     {
         if ( myCompiled == null ) {
             XsltCompiler c = mySaxon.newXsltCompiler();
-            String style = makeCallSheet(myImportUri, myNS, myLocal);
+            String style = makeCallSheet(myImportUri, myNS, myLocal, myXsltVersion);
             Source src = new StreamSource(new StringReader(style));
             src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
             myCompiled = c.compile(src);
@@ -117,18 +119,19 @@ public class SaxonXSLTTemplate
         return myCompiled;
     }
 
-    private static String makeCallSheet(String import_uri, String ns, String local)
+    private static String makeCallSheet(String import_uri, String ns, String local, String version)
     {
-        return SaxonXSLTFunction.makeCallSheet(false, import_uri, ns, local);
+        return SaxonXSLTFunction.makeCallSheet(false, import_uri, ns, local, version);
     }
 
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(SaxonXSLTTemplate.class);
 
-    private Processor mySaxon;
-    private String myImportUri;
-    private String myNS;
-    private String myLocal;
+    private final Processor mySaxon;
+    private final String myImportUri;
+    private final String myNS;
+    private final String myLocal;
+    private final String myXsltVersion;
     private XsltExecutable myCompiled = null;
 
     /**
@@ -142,6 +145,7 @@ public class SaxonXSLTTemplate
             myTrans = trans;
         }
 
+        @Override
         public void connect(Sequence input)
         {
             if ( ! (input instanceof SaxonSequence) ) {
@@ -151,13 +155,14 @@ public class SaxonXSLTTemplate
             myTrans.setParameter(NAME, seq.makeSaxonValue());
         }
 
+        @Override
         public void error(ComponentError error, Document request)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        private static QName NAME = new QName(ServlexConstants.PRIVATE_NS, "input");
-        private XsltTransformer myTrans;
+        private static final QName NAME = new QName(ServlexConstants.PRIVATE_NS, "input");
+        private final XsltTransformer myTrans;
     }
 }
 

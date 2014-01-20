@@ -39,6 +39,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.SaxonCalabash;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
@@ -53,9 +54,9 @@ import org.expath.servlex.processors.saxon.model.SaxonDocument;
 public class SaxonXSLTTransform
         implements Component
 {
-    public SaxonXSLTTransform(Processor saxon, String stylesheet)
+    public SaxonXSLTTransform(SaxonCalabash procs, String stylesheet)
     {
-        mySaxon = saxon;
+        mySaxon = procs.getSaxon();
         myStyle = stylesheet;
     }
 
@@ -135,8 +136,8 @@ public class SaxonXSLTTransform
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(SaxonXSLTTransform.class);
 
-    private Processor mySaxon;
-    private String myStyle;
+    private final Processor mySaxon;
+    private final String myStyle;
     private XsltExecutable myCompiled = null;
 
     /**
@@ -165,6 +166,7 @@ public class SaxonXSLTTransform
          * document, then the intuitive way is just to apply the stylesheet to the
          * node, no need to declare a parameter...)
          */
+        @Override
         public void connect(Sequence input)
                 throws TechnicalException
         {
@@ -258,6 +260,7 @@ public class SaxonXSLTTransform
 
         // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
         // and the several constants are mostly duplicated from CalabashPipeline...
+        @Override
         public void error(ComponentError error, Document request)
                 throws TechnicalException
         {

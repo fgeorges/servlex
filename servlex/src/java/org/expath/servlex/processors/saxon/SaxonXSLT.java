@@ -24,27 +24,30 @@ import org.expath.servlex.processors.XSLTProcessor;
 class SaxonXSLT
         implements XSLTProcessor
 {
-    public SaxonXSLT(Processor saxon)
+    public SaxonXSLT(SaxonCalabash saxon)
     {
         mySaxon = saxon;
     }
 
+    @Override
     public Component makeTransform(String uri)
     {
         return new SaxonXSLTTransform(mySaxon, uri);
     }
 
+    @Override
     public Component makeFunction(String uri, String ns, String localname)
     {
         return new SaxonXSLTFunction(mySaxon, uri, ns, localname);
     }
 
+    @Override
     public Component makeTemplate(String uri, String ns, String localname)
     {
         return new SaxonXSLTTemplate(mySaxon, uri, ns, localname);
     }
 
-    private Processor mySaxon;
+    private final SaxonCalabash mySaxon;
 }
 
 

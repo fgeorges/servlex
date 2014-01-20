@@ -33,6 +33,7 @@ import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
+import org.expath.servlex.processors.saxon.SaxonCalabash;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
@@ -46,12 +47,13 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 public class SaxonXSLTFunction
         implements Component
 {
-    public SaxonXSLTFunction(Processor saxon, String import_uri, String ns, String localname)
+    public SaxonXSLTFunction(SaxonCalabash procs, String import_uri, String ns, String localname)
     {
-        mySaxon = saxon;
+        mySaxon = procs.getSaxon();
         myImportUri = import_uri;
         myNS = ns;
         myLocal = localname;
+        myXsltVersion = procs.getWrapperXsltVersion();
     }
 
     @Override
@@ -109,7 +111,7 @@ public class SaxonXSLTFunction
     {
         if ( myCompiled == null ) {
             XsltCompiler c = mySaxon.newXsltCompiler();
-            String style = makeCallSheet(true, myImportUri, myNS, myLocal);
+            String style = makeCallSheet(true, myImportUri, myNS, myLocal, myXsltVersion);
             Source src = new StreamSource(new StringReader(style));
             src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
             myCompiled = c.compile(src);
@@ -124,14 +126,14 @@ public class SaxonXSLTFunction
     // at the deployment...
     //
     // also used by XSLTTemplateEntryPoint (so package-level)
-    static String makeCallSheet(boolean is_function, String import_uri, String ns, String local)
+    static String makeCallSheet(boolean is_function, String import_uri, String ns, String local, String version)
     {
         StringBuilder b = new StringBuilder();
         b.append("<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'\n");
-        b.append("                xmlns:web='" + ServlexConstants.WEBAPP_NS + "'\n");
-        b.append("                xmlns:local='" + ServlexConstants.PRIVATE_NS + "'\n");
+        b.append("                xmlns:web='").append(ServlexConstants.WEBAPP_NS).append("'\n");
+        b.append("                xmlns:local='").append(ServlexConstants.PRIVATE_NS).append("'\n");
         b.append("                xmlns:my='").append(ns).append("'\n");
-        b.append("                version='2.0'>\n");
+        b.append("                version='").append(version).append("'>\n");
         b.append("   <xsl:import href='").append(import_uri).append("'/>\n");
         b.append("   <xsl:param name='local:input' as='item()*'/>\n");
         b.append("   <xsl:template name='local:main'>\n");
@@ -167,10 +169,11 @@ public class SaxonXSLTFunction
     /** The logger. */
     private static final Logger LOG = Logger.getLogger(SaxonXSLTFunction.class);
 
-    private Processor mySaxon;
-    private String myImportUri;
-    private String myNS;
-    private String myLocal;
+    private final Processor mySaxon;
+    private final String myImportUri;
+    private final String myNS;
+    private final String myLocal;
+    private final String myXsltVersion;
     private XsltExecutable myCompiled = null;
 
     /**

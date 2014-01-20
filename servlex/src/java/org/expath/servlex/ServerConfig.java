@@ -81,10 +81,7 @@ public class ServerConfig
             throws TechnicalException
     {
         LOG.info("ServerConfig with repository: " + repo);
-        String clazz = System.getProperty(PROCESSORS_PROPERTY);
-        if ( clazz == null ) {
-            clazz = DEFAULT_PROCESSORS;
-        }
+        String clazz = System.getProperty(PROCESSORS_PROPERTY, DEFAULT_PROCESSORS);
         myProcessors = new ProcessorsMap(clazz, repo, this);
         myRepo = new WebRepository(repo, myProcessors);
         init();

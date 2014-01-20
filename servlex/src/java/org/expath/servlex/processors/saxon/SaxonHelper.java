@@ -9,10 +9,13 @@
 
 package org.expath.servlex.processors.saxon;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.s9api.Axis;
@@ -59,10 +62,23 @@ public class SaxonHelper
         return "{" + node.getURI() + "}" + node.getLocalPart();
     }
 
-    public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config)
+    public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config, String config_file)
             throws PackageException
     {
-        Processor saxon = new Processor(true);
+        Processor saxon;
+        if ( config_file == null ) {
+            saxon = new Processor(true);
+        }
+        else {
+            File   f = new File(config_file);
+            Source c = new StreamSource(f);
+            try {
+                saxon = new Processor(c);
+            }
+            catch ( SaxonApiException ex ) {
+                throw new PackageException("Error instantiating Saxon with config file: " + config_file, ex);
+            }
+        }
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
         WebappFunctions.setup(procs, saxon, config);
