@@ -2,7 +2,7 @@
 <installation version="1.0">
    <info>
       <appname>Servlex</appname>
-      <appversion>0.9.0</appversion>
+      <appversion>0.9.1dev</appversion>
       <appsubpath>servlex</appsubpath>
       <authors>
          <author email="fgeorges@servlex.net" name="Florent Georges"/>
@@ -35,10 +35,10 @@
    </panels>
    <packs>
       <pack name="Servlex" preselected="yes" required="yes">
-         <description>The Servlex server, pre-packaged, including Apache Tomcat 7.0.37.</description>
+         <description>The Servlex server, pre-packaged, including Apache Tomcat 7.0.47.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.0dev/hello-world/"             targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.0dev/hello-world-0.9.0dev.xaw" targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.1dev/hello-world/"             targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.1dev/hello-world-0.9.1dev.xaw" targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/LICENSE"        targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/NOTICE"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
@@ -53,7 +53,7 @@
          <file src="apache-tomcat-7.0.47/temp/"          targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/webapps/"       targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/work/"          targetdir="$INSTALL_PATH"/>
-         <parsable targetfile="$INSTALL_PATH/conf/catalina.properties"/>
+         <parsable targetfile="$INSTALL_PATH/conf/catalina.properties" type="java"/>
       </pack>
    </packs>
 </installation>
