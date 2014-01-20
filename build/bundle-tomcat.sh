@@ -94,6 +94,10 @@ mkdir "${TOMCAT}/webapps/ROOT"
 # replace the Servlex version number
 perl -e "s|<appversion>([-.0-9a-z]+)</appversion>|<appversion>${VERSION}</appversion>|g;" \
     -pi izpack-tomcat.xml
+perl -e "s|servlex-([-.0-9a-z]+)/hello-world/|servlex-${VERSION}/hello-world/|g;" \
+    -pi izpack-tomcat.xml
+perl -e "s|servlex-([-.0-9a-z]+)/hello-world-([-.0-9a-z]+).xaw|servlex-${VERSION}/hello-world-${VERSION}.xaw|g;" \
+    -pi izpack-tomcat.xml
 perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
     -pi izpack-tomcat.xml
 
