@@ -64,7 +64,7 @@ public class ServlexConstants
     /** The system property name for whether logging HTTP entity content. */
     public static final String DEFAULT_CHARSET_PROPERTY = "org.expath.servlex.default.charset";
 
-    /** The system property name for which XSLT version to use for XSLT wrappers. */
+    /** The system property name for the path to a Saxon configuration file. */
     public static final String SAXON_CONFIG_FILE_PROPERTY = "org.expath.servlex.saxon.config.file";
     /** The system property name for which XSLT version to use for XSLT wrappers. */
     public static final String SAXON_XSLT_VER_PROPERTY    = "org.expath.servlex.saxon.xslt.version";
