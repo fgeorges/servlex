@@ -10,6 +10,8 @@
 package org.expath.servlex.processors.saxon;
 
 import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcMessageListener;
+import com.xmlcalabash.core.XProcRunnable;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
@@ -155,7 +157,54 @@ public class CalabashPipeline
         SaxonRepository repo = myCalabash.getRepository();
         PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
         runtime.setConfigurer(configurer);
-        // runtime.setMessageListener(new MsgListener());
+//        runtime.setMessageListener(new XProcMessageListener() {
+//            @Override
+//            public void error(XProcRunnable xpr, XdmNode xn, String string, QName qname) {
+//                System.out.println("MY MESSAGE: ERROR: " + string);
+//                System.out.println("                   " + qname);
+//                System.out.println("                   " + xpr);
+//            }
+//
+//            @Override
+//            public void error(Throwable thrwbl) {
+//                System.out.println("MY MESSAGE: ERROR: " + thrwbl);
+//            }
+//
+//            @Override
+//            public void warning(XProcRunnable xpr, XdmNode xn, String string) {
+//                System.out.println("MY MESSAGE: WARNING: " + string);
+//                System.out.println("                     " + xpr);
+//            }
+//
+//            @Override
+//            public void warning(Throwable thrwbl) {
+//                System.out.println("MY MESSAGE: WARNING: " + thrwbl);
+//            }
+//
+//            @Override
+//            public void info(XProcRunnable xpr, XdmNode xn, String string) {
+//                System.out.println("MY MESSAGE: INFO: " + string);
+//                System.out.println("                  " + xpr);
+//            }
+//
+//            @Override
+//            public void fine(XProcRunnable xpr, XdmNode xn, String string) {
+//                System.out.println("MY MESSAGE: FINE: " + string);
+//                System.out.println("                  " + xpr);
+//            }
+//
+//            @Override
+//            public void finer(XProcRunnable xpr, XdmNode xn, String string) {
+//                System.out.println("MY MESSAGE: FINER: " + string);
+//                System.out.println("                   " + xpr);
+//            }
+//
+//            @Override
+//            public void finest(XProcRunnable xpr, XdmNode xn, String string) {
+////                System.out.println("MY MESSAGE: FINEST: " + string);
+////                System.out.println("                    " + xpr);
+//            }
+//        });
         File profiling = myConfig.getProfileFile("xproc-profile");
         if ( profiling != null ) {
             try {
