@@ -102,6 +102,9 @@ public class InstallWebappCall
     static Map<String, String> configParams(List<String> list)
             throws XPathException
     {
+        if ( list == null ) {
+            return new HashMap<>();
+        }
         int size = list.size();
         if ( (size % 2) != 0 ) {
             throw FunErrors.invalidConfigList("Not an even number of strings for config parameters: " + size);
