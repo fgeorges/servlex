@@ -19,6 +19,7 @@
                <li><a href="." title="Servlex Home">Home</a></li>
                <li><a href="install" title="Installation Guide">Install</a></li>
                <li><a href="config" title="Configuration Options" class="active">Config</a></li>
+               <li><a href="download" title="Download Servlex">Download</a></li>
                <li><a href="news" title="Servlex News">News</a></li>
             </ul>
          </div>
@@ -34,6 +35,7 @@
                      configuration options, but it gives also a few recipes about Tomcat, e.g. how
                      to change the port number.
                   </p>
+
                   <h4>Servlex options</h4>
                   <p>
                      The following options are Java system properties.  The way to set them to
@@ -80,6 +82,28 @@ org.expath.servlex.profile.dir=/some/place/to/save/profiling
                      The valid charsets are the same as the charsets accepted by the Java
                      platform.
                   </p>
+
+                  <h4>Options for the Saxon processor</h4>
+                  <p>
+                     If you use Saxon as the XSLT and XQuery processor (which is so far the only
+                     implementation in Servlex), you can use the following options to configure its
+                     behaviour.
+                  </p>
+                  <h5>org.expath.servlex.saxon.xslt.version</h5>
+                  <p>
+                     The XSLT and XQuery processor based on Saxon generates an XSLT stylesheet to
+                     implement XSLT function and named template components.  The value of this
+                     option is the version to use for those wrapper XSLT stylesheets.  By default
+                     it is <code>2.0</code>.
+                  </p>
+                  <h5>org.expath.servlex.saxon.config.file</h5>
+                  <p>
+                     Saxon defines its own configuration file format.  The value of this option, if
+                     any, must be the path to such a Saxon config file.  The file is used when
+                     instantiating Saxon, when starting Servlex.  By default, Servlex does not
+                     provide Saxon with any config file.
+                  </p>
+
                   <h4>Useful recipes for Tomcat</h4>
                   <p>
                      If you use Tomcat (e.g. if you installed the Servlex installer, which
