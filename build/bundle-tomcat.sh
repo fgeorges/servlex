@@ -6,22 +6,6 @@ die() {
     exit 1;
 }
 
-start_tomcat() {
-    # start Tomcat up
-    "${TOMCAT}/bin/startup.sh" \
-        || die "Tomcat failed to startup."
-    # wait for Tomcat to be up
-    until curl --silent --show-error --connect-timeout 1 -I $MANAGER | grep "Coyote" >/dev/null; do
-        echo Waiting for Tomcat to be up...
-        sleep 2
-    done
-}
-
-stop_tomcat() {
-    "${TOMCAT}/bin/shutdown.sh" \
-        || die "Tomcat failed to shutdown."
-}
-
 VERSION="$1"
 # the Servlex version number
 if [[ -z "${VERSION}" ]]; then
@@ -46,19 +30,6 @@ TOMCAT=${BASEDIR}/${TOMCAT_NAME}
 # untar the archive
 rm -r "${TOMCAT}"
 ( cd "${BASEDIR}"; tar zxf "${TOMCAT_NAME}.tar.gz" )
-
-# creating the repo and the profiling directory
-mkdir "${TOMCAT}/repo"
-mkdir "${TOMCAT}/repo/.expath-web"
-mkdir "${TOMCAT}/profiling"
-
-# empty webapps.xml file
-cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
-
-# deploy the webapp manager
-xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
-xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-http-client-saxon-0.11.0dev.xar"
-xrepo --repo "${TOMCAT}/repo" install "${BASEDIR}/apps/expath-zip-saxon-0.7.0pre1.xar"
 
 # adding properties to conf/catalina.properties
 PROPS="${TOMCAT}/conf/catalina.properties"
@@ -90,6 +61,26 @@ rm -r "${TOMCAT}"/webapps/*
 # unzip the WAR into webapps/ROOT
 mkdir "${TOMCAT}/webapps/ROOT"
 ( cd "${TOMCAT}/webapps/ROOT"; unzip ../../../../servlex/dist/servlex.war )
+
+# creating the repo and the profiling directory
+mkdir "${TOMCAT}/repo"
+mkdir "${TOMCAT}/repo/.expath-web"
+mkdir "${TOMCAT}/profiling"
+
+# empty webapps.xml file
+cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
+
+# the xrepo.sh script
+cp "${BASEDIR}/xrepo-tomcat.sh" "${TOMCAT}/bin/xrepo.sh"
+chmod u+x "${TOMCAT}/bin/xrepo.sh"
+
+# deploy the webapp manager
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
+    install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
+    install "${BASEDIR}/apps/expath-http-client-saxon-0.11.0dev.xar"
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
+    install "${BASEDIR}/apps/expath-zip-saxon-0.7.0pre1.xar"
 
 # replace the Servlex version number
 perl -e "s|<appversion>([-.0-9a-z]+)</appversion>|<appversion>${VERSION}</appversion>|g;" \
