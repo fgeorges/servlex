@@ -184,27 +184,45 @@ public class ServerConfig
     }
 
     /**
+     * Return true if there is one single application, and it has no context root.
+     */
+    public boolean isSingleApp()
+    {
+        return myRepo.isSingleApp();
+    }
+
+    /**
+     * Return the one application.
+     * 
+     * Throw an exception if not in single application mode.
+     */
+    public Application getApplication()
+            throws ServlexException
+    {
+        if ( ! isSingleApp() ) {
+            throw new ServlexException(500, "Asking for the single app whilst in single app mode");
+        }
+        return myRepo.getApplication();
+    }
+
+    /**
      * Return an application given its name.
      * 
      * Throw an exception if there is no application with that name.
+     * Throw an exception if in single application mode.
      */
     public Application getApplication(String appname)
             throws ServlexException
     {
+        if ( isSingleApp() ) {
+            throw new ServlexException(500, "Asking for app '" + appname + "' in single app mode");
+        }
         Application app = myRepo.getApplication(appname);
         if ( app == null ) {
             LOG.error("404: Application not found: " + appname);
             throw new ServlexException(404, "Page not found");
         }
         return app;
-    }
-
-    /**
-     * Return the list of application names.
-     */
-    public Set<String> getApplicationNames()
-    {
-        return myRepo.getContextRoots();
     }
 
     /**

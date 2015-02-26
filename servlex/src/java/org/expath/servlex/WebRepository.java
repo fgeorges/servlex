@@ -91,9 +91,25 @@ public class WebRepository
     /**
      * Return the application bound to the given context root.
      */
+    public Application getApplication()
+    {
+        return myApps.get(null);
+    }
+
+    /**
+     * Return the application bound to the given context root.
+     */
     public Application getApplication(String root)
     {
         return myApps.get(root);
+    }
+
+    /**
+     * Return true if there is one single application, and it has no context root.
+     */
+    public boolean isSingleApp()
+    {
+        return myIsSingleApp;
     }
 
     /**
@@ -206,6 +222,9 @@ public class WebRepository
         for ( WebappDecl decl : decls ) {
             URI    name = decl.getName();
             String root = decl.getRoot();
+            if ( root == null ) {
+                myIsSingleApp = true;
+            }
             // resolve the package
             Packages packages = myUnderlying.getPackages(name.toString());
             if ( packages == null ) {
@@ -224,6 +243,10 @@ public class WebRepository
             overrideConfigParams(app, decl.getConfigParams());
             LOG.info("Add the application to the store: " + root + " / " + app.getName());
             applications.put(root, app);
+        }
+        // the check must already been done in the parser, but better safe than sorry
+        if ( myIsSingleApp && applications.size() > 1 ) {
+            throw new TechnicalException("There cannot be more than one application if it has no context root.");
         }
         return applications;
     }
@@ -299,6 +322,8 @@ public class WebRepository
     private final ProcessorsMap myProcs;
     /** The application map. */
     private Map<String, Application> myApps;
+    /** Is there only one webapp, with no context root? */
+    private boolean myIsSingleApp = false;
 
     /**
      * Specific exception when trying to install a package in a read-only repository.

@@ -374,12 +374,17 @@ public class Servlex
         {
             String pathinfo = req.getPathInfo();
             int slash = pathinfo.indexOf('/', 1);
-            // if no slash in pathinfo, then it is the app name
-            if ( pathinfo.equals("/") ) {
+            if ( ourConfig.isSingleApp() ) {
+                myAppName = null;
+                myPath = pathinfo;
+                myApplication = ourConfig.getApplication();
+            }
+            else if ( pathinfo.equals("/") ) {
                 myAppName = null;
                 myPath = null;
                 myApplication = null;
             }
+            // if no slash in pathinfo, then it is the app name
             else if ( slash < 1 ) {
                 myAppName = pathinfo.substring(1);
                 myPath = "/";

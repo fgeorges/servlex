@@ -99,11 +99,10 @@ public class RequestParser
         String method    = myRequest.getMethod();
         String uri       = getRequestUri();
         String authority = getAuthority(uri);
-        String ctxt_root =
-                myRequest.getContextPath()
-                + myRequest.getServletPath()
-                + "/"
-                + myAppName;
+        String ctxt_root = myRequest.getContextPath() + myRequest.getServletPath();
+        if ( myAppName != null ) {
+            ctxt_root += "/" + myAppName;
+        }
         // log them?
         if ( LOG.isDebugEnabled() ) {
             LOG.debug("Request - servlet  : " + servlet);

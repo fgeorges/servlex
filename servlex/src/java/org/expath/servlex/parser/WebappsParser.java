@@ -40,7 +40,7 @@ public class WebappsParser
      */
     public static boolean isContextRootValid(String ctxt_root)
     {
-        return ROOT_PATTERN.matcher(ctxt_root).matches();
+        return ctxt_root == null || ROOT_PATTERN.matcher(ctxt_root).matches();
     }
 
     public List<WebappDecl> parse()
@@ -113,6 +113,19 @@ public class WebappsParser
             }
         }
 
+        // validate that there is one single webapp if it has no @root
+        int nb_webapps = 0;
+        int nb_no_root = 0;
+        for ( WebappDecl w : result ) {
+            ++nb_webapps;
+            if ( w.getRoot() == null ) {
+                ++nb_no_root;
+            }
+        }
+        if ( nb_no_root > 0 && nb_webapps > 1 ) {
+            parser.parseError("There can be at most one webapp if one has no @root in " + WEBAPPS_PATH);
+        }
+
         return result;
     }
 
@@ -126,9 +139,6 @@ public class WebappsParser
 
         // @root
         String ctxt_root = parser.getAttribute("root");
-        if ( ctxt_root == null ) {
-            parser.parseError("No @root on /webapps/webapp in " + WEBAPPS_PATH);
-        }
         if ( ! isContextRootValid(ctxt_root) ) {
             parser.parseError("/webapps/webapp/@root in " + WEBAPPS_PATH + " is not valid: " + ctxt_root + ": " + ROOT_RE);
         }
