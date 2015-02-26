@@ -74,7 +74,7 @@
                      'Need exactly one file part, got more than one part',
                      $mpart)"/>
             </xsl:when>
-            <xsl:when test="not($ctype eq 'application/octet-stream')">
+            <xsl:when test="not($ctype = ('application/octet-stream', 'application/expath+xar'))">
                <xsl:sequence select="
                    error(
                      xs:QName('app:bad-request'),
