@@ -90,32 +90,34 @@
                      <li>install latest expath-zip-saxon-x.y.z.xaw (the manager depends on it)</li>
                      <li>add some properties to [tomcat]/conf/catalina.properties</li>
                   </ul>
+                  <p></p>
                   <p>
                      The content of the webapps.xml file is:
                   </p>
-                  <pre><![CDATA[
-<webapps xmlns="http://expath.org/ns/webapp">
+                  <pre>
+&lt;webapps xmlns="http://expath.org/ns/webapp">
 
-   <!--
+   &lt;!--
        Contains elements like:
 
-       <webapp root="myapp" enabled="true">
-          <package name="http://example.org/my/webapp"/>
-       </webapp>
+       &lt;webapp root="myapp" enabled="true">
+          &lt;package name="http://example.org/my/webapp"/>
+       &lt;/webapp>
    -->
 
-   <webapp root="manager">
-      <package name="http://servlex.net/app/manager"/>
-   </webapp>
+   &lt;webapp root="manager">
+      &lt;package name="http://servlex.net/app/manager"/>
+   &lt;/webapp>
 
-</webapps>
-]]></pre>
+&lt;/webapps>
+</pre>
+                  <p></p>
                   <p>
                      The properties added to the Tomcat configuration file are as following.
                      Most of them are commented out, but they serve as a reference for what
                      properties exist.
                   </p>
-                  <pre><![CDATA[
+                  <pre>
 # Added by Servlex bundler for Tomcat
 # 
 # The processors implementation class to use
@@ -128,7 +130,8 @@ org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
 # org.expath.servlex.trace.content=true
 # Uncomment to set the default charset of requests (if not set in a request)
 # org.expath.servlex.default.charset=UTF-8
-]]></pre>
+</pre>
+                  <p></p>
                   <h4>Try it</h4>
                   <p>
                      Once installed, you can access the Servlex Admin Console at <a
