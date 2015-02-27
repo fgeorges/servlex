@@ -3,7 +3,7 @@
 # The version number to build a release for.  To edit when changing
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml
-DIST_VER=0.9.1dev
+DIST_VER=0.9.2
 DIR=servlex-${DIST_VER}
 REVISION=`git describe --always`
 
@@ -38,7 +38,7 @@ mkdir ${DIR}
 # README and VERSION
 cp README ${DIR}/
 echo "Version: ${DIST_VER}" > ${DIR}/VERSION
-echo "Subversion revision: ${REVISION}" >> ${DIR}/VERSION
+echo "Git revision: ${REVISION}" >> ${DIR}/VERSION
 VERSION_PROP=../servlex/src/java/org/expath/servlex/tools/version.properties
 echo "org.expath.servlex.version=${DIST_VER}" > ${VERSION_PROP}
 echo "org.expath.servlex.revision=${REVISION}" >> ${VERSION_PROP}

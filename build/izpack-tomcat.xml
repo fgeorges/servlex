@@ -2,7 +2,7 @@
 <installation version="1.0">
    <info>
       <appname>Servlex</appname>
-      <appversion>0.9.1dev</appversion>
+      <appversion>0.9.2</appversion>
       <appsubpath>servlex</appsubpath>
       <authors>
          <author email="fgeorges@servlex.net" name="Florent Georges"/>
@@ -37,8 +37,8 @@
       <pack name="Servlex" preselected="yes" required="yes">
          <description>The Servlex server, pre-packaged, including Apache Tomcat 7.0.47.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.1dev/hello-world/"             targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.1dev/hello-world-0.9.1dev.xaw" targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.2/hello-world/"             targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.9.2/hello-world-0.9.2.xaw" targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/LICENSE"        targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/NOTICE"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-7.0.47/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
