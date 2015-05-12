@@ -9,12 +9,12 @@
 
 package org.expath.servlex.model;
 
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Cleanable;
+import org.expath.servlex.tools.Log;
 
 /**
  * Servlet wrapper (can wrap a servlet, a filter, an error handler or a chain).
@@ -44,7 +44,7 @@ public abstract class Wrapper
         return myName;
     }
 
-    public abstract void logApplication(Logger log);
+    public abstract void logApplication(Log log);
 
     public abstract Invocation makeInvocation(String path, RequestConnector request, Invocation wrapped);
 

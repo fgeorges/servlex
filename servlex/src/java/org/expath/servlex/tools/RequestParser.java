@@ -19,7 +19,6 @@ import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.field.AbstractField;
 import org.apache.james.mime4j.parser.Field;
 import org.apache.james.mime4j.parser.MimeTokenStream;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.Servlet;
@@ -104,7 +103,7 @@ public class RequestParser
             ctxt_root += "/" + myAppName;
         }
         // log them?
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug() ) {
             LOG.debug("Request - servlet  : " + servlet);
             LOG.debug("Request - path     : " + path);
             LOG.debug("Request - method   : " + method);
@@ -218,7 +217,7 @@ public class RequestParser
         for ( Enumeration<String> e = myRequest.getParameterNames(); e.hasMoreElements(); /* */ ) {
             String name = e.nextElement();
             for ( String value : myRequest.getParameterValues(name) ) {
-                if ( LOG.isDebugEnabled() ) {
+                if ( LOG.debug() ) {
                     LOG.debug("Request - param    : " + name + " / " + value);
                 }
                 b.startElem("param");
@@ -239,7 +238,7 @@ public class RequestParser
             String name = e.nextElement();
             for ( Enumeration<String> e2 = myRequest.getHeaders(name); e2.hasMoreElements(); /* */ ) {
                 String value = e2.nextElement();
-                if ( LOG.isDebugEnabled() ) {
+                if ( LOG.debug() ) {
                     LOG.debug("Request - header   : " + name + " / " + value);
                 }
                 b.startElem("header");
@@ -272,7 +271,7 @@ public class RequestParser
         try {
             // the input stream
             ServletInputStream in = myRequest.getInputStream();
-            if ( LOG.isTraceEnabled() && trace_content ) {
+            if ( LOG.debug() && trace_content ) {
                 in = new TraceInputStream(in);
             }
             // either multipart or single part
@@ -315,7 +314,7 @@ public class RequestParser
                  , TechnicalException
     {
         int state = parser.getState();
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug() ) {
             LOG.debug("MIME parser state: " + MimeTokenStream.stateToString(state));
         }
         switch ( state ) {
@@ -329,7 +328,7 @@ public class RequestParser
             }
             case MimeTokenStream.T_FIELD: {
                 Field f = parser.getField();
-                if ( LOG.isDebugEnabled() ) {
+                if ( LOG.debug() ) {
                     LOG.debug("  field: " + f);
                 }
                 String body  = Integer.toString(position);
@@ -346,7 +345,7 @@ public class RequestParser
             case MimeTokenStream.T_BODY: {
                 // TOD: Do I really need to maintain the subtype value, or has the
                 // body descriptor get it?
-                if ( LOG.isDebugEnabled() ) {
+                if ( LOG.debug()) {
                     LOG.debug("  body desc: " + parser.getBodyDescriptor());
                 }
                 String ctype_raw = parser.getBodyDescriptor().getMimeType();
@@ -432,7 +431,7 @@ public class RequestParser
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(RequestParser.class);
+    private static final Log LOG = new Log(RequestParser.class);
 
     /** The Java EE HTTP request object. */
     private final HttpServletRequest myRequest;

@@ -14,7 +14,6 @@ import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 import org.apache.http.message.HeaderValueParser;
-import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 
@@ -158,7 +157,7 @@ public class ContentType
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(RequestConnector.class);
+    private static final Log LOG = new Log(RequestConnector.class);
 
     /** The original content-type value. */
     private String myOriginal;

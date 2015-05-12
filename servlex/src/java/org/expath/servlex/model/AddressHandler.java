@@ -9,12 +9,12 @@
 
 package org.expath.servlex.model;
 
-import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Cleanable;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexMatcher;
 import org.expath.servlex.tools.RegexPattern;
 
@@ -83,7 +83,7 @@ public abstract class AddressHandler
         myWrapper = w;
     }
 
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("   Address Handler:");
         log.debug("      regex  : " + myRegex);

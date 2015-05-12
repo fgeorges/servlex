@@ -14,8 +14,8 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.WebRepository;
+import org.expath.servlex.tools.Log;
 
 /**
  * Implements web:installed-webapps().
@@ -48,7 +48,7 @@ public class InstalledWebappsCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(InstalledWebappsCall.class);
+    private static final Log LOG = new Log(InstalledWebappsCall.class);
 }
 
 

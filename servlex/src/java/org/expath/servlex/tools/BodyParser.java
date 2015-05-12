@@ -18,7 +18,6 @@ import java.io.Reader;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
-import org.apache.log4j.Logger;
 import org.ccil.cowan.tagsoup.Parser;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
@@ -109,7 +108,7 @@ public class BodyParser
             src = new StreamSource(input, sys_id);
         }
         Document doc = myProcs.buildDocument(src);
-        if ( myTrace && LOG.isTraceEnabled() ) {
+        if ( myTrace && LOG.trace()) {
             LOG.trace("Content parsed as document node: " + doc);
         }
         return doc;
@@ -133,7 +132,7 @@ public class BodyParser
             builder.append('\n');
         }
         String str = builder.toString();
-        if ( myTrace && LOG.isTraceEnabled() ) {
+        if ( myTrace && LOG.trace()) {
             LOG.trace("Content parsed as text: " + str);
         }
         return myProcs.buildString(str);
@@ -157,7 +156,7 @@ public class BodyParser
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(RequestConnector.class);
+    private static final Log LOG = new Log(RequestConnector.class);
 
     /** Log content? */
     private boolean myTrace;

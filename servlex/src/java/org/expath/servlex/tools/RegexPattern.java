@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.tools.regex.JDK15RegexTranslator;
 import org.expath.servlex.tools.regex.JRegularExpression;
@@ -28,11 +27,11 @@ import org.expath.servlex.tools.regex.RegularExpression;
  */
 public class RegexPattern
 {
-    public RegexPattern(String regex, Logger logger)
+    public RegexPattern(String regex, Log log)
             throws TechnicalException
     {
         myLexical = regex;
-        String jre = toJavaRegex(regex, logger);
+        String jre = toJavaRegex(regex, log);
         myRegex = Pattern.compile(jre);
     }
 
@@ -68,7 +67,7 @@ public class RegexPattern
     /**
      * Translate an XPath regex to a native Java SE 1.5 regex.
      */
-    private String toJavaRegex(String regex, Logger logger)
+    private String toJavaRegex(String regex, Log log)
             throws TechnicalException
     {
         try {
@@ -76,7 +75,7 @@ public class RegexPattern
             List<RegexSyntaxException> warnings = new ArrayList<>();
             String res = JDK15RegexTranslator.translate(regex, options, 0, warnings);
             for ( RegexSyntaxException w : warnings ) {
-                logger.info("XPath to Java regex compiler: Warning in regex: '" + w + "'");
+                log.info("XPath to Java regex compiler: Warning in regex: '" + w + "'");
             }
             return res;
         }

@@ -16,9 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import org.apache.log4j.Logger;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.Log;
 
 /**
  * The context while parsing a webapp descriptor (aka expath-web.xml).
@@ -137,7 +137,7 @@ class ParsingContext
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ParsingContext.class);
+    private static final Log LOG = new Log(ParsingContext.class);
 
     private Processors myProcs  = null;
     private String     myAbbrev = null;

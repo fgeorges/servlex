@@ -13,9 +13,9 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.StringsProperties;
 
 /**
@@ -46,7 +46,7 @@ public class GetServerFieldNamesCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(GetServerFieldCall.class);
+    private static final Log LOG = new Log(GetServerFieldCall.class);
 }
 
 

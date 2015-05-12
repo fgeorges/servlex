@@ -9,7 +9,7 @@
 
 package org.expath.servlex.processors.saxon.functions;
 
-import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.expr.sort.AtomicMatchKey;
 import net.sf.saxon.lib.StringCollator;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.NoDynamicContextException;
@@ -50,7 +50,7 @@ public class RepositoryItem
     }
 
     @Override
-    public Object getXPathComparable(boolean bln, StringCollator collator, XPathContext ctxt)
+    public AtomicMatchKey getXPathComparable(boolean bln, StringCollator collator, int i)
             throws NoDynamicContextException
     {
         String msg = "A repository item cannot be XPath-compared.";

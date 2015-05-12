@@ -18,13 +18,13 @@ import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 import org.apache.http.message.HeaderValueParser;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * TODO: Doc...
@@ -87,14 +87,14 @@ public class ParseHeaderValueCall
             b.endElem();
         }
         b.endElem();
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             LOG.debug("Result of parsing header value: " + b.getRoot());
         }
         return b.getRoot();
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ParseHeaderValueCall.class);
+    private static final Log LOG = new Log(ParseHeaderValueCall.class);
     /** Shortcuts. */
     private static final String NS     = ServlexConstants.WEBAPP_NS;
     private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;

@@ -22,12 +22,12 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
+import org.expath.servlex.tools.Log;
 
 /**
  * Implements web:install-webapp().
@@ -175,7 +175,7 @@ public class InstallWebappCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(InstallWebappCall.class);
+    private static final Log LOG = new Log(InstallWebappCall.class);
 }
 
 

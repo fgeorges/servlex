@@ -18,11 +18,11 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer.Property;
 import net.sf.saxon.s9api.XdmValue;
 import org.apache.commons.codec.binary.Base64OutputStream;
-import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.tools.Log;
 
 /**
  * Implementation of serializer for Saxon.
@@ -241,7 +241,7 @@ class SaxonSerializer
     private void setOutputProperty(net.sf.saxon.s9api.Serializer serial, Property p, String v)
     {
         if ( v != null ) {
-            if ( LOG.isDebugEnabled() ) {
+            if ( LOG.debug()) {
                 LOG.debug("Serializer, set property '" + p + "' to '" + v + "'");
             }
             serial.setOutputProperty(p, v);
@@ -280,7 +280,7 @@ class SaxonSerializer
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SaxonSerializer.class);
+    private static final Log LOG = new Log(SaxonSerializer.class);
 
     /**
      * The Saxon namespace (to declare extension output properties on web:body).

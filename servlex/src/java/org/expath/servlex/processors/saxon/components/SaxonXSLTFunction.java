@@ -22,7 +22,6 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
@@ -38,6 +37,7 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * ...
@@ -64,7 +64,7 @@ public class SaxonXSLTFunction
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      XSLT Function");
         log.debug("         uri  : " + myImportUri);
@@ -137,7 +137,7 @@ public class SaxonXSLTFunction
         b.append("   <xsl:import href='").append(import_uri).append("'/>\n");
         b.append("   <xsl:param name='local:input' as='item()*'/>\n");
         b.append("   <xsl:template name='local:main'>\n");
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug() ) {
             b.append("      <xsl:message>\n");
             b.append("         THE INPUT: <xsl:copy-of select='$local:input'/>\n");
             b.append("      </xsl:message>\n");
@@ -152,7 +152,7 @@ public class SaxonXSLTFunction
             b.append("         </xsl:call-template>\n");
             b.append("      </xsl:variable>\n");
         }
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             b.append("      <xsl:message>\n");
             b.append("         THE OUTPUT: <xsl:copy-of select='$res'/>\n");
             b.append("      </xsl:message>\n");
@@ -167,7 +167,7 @@ public class SaxonXSLTFunction
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SaxonXSLTFunction.class);
+    private static final Log LOG = new Log(SaxonXSLTFunction.class);
 
     private final Processor mySaxon;
     private final String myImportUri;

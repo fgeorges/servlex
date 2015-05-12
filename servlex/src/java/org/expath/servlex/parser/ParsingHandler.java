@@ -9,10 +9,10 @@
 
 package org.expath.servlex.parser;
 
-import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Wrapper;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexPattern;
 
 /**
@@ -28,7 +28,7 @@ abstract class ParsingHandler
         myPattern = pattern;
     }
 
-    public AddressHandler makeAddressHandler(ParsingContext ctxt, Logger log)
+    public AddressHandler makeAddressHandler(ParsingContext ctxt, Log log)
             throws ParseException
     {
         RegexPattern regex;

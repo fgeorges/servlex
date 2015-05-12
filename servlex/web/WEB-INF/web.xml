@@ -12,6 +12,7 @@
         <servlet-name>Deploy</servlet-name>
         <servlet-class>org.expath.servlex.rest.DeployWebapp</servlet-class>
     </servlet>
+    <!--
     <servlet>
         <servlet-name>Log4jInit</servlet-name>
         <servlet-class>org.expath.servlex.tools.Log4jInitializer</servlet-class>
@@ -21,6 +22,7 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    -->
     <servlet-mapping>
         <servlet-name>Servlex</servlet-name>
         <url-pattern>/*</url-pattern>

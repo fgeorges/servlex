@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.expath.servlex.TechnicalException;
 
 /**
@@ -98,9 +97,9 @@ public abstract class Properties<Value>
 
     private void logValue(String op, String key, Iterable<Value> value)
     {
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             LOG.debug("Properties." + op + ": " + key + ", " + value);
-            if ( LOG.isTraceEnabled() ) {
+            if ( LOG.trace()) {
                 for ( Value v : value ) {
                     LOG.trace("          ." + op + ": " + v);
                 }
@@ -110,7 +109,7 @@ public abstract class Properties<Value>
 
     private void logValue(String op, String key, String value)
     {
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             LOG.debug("Properties." + op + ": " + key + ", " + value);
         }
     }
@@ -169,7 +168,7 @@ public abstract class Properties<Value>
     }
 
     /** The logger. */
-    protected static final Logger LOG = Logger.getLogger(Properties.class);
+    protected static final Log LOG = new Log(Properties.class);
     /** The private property name prefix, if any. */
     private String myPrivatePrefix;
     /** The store map. */

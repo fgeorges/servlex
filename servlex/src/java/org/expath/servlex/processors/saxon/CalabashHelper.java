@@ -15,7 +15,6 @@ import javax.xml.namespace.QName;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
@@ -25,6 +24,7 @@ import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
+import org.expath.servlex.tools.Log;
 
 /**
  * Helper methods for Calabash.
@@ -101,7 +101,7 @@ public class CalabashHelper
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(CalabashHelper.class);
+    private static final Log LOG = new Log(CalabashHelper.class);
 }
 
 

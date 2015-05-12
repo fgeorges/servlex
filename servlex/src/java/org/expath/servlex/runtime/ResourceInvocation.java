@@ -13,7 +13,6 @@ import org.expath.servlex.model.Resource;
 import java.io.InputStream;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Storage;
@@ -25,6 +24,7 @@ import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.connectors.ResourceConnector;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexPattern;
 
 /**
@@ -61,6 +61,7 @@ public class ResourceInvocation
                 myRewrite);
         String orig_path = getPath();
         try {
+            // TODO: Allow config params in rewrite rules, like "{img-dir}/$1"
             String path = myRegex.replace(orig_path, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
             Source src = pkg.getResolver().resolveComponent(path);
@@ -94,7 +95,7 @@ public class ResourceInvocation
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ResourceInvocation.class);
+    private static final Log LOG = new Log(ResourceInvocation.class);
 
     private final Resource     myRsrc;
     private final RegexPattern myRegex;

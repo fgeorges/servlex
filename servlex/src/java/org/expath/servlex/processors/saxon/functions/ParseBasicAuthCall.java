@@ -15,13 +15,13 @@ import net.sf.saxon.om.Sequence;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.Base64BinaryValue;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * See {@link ParseBasicAuthFunction}.
@@ -100,7 +100,7 @@ public class ParseBasicAuthCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ParseBasicAuthCall.class);
+    private static final Log LOG = new Log(ParseBasicAuthCall.class);
     /** Shortcuts. */
     private static final String NS     = ServlexConstants.WEBAPP_NS;
     private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;

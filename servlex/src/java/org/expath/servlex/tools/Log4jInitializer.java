@@ -10,7 +10,6 @@
 package org.expath.servlex.tools;
 
 import javax.servlet.http.HttpServlet;
-import org.apache.log4j.xml.DOMConfigurator;
 
 /**
  * Servlet dedicated to initializing log4j within the servlet container.
@@ -32,7 +31,8 @@ public class Log4jInitializer
         // TODO: Log it properly.
         if ( file != null ) {
             // TODO: Use a proper file resolution mechanism.
-            DOMConfigurator.configure(path + file);
+            throw new RuntimeException("Disabled class, to be removed, do not use!");
+//            DOMConfigurator.configure(path + file);
         }
     }
 }

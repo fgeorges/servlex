@@ -16,7 +16,6 @@ import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmValue;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
@@ -29,6 +28,7 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * A component that is an XQuery function.
@@ -53,7 +53,7 @@ public class SaxonXQueryFunction
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      XQuery Function");
         log.debug("         ns   : " + myNS);
@@ -118,7 +118,7 @@ public class SaxonXQueryFunction
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SaxonXQueryFunction.class);
+    private static final Log LOG = new Log(SaxonXQueryFunction.class);
 
     /** The Saxon instance. */
     private Processor mySaxon;

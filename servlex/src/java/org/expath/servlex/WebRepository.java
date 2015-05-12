@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Package;
@@ -28,6 +27,7 @@ import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.WebappDecl;
 import org.expath.servlex.parser.WebappsParser;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.ProcessorsMap;
 import org.expath.servlex.tools.WebappsXmlFile;
 
@@ -312,7 +312,7 @@ public class WebRepository
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ServerConfig.class);
+    private static final Log LOG = new Log(ServerConfig.class);
 
     /** The underlying package repository. */
     private final Repository myUnderlying;

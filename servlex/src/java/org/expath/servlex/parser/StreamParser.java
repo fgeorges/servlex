@@ -16,7 +16,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
-import org.apache.log4j.Logger;
+import org.expath.servlex.tools.Log;
 
 /**
  * Wrap an XMLStreamReader with dedicated methods and consistent error handling.
@@ -314,7 +314,7 @@ public class StreamParser
         catch ( XMLStreamException ex ) {
             throw new ParseException("Error getting the next tag", ex);
         }
-        if ( LOG.isTraceEnabled() ) {
+        if ( LOG.trace()) {
             LOG.trace("PARSER EVENT: " + getEventName(event) + " - " + myParser.getName());
         }
         return event;
@@ -405,7 +405,7 @@ public class StreamParser
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
+    private static final Log LOG = new Log(EXPathWebParser.class);
     /** The underlying parser. */
     private final XMLStreamReader myParser;
     /** THE namespace the parsed document uses. */

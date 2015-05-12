@@ -27,7 +27,6 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
@@ -45,6 +44,7 @@ import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
+import org.expath.servlex.tools.Log;
 
 /**
  * ...
@@ -68,7 +68,7 @@ public class SaxonXSLTTransform
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      XSLT Transform");
         log.debug("         style: " + myStyle);
@@ -134,7 +134,7 @@ public class SaxonXSLTTransform
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SaxonXSLTTransform.class);
+    private static final Log LOG = new Log(SaxonXSLTTransform.class);
 
     private final Processor mySaxon;
     private final String myStyle;

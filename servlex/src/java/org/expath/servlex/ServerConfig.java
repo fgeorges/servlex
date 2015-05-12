@@ -11,10 +11,8 @@ package org.expath.servlex;
 
 import java.io.File;
 import java.util.Enumeration;
-import java.util.Set;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.ClasspathStorage;
 import org.expath.pkg.repo.FileSystemStorage;
 import org.expath.pkg.repo.PackageException;
@@ -31,6 +29,7 @@ import static org.expath.servlex.ServlexConstants.PROFILE_DIR_PROPERTY;
 import static org.expath.servlex.ServlexConstants.REPO_CP_PROPERTY;
 import static org.expath.servlex.ServlexConstants.REPO_DIR_PROPERTY;
 import static org.expath.servlex.ServlexConstants.TRACE_CONTENT_PROPERTY;
+import org.expath.servlex.tools.Log;
 
 
 /**
@@ -163,7 +162,7 @@ public class ServerConfig
     {
         if ( INSTANCE == null ) {
             ServletContext ctxt = config.getServletContext();
-            if ( LOG.isInfoEnabled() ) {
+            if ( LOG.info() ) {
                 Enumeration<String> names = ctxt.getInitParameterNames();
                 while ( names.hasMoreElements() ) {
                     String n = names.nextElement();
@@ -325,7 +324,7 @@ public class ServerConfig
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ServerConfig.class);
+    private static final Log LOG = new Log(ServerConfig.class);
 
     /** The singleton instance. */
     private static ServerConfig INSTANCE;

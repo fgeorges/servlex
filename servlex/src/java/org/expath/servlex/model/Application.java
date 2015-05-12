@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.SequenceProperties;
 
 
@@ -151,7 +151,7 @@ public class Application
     public void logApplication()
     {
         // TODO: Create a property to control logging the applicaiton structure
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             LOG.debug("*** Application: " + myName);
             for ( AddressHandler h : myHandlers ) {
                 h.logApplication(LOG);
@@ -160,7 +160,7 @@ public class Application
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(Application.class);
+    private static final Log LOG = new Log(Application.class);
 
     private final String myName;
     private final String myTitle;

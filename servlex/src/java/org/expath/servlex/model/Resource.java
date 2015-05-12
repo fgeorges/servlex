@@ -9,12 +9,12 @@
 
 package org.expath.servlex.model;
 
-import org.apache.log4j.Logger;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ResourceInvocation;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexPattern;
 
 
@@ -48,7 +48,7 @@ public class Resource
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         super.logApplication(log);
         log.debug("   (is a Resource):");
@@ -70,7 +70,7 @@ public class Resource
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(Application.class);
+    private static final Log LOG = new Log(Application.class);
 
     private String myType;
     private String myRewrite;

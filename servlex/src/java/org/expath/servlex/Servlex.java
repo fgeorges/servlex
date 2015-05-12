@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.log4j.Logger;
 import org.expath.servlex.connectors.Connector;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Processors;
@@ -42,6 +41,7 @@ import static org.expath.servlex.ServlexConstants.PROP_PRODUCT_VERSION;
 import static org.expath.servlex.ServlexConstants.PROP_REQUEST_ID;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR;
 import static org.expath.servlex.ServlexConstants.PROP_VENDOR_HTML;
+import org.expath.servlex.tools.Log;
 
 
 /**
@@ -333,7 +333,7 @@ public class Servlex
     private static final String SERVER_MAP_ATTR  = "servlex.server.map";
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(Servlex.class);
+    private static final Log LOG = new Log(Servlex.class);
 
     /** The date formatter. */
     private static final DateFormat NOW_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");

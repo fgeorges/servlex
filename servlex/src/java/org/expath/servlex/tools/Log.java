@@ -1,60 +1,91 @@
 /****************************************************************************/
-/*  File:       ReloadWebappsCall.java                                      */
+/*  File:       Log.java                                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-26                                                  */
+/*  Date:       2015-05-11                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2015 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.processors.saxon.functions;
+package org.expath.servlex.tools;
 
-import java.util.Set;
-import net.sf.saxon.expr.XPathContext;
-import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Sequence;
-import net.sf.saxon.trans.XPathException;
-import org.expath.servlex.TechnicalException;
-import org.expath.servlex.WebRepository;
-import org.expath.servlex.tools.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 /**
- * Implements web:reload-webapps().
- * 
- * The XPath signature:
- *
- *     web:reload-webapps($repo as item()) as xs:string*
- * 
- * The parameter $repo must be a {@link RepositoryItem}.  The return value is
- * the list of the context roots of all webapps.
+ * Logging class, to isolate dependencies on any logging system.
  * 
  * @author Florent Georges
  */
-public class ReloadWebappsCall
-        extends ExtensionFunctionCall
+public class Log
 {
-    @Override
-    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
-            throws XPathException
+    public Log(Class c)
     {
-        // the params
-        FunParams params = new FunParams(orig_params, 1, 1);
-        WebRepository repo = params.asRepository(0, false);
-        // log it
-        LOG.debug(params.format(ReloadWebappsFunction.LOCAL_NAME).param(repo).value());
-        // do it
-        try {
-            repo.reload();
-        }
-        catch ( TechnicalException ex ) {
-            throw FunErrors.unexpected("Unexpected error reloading the web repository.", ex);
-        }
-        Set<String> value = repo.getContextRoots();
-        return FunReturn.value(value);
+        myLogger = LogManager.getLogger(c);
     }
 
-    /** The logger. */
-    private static final Log LOG = new Log(ReloadWebappsCall.class);
+    public boolean trace()
+    {
+        return myLogger.isTraceEnabled();
+    }
+
+    public void trace(String msg)
+    {
+        myLogger.trace(msg);
+    }
+
+    public boolean debug()
+    {
+        return myLogger.isDebugEnabled();
+    }
+
+    public void debug(String msg)
+    {
+        myLogger.debug(msg);
+    }
+
+    public void debug(String msg, Throwable ex)
+    {
+        myLogger.debug(msg, ex);
+    }
+
+    public boolean info()
+    {
+        return myLogger.isInfoEnabled();
+    }
+
+    public void info(String msg)
+    {
+        myLogger.info(msg);
+    }
+
+    public void info(String msg, Throwable ex)
+    {
+        myLogger.info(msg, ex);
+    }
+
+    public void warn(String msg)
+    {
+        myLogger.warn(msg);
+    }
+
+    public void warn(String msg, Throwable ex)
+    {
+        myLogger.warn(msg, ex);
+    }
+
+    public void error(String msg)
+    {
+        myLogger.error(msg);
+    }
+
+    public void error(String msg, Throwable ex)
+    {
+        myLogger.error(msg, ex);
+    }
+
+    private Logger myLogger;
 }
 
 

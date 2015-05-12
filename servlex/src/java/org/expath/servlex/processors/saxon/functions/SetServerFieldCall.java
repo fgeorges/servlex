@@ -13,10 +13,10 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.Properties;
 
 /**
@@ -50,7 +50,7 @@ public class SetServerFieldCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SetServerFieldCall.class);
+    private static final Log LOG = new Log(SetServerFieldCall.class);
 }
 
 

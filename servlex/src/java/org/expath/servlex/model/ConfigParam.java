@@ -9,7 +9,7 @@
 
 package org.expath.servlex.model;
 
-import org.apache.log4j.Logger;
+import org.expath.servlex.tools.Log;
 
 /**
  * A config parameter.
@@ -51,7 +51,7 @@ public class ConfigParam
         myValue = value;
     }
 
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      Config param: " + myId);
         log.debug("         Name : " + myName);

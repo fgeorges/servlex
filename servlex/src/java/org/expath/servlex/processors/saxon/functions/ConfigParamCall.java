@@ -13,11 +13,11 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.model.ConfigParam;
+import org.expath.servlex.tools.Log;
 
 /**
  * Implements web:config-param().
@@ -64,7 +64,7 @@ public class ConfigParamCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ConfigParamCall.class);
+    private static final Log LOG = new Log(ConfigParamCall.class);
 }
 
 

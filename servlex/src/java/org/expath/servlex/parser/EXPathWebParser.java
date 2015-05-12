@@ -13,7 +13,6 @@ import java.net.URI;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.transform.Source;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.Package;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Storage;
@@ -24,6 +23,7 @@ import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Application;
 import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.processors.Processors;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.ProcessorsMap;
 
 /**
@@ -791,7 +791,7 @@ public class EXPathWebParser
     /** The webapp descriptor file name. */
     private static final String DESC_FILENAME = "expath-web.xml";
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(EXPathWebParser.class);
+    private static final Log LOG = new Log(EXPathWebParser.class);
 
     /** The map of Processors objects. */
     private final ProcessorsMap myProcs;

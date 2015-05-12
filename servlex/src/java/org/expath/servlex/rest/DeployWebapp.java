@@ -24,13 +24,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
+import org.expath.servlex.tools.Log;
 
 /**
  * Servlet used to deploy a XAW file.
@@ -290,7 +290,7 @@ public class DeployWebapp
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(DeployWebapp.class);
+    private static final Log LOG = new Log(DeployWebapp.class);
     /**
      * The regex for webapp context roots.
      * 

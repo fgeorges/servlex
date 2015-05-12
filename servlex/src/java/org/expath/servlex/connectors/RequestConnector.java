@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.model.Servlet;
 import org.expath.servlex.ServlexException;
@@ -27,6 +26,7 @@ import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexMatcher;
 
 /**
@@ -193,7 +193,7 @@ public class RequestConnector
     /** The usual EXPath servlet namespace prefix. */
     private static final String NS_PREFIX = "web";
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(RequestConnector.class);
+    private static final Log LOG = new Log(RequestConnector.class);
 
     /** The request parser. */
     private final RequestParser myParser;

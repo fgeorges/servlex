@@ -25,13 +25,13 @@ import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.AxisIterator;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.TreeBuilder;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * See {@link ExecuteFunction}.
@@ -94,7 +94,7 @@ public class ExecuteCall
     private void parseExecProgram(NodeInfo program)
             throws XPathException
     {
-        AxisIterator<NodeInfo> it = program.iterateAxis(AxisInfo.CHILD, NodeKindTest.ELEMENT);
+        AxisIterator it = program.iterateAxis(AxisInfo.CHILD, NodeKindTest.ELEMENT);
         NodeInfo child;
         while ( (child = it.next()) != null ) {
             String ns   = child.getURI();
@@ -172,7 +172,7 @@ public class ExecuteCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(ExecuteCall.class);
+    private static final Log LOG = new Log(ExecuteCall.class);
     /** Shortcuts. */
     private static final String NS     = ServlexConstants.WEBAPP_NS;
     private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;

@@ -13,10 +13,10 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import org.apache.log4j.Logger;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.saxon.model.SaxonSequence;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.Properties;
 
 /**
@@ -42,7 +42,7 @@ public class SetSessionFieldCall
             Properties props = Servlex.getSessionMap();
             org.expath.servlex.processors.Sequence seq = new SaxonSequence(value);
             props.set(name, seq);
-            if ( LOG.isTraceEnabled() ) {
+            if ( LOG.trace()) {
                 LOG.trace("Use session map: " + props);
                 LOG.trace("Set key: " + name + ", to: " + seq + " (" + value + ")");
             }
@@ -54,7 +54,7 @@ public class SetSessionFieldCall
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SetSessionFieldCall.class);
+    private static final Log LOG = new Log(SetSessionFieldCall.class);
 }
 
 

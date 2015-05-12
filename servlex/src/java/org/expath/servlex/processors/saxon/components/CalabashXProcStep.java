@@ -15,7 +15,6 @@ import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
@@ -27,6 +26,7 @@ import org.expath.servlex.processors.saxon.CalabashXProc;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * TODO: ...
@@ -55,7 +55,7 @@ public class CalabashXProcStep
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      XProc Step");
         log.debug("         uri  : " + myImportUri);
@@ -113,7 +113,7 @@ public class CalabashXProcStep
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(CalabashXProcStep.class);
+    private static final Log LOG = new Log(CalabashXProcStep.class);
 
     private CalabashXProc myCalabash;
     private String myImportUri;

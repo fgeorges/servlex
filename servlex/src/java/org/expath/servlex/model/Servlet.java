@@ -11,12 +11,12 @@ package org.expath.servlex.model;
 
 import org.apache.commons.lang3.StringUtils;
 import org.expath.servlex.components.Component;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ServletInvocation;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 import org.expath.servlex.tools.RegexPattern;
 
 
@@ -61,10 +61,10 @@ public class Servlet
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         super.logApplication(log);
-        if ( log.isDebugEnabled() ) {
+        if ( log.debug()) {
             log.debug("   (is a Servlet):");
             log.debug("      name   : " + myName);
             log.debug("      groups : " + StringUtils.join(myGroups, ", "));

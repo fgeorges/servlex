@@ -9,13 +9,13 @@
 
 package org.expath.servlex.model;
 
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.FilterInvocation;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 
 /**
  * A filter around a servlet (or around another filter, error handler, etc.)
@@ -46,7 +46,7 @@ public class Filter
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      Filter");
         log.debug("         in : " + myIn);

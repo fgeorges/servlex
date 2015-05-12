@@ -10,13 +10,13 @@
 package org.expath.servlex.model;
 
 import javax.xml.namespace.QName;
-import org.apache.log4j.Logger;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.runtime.ErrorHandlerInvocation;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.tools.Auditor;
+import org.expath.servlex.tools.Log;
 
 /**
  * An error handler.
@@ -81,7 +81,7 @@ public class ErrorHandler
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      Error Handler");
         log.debug("         every: " + myEvery);

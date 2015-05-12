@@ -19,7 +19,6 @@ import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmValue;
-import org.apache.log4j.Logger;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.URISpace;
@@ -36,6 +35,7 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
+import org.expath.servlex.tools.Log;
 
 /**
  * A component that is an XQuery Main Module, AKA "a query".
@@ -62,7 +62,7 @@ public class SaxonXQueryModule
     }
 
     @Override
-    public void logApplication(Logger log)
+    public void logApplication(Log log)
     {
         log.debug("      XQuery Module");
         log.debug("         uri: " + myUri);
@@ -168,7 +168,7 @@ public class SaxonXQueryModule
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(SaxonXQueryModule.class);
+    private static final Log LOG = new Log(SaxonXQueryModule.class);
 
     /** The Saxon instance. */
     private Processor mySaxon;

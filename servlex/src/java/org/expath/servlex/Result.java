@@ -22,13 +22,13 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
-import org.apache.log4j.Logger;
 import org.expath.servlex.processors.Attribute;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.Serializer;
+import org.expath.servlex.tools.Log;
 
 /**
  * TODO: ...
@@ -249,7 +249,7 @@ public class Result
             Attribute attr  = attributes.next();
             QName     name  = attr.name();
             String    value = attr.stringValue();
-            if ( LOG.isDebugEnabled() ) {
+            if ( LOG.debug()) {
                 LOG.debug("body attribute: " + name + " = " + value);
             }
             if ( name.equals(TYPE_NAME) ) {
@@ -346,7 +346,7 @@ public class Result
         try {
             String type     = myBody.serializer.getMediaType();
             String encoding = myBody.serializer.getEncoding();
-            if ( LOG.isDebugEnabled() ) {
+            if ( LOG.debug() ) {
                 LOG.debug("media type: " + type + ", encoding: " + encoding);
             }
             resp.setContentType(type);
@@ -471,7 +471,7 @@ public class Result
     private static final QName USE_CHAR_MAPS_NAME   = new QName("use-character-maps");
     private static final QName VERSION_NAME         = new QName("version");
 
-    private static final Logger LOG = Logger.getLogger(Result.class);
+    private static final Log LOG = new Log(Result.class);
 
     private Processors myProcs;
     private int myStatus;

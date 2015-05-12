@@ -15,6 +15,7 @@ import net.sf.saxon.om.AtomicArray;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.ObjectValue;
@@ -90,7 +91,7 @@ public class FunReturn
         if ( strings == null ) {
             return empty();
         }
-        List<StringValue> items = new ArrayList<>();
+        List<AtomicValue> items = new ArrayList<>();
         for ( String s : strings ) {
             StringValue v = new StringValue(s);
             items.add(v);
@@ -98,8 +99,7 @@ public class FunReturn
         if ( items.isEmpty() ) {
             return empty();
         }
-        StringValue[] array = items.toArray(SV_ARRAY_MARKER);
-        return new AtomicArray(array);
+        return new AtomicArray(items);
     }
 
     public static Sequence value(org.expath.servlex.processors.Sequence seq)

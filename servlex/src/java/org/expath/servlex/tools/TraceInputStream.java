@@ -11,7 +11,6 @@ package org.expath.servlex.tools;
 
 import java.io.IOException;
 import javax.servlet.ServletInputStream;
-import org.apache.log4j.Logger;
 
 /**
  * Proxy a {@link ServletInputStream} and log all data at trace level.
@@ -167,7 +166,7 @@ public class TraceInputStream
     }
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(TraceInputStream.class);
+    private static final Log LOG = new Log(TraceInputStream.class);
     /** The proxied input stream. */
     private ServletInputStream myIn;
 }
