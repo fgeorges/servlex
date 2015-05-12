@@ -9,18 +9,21 @@
 
 package org.expath.servlex.processors.saxon;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcMessageListener;
-import com.xmlcalabash.core.XProcRunnable;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.Output;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +37,6 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
-import org.apache.log4j.Logger;
 import org.expath.pkg.calabash.PkgConfigurer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.saxon.ConfigHelper;
@@ -56,6 +58,7 @@ import org.expath.servlex.tools.Auditor;
 import static org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.tools.Cleanable;
+import org.expath.servlex.tools.Log;
 
 /**
  * Abstract an XProc pipeline.
@@ -153,6 +156,9 @@ public class CalabashPipeline
     {
         Processor saxon = myCalabash.getSaxon();
         XProcConfiguration xconf = new XProcConfiguration(saxon);
+        // < temporary >
+        temporary_FIX_BECAUSE_OF_CALABASH(xconf);
+        // </ temporary >
         XProcRuntime runtime = new XProcRuntime(xconf);
         SaxonRepository repo = myCalabash.getRepository();
         PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
@@ -225,6 +231,51 @@ public class CalabashPipeline
         return runtime;
     }
 
+    // When instantiated with an existing Saxon processor, an XProcConfiguration
+    // object is not loaded with the step implementations! (in Calabash 1.1.1,
+    // using the new annotation-based system)  This function does exactly that,
+    // based on the similar code in Calabash, and in the library it uses for
+    // manipulating annotations.
+    private void temporary_FIX_BECAUSE_OF_CALABASH(XProcConfiguration conf)
+            throws TechnicalException
+    {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Class annot = XMLCalabash.class;
+        String idx = "META-INF/annotations/" + annot.getCanonicalName();
+        InputStream in = cl.getResourceAsStream(idx);
+        BufferedReader r = new BufferedReader(new InputStreamReader(in));
+        try {
+            String line = r.readLine();
+            while ( line != null ) {
+                Class<?> klass;
+                try {
+                    klass = cl.loadClass(line);
+                }
+                catch ( ClassNotFoundException ex ) {
+                    throw new TechnicalException("Error loading the step class: " + line, ex);
+                }
+                XMLCalabash annotation = klass.getAnnotation(XMLCalabash.class);
+                for ( String clarkName: annotation.type().split("\\s+") ) {
+                    try {
+                        QName name = QName.fromClarkName(clarkName);
+                        LOG.debug("Found step type annotation: " + clarkName);
+                        if ( conf.implementations.containsKey(name) ) {
+                            LOG.debug("Ignoring step type annotation for configured step: " + clarkName);
+                        }
+                        conf.implementations.put(name, klass);
+                    }
+                    catch ( IllegalArgumentException ex ) {
+                        throw new TechnicalException("Failed to parse step annotation type: " + clarkName, ex);
+                    }
+                }
+                line = r.readLine();
+            }
+        }
+        catch ( IOException ex ) {
+            LOG.error("Error reading the annotation index file", ex);
+        }
+    }
+
     /**
      * ...
      * 
@@ -240,7 +291,7 @@ public class CalabashPipeline
     {
         ComponentInstance instance = new MyInstance(myCompiled, myProcs);
         connector.connectToPipeline(instance, myConfig);
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             LOG.debug("Existing output ports: " + myCompiled.getOutputs());
             for ( String o : myCompiled.getOutputs() ) {
                 LOG.debug("Existing output port: " + o);
@@ -314,7 +365,7 @@ public class CalabashPipeline
         else {
             LOG.debug("The pipeline returned 1 document on '" + org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME + "'.");
             XdmNode response = port.read();
-            if ( LOG.isDebugEnabled() ) {
+            if ( LOG.debug()) {
                 LOG.debug("Content of the outpot port '" + org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME + "': " + response);
             }
             if ( response == null ) {
@@ -347,7 +398,7 @@ public class CalabashPipeline
     private static void addToList(List<XdmItem> list, XdmNode node)
             throws ServlexException
     {
-        if ( LOG.isDebugEnabled() ) {
+        if ( LOG.debug()) {
             // a document node
             if ( node.getNodeKind() == XdmNodeKind.DOCUMENT ) {
                 XdmNode child = getDocElement(node);
@@ -412,7 +463,7 @@ public class CalabashPipeline
     }
 
     /** The specific logger. */
-    private static final Logger LOG = Logger.getLogger(CalabashPipeline.class);
+    private static final Log LOG = new Log(CalabashPipeline.class);
     /** QName for 'web:response'. */
     private static final QName WRAPPER_NAME
             = new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "wrapper");
