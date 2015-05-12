@@ -272,7 +272,7 @@ public class CalabashPipeline
             }
         }
         catch ( IOException ex ) {
-            LOG.error("Error reading the annotation index file", ex);
+            throw new TechnicalException("Error reading the annotation index file", ex);
         }
     }
 
