@@ -9,8 +9,15 @@
 
 package org.expath.servlex.runtime;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import org.expath.servlex.model.Resource;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.expath.pkg.repo.Package;
@@ -61,22 +68,36 @@ public class ResourceInvocation
                 myRewrite);
         String orig_path = getPath();
         try {
-            // TODO: Allow config params in rewrite rules, like "{img-dir}/$1"
             String path = myRegex.replace(orig_path, myRewrite);
             Package pkg = myRsrc.getApplication().getPackage();
-            Source src = pkg.getResolver().resolveComponent(path);
-            // return a 404 if the resource does not exist
-            if ( src == null ) {
-                throw new ServlexException(404, "Page not found");
-            }
-            StreamSource stream = null;
-            if ( src instanceof StreamSource ) {
-                stream = (StreamSource) src;
+            InputStream in;
+            if ( path.startsWith("file:") ) {
+                try {
+                    File f = new File(new URI(path));
+                    in = new FileInputStream(f);
+                }
+                catch ( URISyntaxException ex ) {
+                    throw new ServlexException(500, "The resource is not a proper file: URI: " + path);
+                }
+                catch ( FileNotFoundException ex ) {
+                    throw new ServlexException(500, "Error opening the file: " + path);
+                }
             }
             else {
-                throw new ServlexException(500, "The resource is not a StreamSource: " + src.getClass());
+                Source src = pkg.getResolver().resolveComponent(path);
+                // return a 404 if the resource does not exist
+                if ( src == null ) {
+                    throw new ServlexException(404, "Page not found");
+                }
+                StreamSource stream = null;
+                if ( src instanceof StreamSource ) {
+                    stream = (StreamSource) src;
+                }
+                else {
+                    throw new ServlexException(500, "The resource is not a StreamSource: " + src.getClass());
+                }
+                in = stream.getInputStream();
             }
-            InputStream in = stream.getInputStream();
             String type = myRsrc.getType();
             return new ResourceConnector(in, 200, type, app.getProcessors(), auditor);
         }

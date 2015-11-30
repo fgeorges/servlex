@@ -292,6 +292,7 @@ public class EXPathWebParser
 
     private Application createApplication(Package pkg, ParsingContext ctxt)
             throws ParseException
+                 , TechnicalException
     {
         for ( ParsingWrapper w : ctxt.getWrappers() ) {
             w.makeIt(ctxt);
@@ -301,15 +302,15 @@ public class EXPathWebParser
         String      title  = ctxt.getTitle();
         Processors  procs  = ctxt.getProcessors();
         Application app    = new Application(abbrev, title, pkg, procs);
-        // build the servlets
-        for ( ParsingHandler h : ctxt.getHandlers()) {
-            AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
-            app.addHandler(handler);
-        }
         // add config params
         for ( ParsingConfigParam c : ctxt.getConfigParams()) {
             ConfigParam config = c.makeConfigParam(ctxt);
             app.addConfigParam(config);
+        }
+        // build the servlets
+        for ( ParsingHandler h : ctxt.getHandlers()) {
+            AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
+            app.addHandler(handler);
         }
         return app;
     }

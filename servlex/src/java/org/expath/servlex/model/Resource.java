@@ -12,6 +12,7 @@ package org.expath.servlex.model;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.runtime.ResourceInvocation;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Log;
@@ -41,7 +42,43 @@ public class Resource
         auditor.cleanup("resource " + myRegex);
     }
 
-    
+    /**
+     * Allow config params in rewrite rules, like "{img-dir}/something".
+     * 
+     * TODO: Are we sure the param value is set at this point?  From webapps.xml,
+     * not only from expath-web.xml?
+     */
+    @Override
+    void setApplication(Application app)
+            throws TechnicalException
+    {
+        super.setApplication(app);
+        if ( myRewrite != null ) {
+            String rewrite = myRewrite;
+            while ( true ) {
+                int left = rewrite.indexOf('{');
+                if ( left < 0 ) {
+                    break;
+                }
+                int right = rewrite.indexOf('}');
+                if ( left > right ) {
+                    throw new TechnicalException("Unbalanced round brackets in rewrite: '"
+                            + myRewrite + "' (in " + app.getName() + ")");
+                }
+                String name = rewrite.substring(left + 1, right);
+                ConfigParam param = app.getConfigParam(name);
+                if ( param == null ) {
+                    throw new TechnicalException("Unknown param '" + name + "' in rewrite: '"
+                            + myRewrite + "' (in " + app.getName() + ")");
+                }
+                rewrite = rewrite.substring(0, left)
+                        + param.getValue()
+                        + rewrite.substring(right + 1);
+            }
+            myRewrite = rewrite;
+        }
+    }
+
     public String getType()
     {
         return myType;
@@ -72,7 +109,7 @@ public class Resource
     /** The logger. */
     private static final Log LOG = new Log(Application.class);
 
-    private String myType;
+    private final String myType;
     private String myRewrite;
 }
 
