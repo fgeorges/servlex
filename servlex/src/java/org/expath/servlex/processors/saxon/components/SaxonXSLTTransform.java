@@ -9,24 +9,21 @@
 
 package org.expath.servlex.processors.saxon.components;
 
-import javax.xml.transform.Source;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.Xslt30Transformer;
 import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexConstants;
@@ -43,11 +40,10 @@ import org.expath.servlex.processors.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.processors.saxon.SaxonHelper;
-import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import org.expath.servlex.tools.Log;
 
 /**
- * ...
+ * An XSLT stylesheet component implemented for Saxon.
  *
  * @author Florent Georges
  */
@@ -79,15 +75,20 @@ public class SaxonXSLTTransform
         throws ServlexException
              , ComponentError
     {
-        auditor.run("style");
+        auditor.run("xslt transform");
         try {
             XsltExecutable exec = getCompiled();
-            XsltTransformer trans = exec.load();
-            ComponentInstance instance = new MyInstance(trans);
+            Xslt30Transformer trans = exec.load30();
+            MyInstance instance = new MyInstance();
             connector.connectToStylesheet(instance, config);
             XdmDestination dest = new XdmDestination();
-            trans.setDestination(dest);
-            trans.transform();
+            XdmValue value = instance.getValue();
+            XdmNode  node  = getContextNode(value);
+            trans.setInitialContextNode(node);
+            Map<QName, XdmValue> params = new HashMap<>();
+            params.put(NAME, value);
+            trans.setStylesheetParameters(params);
+            trans.applyTemplates(value, dest);
             // TODO: As per XSLT, this is always a doc node.  Check that.  But for
             // now, I take the doc's children as the result sequence...
             // TODO: BTW, check this is a document node...
@@ -96,17 +97,13 @@ public class SaxonXSLTTransform
             Sequence seq = new SaxonSequence(it);
             return new XdmConnector(seq, auditor);
         }
-        catch ( PackageException ex ) {
+        catch ( PackageException | TransformerException | TechnicalException ex ) {
             LOG.error("Internal error", ex);
             throw new ServlexException(500, "Internal error", ex);
         }
         catch ( SaxonApiException ex ) {
             LOG.error("User error in pipeline", ex);
             throw SaxonHelper.makeError(ex);
-        }
-        catch ( TransformerException ex ) {
-            LOG.error("Internal error", ex);
-            throw new ServlexException(500, "Internal error", ex);
         }
     }
  
@@ -116,25 +113,91 @@ public class SaxonXSLTTransform
                  , TransformerException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = mySaxon.newXsltCompiler();
-            // saxon's xslt compiler does not use its uri resolver on the param
-            // passed directly to the stream source ctor; the resolver is used
-            // only for xsl:import and xsl:include, so we have to call it first
-            // explicitely
-            URIResolver resolver = c.getURIResolver();
-            Source src = ( resolver == null )
-                    ? null
-                    : resolver.resolve(myStyle, null);
-            if ( src == null ) {
-                src = new StreamSource(myStyle);
-            }
-            myCompiled = c.compile(src);
+            myCompiled = SaxonXSLTFunction.compile(mySaxon, myStyle);
         }
         return myCompiled;
     }
 
+    /**
+     * Extract the context node out of the input sequence.
+     */
+    private XdmNode getContextNode(XdmValue seq)
+            throws TechnicalException
+    {
+        if ( seq.size() == 0 ) {
+            throw new TechnicalException("The input to the transform is empty");
+        }
+        XdmItem first = seq.itemAt(0);
+        if ( first.isAtomicValue() ) {
+            String msg = "An atomic value cannot be set as the input to a transform: ";
+            throw new TechnicalException(msg + first);
+        }
+        XdmNode node = (XdmNode) first;
+        node = adjustNode(node);
+        return node;
+    }
+
+    /**
+     * Adjust the node if needed.
+     * 
+     * If the node is an element, child of a document with no other element
+     * child, then the parent document is return instead.  If not, the element
+     * is returned as is.
+     */
+    private XdmNode adjustNode(XdmNode node)
+            throws TechnicalException
+    {
+        XdmNodeKind kind = node.getNodeKind();
+        if ( kind == XdmNodeKind.DOCUMENT ) {
+            // nothing
+        }
+        else if ( kind == XdmNodeKind.ELEMENT ) {
+            node = tryParentDocument(node);
+        }
+        else {
+            String msg = "The input to the transform is neither a document nor an element node: ";
+            throw new TechnicalException(msg + kind);
+        }
+        return node;
+    }
+
+    /**
+     * Return the parent node if it is a suitable document node.
+     */
+    private XdmNode tryParentDocument(XdmNode node)
+    {
+        XdmNode parent = node.getParent();
+        if ( parent == null ) {
+            return node;
+        }
+        else if ( parent.getNodeKind() == XdmNodeKind.DOCUMENT ) {
+            int elem_count = 0;
+            XdmSequenceIterator children = parent.axisIterator(Axis.CHILD);
+            while ( children.hasNext() ) {
+                XdmItem child = children.next();
+                if ( child.isAtomicValue() ) {
+                    // nothing
+                }
+                else if ( ((XdmNode) child).getNodeKind() == XdmNodeKind.ELEMENT ) {
+                    ++elem_count;
+                }
+                if ( elem_count > 1 ) {
+                    return node;
+                }
+            }
+            return parent;
+        }
+        else {
+            return node;
+        }
+    }
+
     /** The logger. */
     private static final Log LOG = new Log(SaxonXSLTTransform.class);
+
+    private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
+    private static final String NS     = ServlexConstants.WEBAPP_NS;
+    private static final QName  NAME   = new QName(PREFIX, NS, "input");
 
     private final Processor mySaxon;
     private final String myStyle;
@@ -146,11 +209,6 @@ public class SaxonXSLTTransform
     private static class MyInstance
             implements ComponentInstance
     {
-        public MyInstance(XsltTransformer trans)
-        {
-            myTrans = trans;
-        }
-
         /**
          * Connect the sequence to $web:input and $web:input[1] as the input tree.
          * 
@@ -165,6 +223,10 @@ public class SaxonXSLTTransform
          * common case: we want to apply a stylesheet and we know we have a single
          * document, then the intuitive way is just to apply the stylesheet to the
          * node, no need to declare a parameter...)
+         * 
+         * TODO: Saxon 9.7 XSLT 3.0 transformer object does not allow anymore to
+         * set parameters one after the other.  Will most likely have to refactor
+         * the way errors are handled.
          */
         @Override
         public void connect(Sequence input)
@@ -173,89 +235,8 @@ public class SaxonXSLTTransform
             if ( ! (input instanceof SaxonSequence) ) {
                 throw new IllegalStateException("Not a Saxon sequence: " + input);
             }
-            SaxonSequence seq   = (SaxonSequence) input;
-            XdmValue      value = seq.makeSaxonValue();
-            XdmNode       node  = getContextNode(value);
-            // the context node for the transform
-            myTrans.setInitialContextNode(node);
-            // the whole input sequence as $web:input
-            // TODO: Is it possible to set it only if it is declared?  Is this
-            // actually an error if it is not declared?
-            myTrans.setParameter(NAME, value);
-        }
-
-        /**
-         * Extract the context node out of the input sequence.
-         */
-        private XdmNode getContextNode(XdmValue seq)
-                throws TechnicalException
-        {
-            if ( seq.size() == 0 ) {
-                throw new TechnicalException("The input to the transform is empty");
-            }
-            XdmItem first = seq.itemAt(0);
-            if ( first.isAtomicValue() ) {
-                String msg = "An atomic value cannot be set as the input to a transform: ";
-                throw new TechnicalException(msg + first);
-            }
-            XdmNode node = (XdmNode) first;
-            node = adjustNode(node);
-            return node;
-        }
-
-        /**
-         * Adjust the node if needed.
-         * 
-         * If the node is an element, child of a document with no other element
-         * child, then the parent document is return instead.  If not, the element
-         * is returned as is.
-         */
-        private XdmNode adjustNode(XdmNode node)
-                throws TechnicalException
-        {
-            XdmNodeKind kind = node.getNodeKind();
-            if ( kind == XdmNodeKind.DOCUMENT ) {
-                // nothing
-            }
-            else if ( kind == XdmNodeKind.ELEMENT ) {
-                node = tryParentDocument(node);
-            }
-            else {
-                String msg = "The input to the transform is neither a document nor an element node: ";
-                throw new TechnicalException(msg + kind);
-            }
-            return node;
-        }
-
-        /**
-         * Return the parent node if it is a suitable document node.
-         */
-        private XdmNode tryParentDocument(XdmNode node)
-        {
-            XdmNode parent = node.getParent();
-            if ( parent == null ) {
-                return node;
-            }
-            else if ( parent.getNodeKind() == XdmNodeKind.DOCUMENT ) {
-                int elem_count = 0;
-                XdmSequenceIterator children = parent.axisIterator(Axis.CHILD);
-                while ( children.hasNext() ) {
-                    XdmItem child = children.next();
-                    if ( child.isAtomicValue() ) {
-                        // nothing
-                    }
-                    else if ( ((XdmNode) child).getNodeKind() == XdmNodeKind.ELEMENT ) {
-                        ++elem_count;
-                    }
-                    if ( elem_count > 1 ) {
-                        return node;
-                    }
-                }
-                return parent;
-            }
-            else {
-                return node;
-            }
+            SaxonSequence seq = (SaxonSequence) input;
+            myValue = seq.makeSaxonValue();
         }
 
         // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
@@ -264,64 +245,67 @@ public class SaxonXSLTTransform
         public void error(ComponentError error, Document request)
                 throws TechnicalException
         {
-            setErrorOptions(error);
-            writeErrorRequest(request);
-            writeErrorData(error);
+            throw new UnsupportedOperationException("Not supported yet.");
+//            setErrorOptions(error);
+//            writeErrorRequest(request);
+//            writeErrorData(error);
         }
 
-        private void setErrorOptions(ComponentError error)
-                throws TechnicalException
+//        private void setErrorOptions(ComponentError error)
+//                throws TechnicalException
+//        {
+//            // the code
+//            QName code = null;
+//            javax.xml.namespace.QName name = error.getName();
+//            if ( name != null ) {
+//                String prefix = name.getPrefix();
+//                String local  = name.getLocalPart();
+//                String ns     = name.getNamespaceURI();
+//                code = new QName(prefix, ns, local);
+//            }
+//            // the message
+//            String msg = error.getMsg();
+//            // set them as options
+//            myTrans.setParameter(CODE_NAME, code == null ? null : new XdmAtomicValue(code));
+//            myTrans.setParameter(MESSAGE,   new XdmAtomicValue(msg));
+//        }
+//
+//        private void writeErrorRequest(Document request)
+//                throws TechnicalException
+//        {
+//            if ( ! (request instanceof SaxonDocument) ) {
+//                throw new TechnicalException("Not a Saxon doc: " + request);
+//            }
+//            SaxonDocument doc = (SaxonDocument) request;
+//            XdmNode node = doc.getSaxonNode();
+//            // connect the web request as the context node
+//            myTrans.setInitialContextNode(node);
+//            // connect the web request to the web:input parameter
+//            // TODO: What about the bodies?
+//            myTrans.setParameter(NAME, node);
+//        }
+//
+//        private void writeErrorData(ComponentError error)
+//                throws TechnicalException
+//        {
+//            // connect the user sequence to the user-data port
+//            Sequence sequence = error.getSequence();
+//            XdmValue userdata = SaxonHelper.toXdmValue(sequence);
+//            if ( userdata != null ) {
+//                myTrans.setParameter(ERROR, userdata);
+//            }
+//        }
+
+        public XdmValue getValue()
         {
-            // the code
-            QName code = null;
-            javax.xml.namespace.QName name = error.getName();
-            if ( name != null ) {
-                String prefix = name.getPrefix();
-                String local  = name.getLocalPart();
-                String ns     = name.getNamespaceURI();
-                code = new QName(prefix, ns, local);
-            }
-            // the message
-            String msg = error.getMsg();
-            // set them as options
-            myTrans.setParameter(CODE_NAME, code == null ? null : new XdmAtomicValue(code));
-            myTrans.setParameter(MESSAGE,   new XdmAtomicValue(msg));
+            return myValue;
         }
 
-        private void writeErrorRequest(Document request)
-                throws TechnicalException
-        {
-            if ( ! (request instanceof SaxonDocument) ) {
-                throw new TechnicalException("Not a Saxon doc: " + request);
-            }
-            SaxonDocument doc = (SaxonDocument) request;
-            XdmNode node = doc.getSaxonNode();
-            // connect the web request as the context node
-            myTrans.setInitialContextNode(node);
-            // connect the web request to the web:input parameter
-            // TODO: What about the bodies?
-            myTrans.setParameter(NAME, node);
-        }
+//        private static final QName  ERROR     = new QName(PREFIX, NS, "error-data");
+//        private static final QName  CODE_NAME = new QName(PREFIX, NS, "error-code");
+//        private static final QName  MESSAGE   = new QName(PREFIX, NS, "error-message");
 
-        private void writeErrorData(ComponentError error)
-                throws TechnicalException
-        {
-            // connect the user sequence to the user-data port
-            Sequence sequence = error.getSequence();
-            XdmValue userdata = SaxonHelper.toXdmValue(sequence);
-            if ( userdata != null ) {
-                myTrans.setParameter(ERROR, userdata);
-            }
-        }
-
-        private static final String PREFIX    = ServlexConstants.WEBAPP_PREFIX;
-        private static final String NS        = ServlexConstants.WEBAPP_NS;
-        private static final QName  NAME      = new QName(PREFIX, NS, "input");
-        private static final QName  ERROR     = new QName(PREFIX, NS, "error-data");
-        private static final QName  CODE_NAME = new QName(PREFIX, NS, "error-code");
-        private static final QName  MESSAGE   = new QName(PREFIX, NS, "error-message");
-
-        private final XsltTransformer myTrans;
+        private XdmValue myValue;
     }
 }
 

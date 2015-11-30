@@ -11,6 +11,7 @@ package org.expath.servlex.model;
 
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.tools.Auditor;
 import org.expath.servlex.tools.Cleanable;
@@ -50,12 +51,14 @@ public abstract class AddressHandler
     }
 
     void setApplication(Application app)
+            throws TechnicalException
     {
         myApp = app;
     }
 
     public Invocation resolve(String path, String method, RequestConnector connector)
             throws ServlexException
+                 , TechnicalException
     {
         RegexMatcher matcher = myRegex.matcher(path);
         if ( matcher.matches() ) {

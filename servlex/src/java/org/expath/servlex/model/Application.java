@@ -16,6 +16,7 @@ import java.util.Map;
 import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
+import org.expath.servlex.TechnicalException;
 import org.expath.servlex.connectors.RequestConnector;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.tools.Log;
@@ -81,6 +82,7 @@ public class Application
      * first handler added is the first one tries to match a path.
      */
     public void addHandler(AddressHandler h)
+            throws TechnicalException
     {
         h.setApplication(this);
         myHandlers.add(h);
@@ -137,6 +139,7 @@ public class Application
      */
     public Invocation resolve(String path, String method, RequestConnector connector)
             throws ServlexException
+                 , TechnicalException
     {
         for ( AddressHandler h : myHandlers ) {
             Invocation invoc = h.resolve(path, method, connector);

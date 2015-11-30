@@ -9,7 +9,6 @@
 
 package org.expath.servlex.parser;
 
-import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Wrapper;
 import org.expath.servlex.tools.Log;
@@ -31,13 +30,7 @@ abstract class ParsingHandler
     public AddressHandler makeAddressHandler(ParsingContext ctxt, Log log)
             throws ParseException
     {
-        RegexPattern regex;
-        try {
-            regex = new RegexPattern(myPattern, log);
-        }
-        catch ( TechnicalException ex ) {
-            throw new ParseException("The pattern is not a valid XPath regex", ex);
-        }
+        RegexPattern regex = new RegexPattern(myPattern);
         AddressHandler handler = makeIt(ctxt, regex);
         Wrapper wrapper = makeWrapper(ctxt);
         handler.setWrapper(wrapper);

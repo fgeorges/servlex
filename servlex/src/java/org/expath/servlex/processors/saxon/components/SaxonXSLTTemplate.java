@@ -9,9 +9,7 @@
 
 package org.expath.servlex.processors.saxon.components;
 
-import java.io.StringReader;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.TransformerException;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -19,12 +17,11 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.Xslt30Transformer;
 import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.components.ComponentInstance;
@@ -40,7 +37,7 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 import org.expath.servlex.tools.Log;
 
 /**
- * ...
+ * An XSLT named template component implemented for Saxon.
  *
  * @author Florent Georges
  */
@@ -53,7 +50,6 @@ public class SaxonXSLTTemplate
         myImportUri = import_uri;
         myNS = ns;
         myLocal = localname;
-        myXsltVersion = procs.getWrapperXsltVersion();
     }
 
     @Override
@@ -77,16 +73,17 @@ public class SaxonXSLTTemplate
         throws ServlexException
              , ComponentError
     {
-        auditor.run("template");
+        auditor.run("xslt named template");
         try {
             XsltExecutable exec = getCompiled();
-            XsltTransformer trans = exec.load();
-            trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            ComponentInstance instance = new MyInstance(trans);
+            Xslt30Transformer trans = exec.load30();
+            MyInstance instance = new MyInstance();
             connector.connectToXSLTComponent(instance, config);
             XdmDestination dest = new XdmDestination();
-            trans.setDestination(dest);
-            trans.transform();
+            QName name = new QName(myNS, myLocal);
+            XdmValue[] args = { instance.getValue() };
+            // TODO: How to set template parameters? (for web:input)
+            trans.callTemplate(name, dest);
             // TODO: As per XSLT, this is always a doc node.  Check that.  But for
             // now, I take the doc's children as the result sequence...
             // TODO: BTW, check this is a document node...
@@ -99,7 +96,7 @@ public class SaxonXSLTTemplate
             LOG.error("User error in pipeline", ex);
             throw SaxonHelper.makeError(ex);
         }
-        catch ( PackageException ex ) {
+        catch ( PackageException | TransformerException ex ) {
             LOG.error("Internal error", ex);
             throw new ServlexException(500, "Internal error", ex);
         }
@@ -108,20 +105,12 @@ public class SaxonXSLTTemplate
     private synchronized XsltExecutable getCompiled()
             throws PackageException
                  , SaxonApiException
+                 , TransformerException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = mySaxon.newXsltCompiler();
-            String style = makeCallSheet(myImportUri, myNS, myLocal, myXsltVersion);
-            Source src = new StreamSource(new StringReader(style));
-            src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
-            myCompiled = c.compile(src);
+            myCompiled = SaxonXSLTFunction.compile(mySaxon, myImportUri);
         }
         return myCompiled;
-    }
-
-    private static String makeCallSheet(String import_uri, String ns, String local, String version)
-    {
-        return SaxonXSLTFunction.makeCallSheet(false, import_uri, ns, local, version);
     }
 
     /** The logger. */
@@ -131,7 +120,6 @@ public class SaxonXSLTTemplate
     private final String myImportUri;
     private final String myNS;
     private final String myLocal;
-    private final String myXsltVersion;
     private XsltExecutable myCompiled = null;
 
     /**
@@ -140,11 +128,6 @@ public class SaxonXSLTTemplate
     private static class MyInstance
             implements ComponentInstance
     {
-        public MyInstance(XsltTransformer trans)
-        {
-            myTrans = trans;
-        }
-
         @Override
         public void connect(Sequence input)
         {
@@ -152,7 +135,7 @@ public class SaxonXSLTTemplate
                 throw new IllegalStateException("Not a Saxon sequence: " + input);
             }
             SaxonSequence seq = (SaxonSequence) input;
-            myTrans.setParameter(NAME, seq.makeSaxonValue());
+            myValue = seq.makeSaxonValue();
         }
 
         @Override
@@ -161,8 +144,12 @@ public class SaxonXSLTTemplate
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        private static final QName NAME = new QName(ServlexConstants.PRIVATE_NS, "input");
-        private final XsltTransformer myTrans;
+        public XdmValue getValue()
+        {
+            return myValue;
+        }
+
+        private XdmValue myValue;
     }
 }
 

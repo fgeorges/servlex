@@ -300,7 +300,13 @@ public class Servlex
         Auditor auditor = new Auditor(ourConfig, procs);
         // resolve the component
         RequestConnector request = new RequestConnector(req, path, appname, procs, auditor);
-        Invocation invoc = app.resolve(path, req.getMethod(), request);
+        Invocation invoc;
+        try {
+            invoc = app.resolve(path, req.getMethod(), request);
+        }
+        catch ( TechnicalException ex ) {
+            throw new ServlexException(500, "Internal error", ex);
+        }
         // log request and profiling info
         auditor.begin(request);
         // invoke the component

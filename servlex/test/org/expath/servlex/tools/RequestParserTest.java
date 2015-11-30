@@ -47,7 +47,7 @@ public class RequestParserTest
         // the System Under Test
         RequestParser sut = new RequestParser(req, path, "manager", null);
         // the regex matcher
-        RegexPattern pattern = new RegexPattern("/remove/([a-z]+)", null);
+        RegexPattern pattern = new RegexPattern("/remove/([a-z]+)");
         RegexMatcher matcher = pattern.matcher(path);
         Assert.assertTrue("The path must match the regex", matcher.matches());
         sut.setMatcher(matcher);

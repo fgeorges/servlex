@@ -9,16 +9,12 @@
 
 package org.expath.servlex.tools;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.sf.saxon.regex.JavaRegularExpression;
+import net.sf.saxon.regex.RegularExpression;
 import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.TechnicalException;
-import org.expath.servlex.tools.regex.JDK15RegexTranslator;
-import org.expath.servlex.tools.regex.JRegularExpression;
-import org.expath.servlex.tools.regex.RegexSyntaxException;
-import org.expath.servlex.tools.regex.RegularExpression;
 
 /**
  * Encapsulate XPath regex matching and replacing.
@@ -27,17 +23,17 @@ import org.expath.servlex.tools.regex.RegularExpression;
  */
 public class RegexPattern
 {
-    public RegexPattern(String regex, Log log)
-            throws TechnicalException
+    public RegexPattern(String regex)
     {
-        myLexical = regex;
-        String jre = toJavaRegex(regex, log);
-        myRegex = Pattern.compile(jre);
+        myRegex = regex;
     }
 
     public RegexMatcher matcher(String value)
+            throws TechnicalException
     {
-        Matcher m = myRegex.matcher(value);
+        String jre = toJavaRegex(myRegex);
+        Pattern p = Pattern.compile(jre);
+        Matcher m = p.matcher(value);
         return new RegexMatcher(m, value);
     }
 
@@ -49,7 +45,7 @@ public class RegexPattern
         }
         else {
             try {
-                JRegularExpression re = new JRegularExpression(myRegex);
+                RegularExpression re = new JavaRegularExpression(myRegex, "");
                 return re.replace(value, rewrite).toString();
             }
             catch ( XPathException ex ) {
@@ -61,31 +57,25 @@ public class RegexPattern
     @Override
     public String toString()
     {
-        return "#<regex-pattern " + myLexical + ">";
+        return "#<regex-pattern " + myRegex + ">";
     }
 
     /**
      * Translate an XPath regex to a native Java SE 1.5 regex.
      */
-    private String toJavaRegex(String regex, Log log)
+    private String toJavaRegex(String regex)
             throws TechnicalException
     {
         try {
-            int options = RegularExpression.XPATH30;
-            List<RegexSyntaxException> warnings = new ArrayList<>();
-            String res = JDK15RegexTranslator.translate(regex, options, 0, warnings);
-            for ( RegexSyntaxException w : warnings ) {
-                log.info("XPath to Java regex compiler: Warning in regex: '" + w + "'");
-            }
-            return res;
+            JavaRegularExpression re = new JavaRegularExpression(regex, "");
+            return re.getJavaRegularExpression();
         }
-        catch ( RegexSyntaxException ex ) {
+        catch ( XPathException ex ) {
             throw new TechnicalException("The pattern is not a valid XPath regex", ex);
         }
     }
 
-    private final Pattern myRegex;
-    private final String  myLexical;
+    private final String myRegex;
 }
 
 

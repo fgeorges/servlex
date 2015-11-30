@@ -9,8 +9,9 @@
 
 package org.expath.servlex.processors.saxon.components;
 
-import java.io.StringReader;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
@@ -19,12 +20,12 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.Xslt30Transformer;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
-import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.components.ComponentInstance;
@@ -40,7 +41,7 @@ import org.expath.servlex.processors.saxon.SaxonHelper;
 import org.expath.servlex.tools.Log;
 
 /**
- * ...
+ * An XSLT function component implemented for Saxon.
  *
  * @author Florent Georges
  */
@@ -53,7 +54,6 @@ public class SaxonXSLTFunction
         myImportUri = import_uri;
         myNS = ns;
         myLocal = localname;
-        myXsltVersion = procs.getWrapperXsltVersion();
     }
 
     @Override
@@ -80,13 +80,13 @@ public class SaxonXSLTFunction
         auditor.run("xslt function");
         try {
             XsltExecutable exec = getCompiled();
-            XsltTransformer trans = exec.load();
-            trans.setInitialTemplate(new QName(ServlexConstants.PRIVATE_NS, "main"));
-            ComponentInstance instance = new MyInstance(trans);
+            Xslt30Transformer trans = exec.load30();
+            MyInstance instance = new MyInstance();
             connector.connectToXSLTComponent(instance, config);
             XdmDestination dest = new XdmDestination();
-            trans.setDestination(dest);
-            trans.transform();
+            QName name = new QName(myNS, myLocal);
+            XdmValue[] args = { instance.getValue() };
+            trans.callFunction(name, args, dest);
             // TODO: As per XSLT, this is always a doc node.  Check that.  But for
             // now, I take the doc's children as the result sequence...
             // TODO: BTW, check this is a document node...
@@ -99,7 +99,7 @@ public class SaxonXSLTFunction
             LOG.error("User error in pipeline", ex);
             throw SaxonHelper.makeError(ex);
         }
-        catch ( PackageException ex ) {
+        catch ( PackageException | TransformerException ex ) {
             LOG.error("Internal error", ex);
             throw new ServlexException(500, "Internal error", ex);
         }
@@ -108,62 +108,32 @@ public class SaxonXSLTFunction
     private synchronized XsltExecutable getCompiled()
             throws PackageException
                  , SaxonApiException
+                 , TransformerException
     {
         if ( myCompiled == null ) {
-            XsltCompiler c = mySaxon.newXsltCompiler();
-            String style = makeCallSheet(true, myImportUri, myNS, myLocal, myXsltVersion);
-            Source src = new StreamSource(new StringReader(style));
-            src.setSystemId(ServlexConstants.PRIVATE_NS + "?generated-for=" + myImportUri);
-            myCompiled = c.compile(src);
+            myCompiled = compile(mySaxon, myImportUri);
         }
         return myCompiled;
     }
 
-    // TODO: Actually, all the servlet functions and templates within the same
-    // stylesheet (the same import URI) can share the same "calling sheet"
-    // (usefull when the compiled object will be cached, because that will
-    // reduce the number of those) ==> the "calling sheets" should be generated
-    // at the deployment...
-    //
-    // also used by XSLTTemplateEntryPoint (so package-level)
-    static String makeCallSheet(boolean is_function, String import_uri, String ns, String local, String version)
+    static XsltExecutable compile(Processor saxon, String uri)
+            throws PackageException
+                 , SaxonApiException
+                 , TransformerException
     {
-        StringBuilder b = new StringBuilder();
-        b.append("<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'\n");
-        b.append("                xmlns:web='").append(ServlexConstants.WEBAPP_NS).append("'\n");
-        b.append("                xmlns:local='").append(ServlexConstants.PRIVATE_NS).append("'\n");
-        b.append("                xmlns:my='").append(ns).append("'\n");
-        b.append("                version='").append(version).append("'>\n");
-        b.append("   <xsl:import href='").append(import_uri).append("'/>\n");
-        b.append("   <xsl:param name='local:input' as='item()*'/>\n");
-        b.append("   <xsl:template name='local:main'>\n");
-        if ( LOG.debug() ) {
-            b.append("      <xsl:message>\n");
-            b.append("         THE INPUT: <xsl:copy-of select='$local:input'/>\n");
-            b.append("      </xsl:message>\n");
+        XsltCompiler c = saxon.newXsltCompiler();
+        // saxon's xslt compiler does not use its uri resolver on the param
+        // passed directly to the stream source ctor; the resolver is used
+        // only for xsl:import and xsl:include, so we have to call it first
+        // explicitely
+        URIResolver resolver = c.getURIResolver();
+        Source src = ( resolver == null )
+                ? null
+                : resolver.resolve(uri, null);
+        if ( src == null ) {
+            src = new StreamSource(uri);
         }
-        if ( is_function ) {
-            b.append("      <xsl:variable name='res' select='my:").append(local).append("($local:input)'/>\n");
-        }
-        else {
-            b.append("      <xsl:variable name='res' as='item()*'>\n");
-            b.append("         <xsl:call-template name='my:").append(local).append("'>\n");
-            b.append("            <xsl:with-param name='web:input' select='$local:input'/>\n");
-            b.append("         </xsl:call-template>\n");
-            b.append("      </xsl:variable>\n");
-        }
-        if ( LOG.debug()) {
-            b.append("      <xsl:message>\n");
-            b.append("         THE OUTPUT: <xsl:copy-of select='$res'/>\n");
-            b.append("      </xsl:message>\n");
-        }
-        b.append("      <xsl:sequence select='$res'/>\n");
-        b.append("   </xsl:template>\n");
-        b.append("</xsl:stylesheet>\n");
-        String sheet = b.toString();
-        LOG.debug("The generated stylesheet");
-        LOG.debug(sheet);
-        return sheet;
+        return c.compile(src);
     }
 
     /** The logger. */
@@ -173,7 +143,6 @@ public class SaxonXSLTFunction
     private final String myImportUri;
     private final String myNS;
     private final String myLocal;
-    private final String myXsltVersion;
     private XsltExecutable myCompiled = null;
 
     /**
@@ -182,27 +151,28 @@ public class SaxonXSLTFunction
     private static class MyInstance
             implements ComponentInstance
     {
-        public MyInstance(XsltTransformer trans)
-        {
-            myTrans = trans;
-        }
-
+        @Override
         public void connect(Sequence input)
         {
             if ( ! (input instanceof SaxonSequence) ) {
                 throw new IllegalStateException("Not a Saxon sequence: " + input);
             }
             SaxonSequence seq = (SaxonSequence) input;
-            myTrans.setParameter(NAME, seq.makeSaxonValue());
+            myValue = seq.makeSaxonValue();
         }
 
+        @Override
         public void error(ComponentError error, Document request)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        private static QName NAME = new QName(ServlexConstants.PRIVATE_NS, "input");
-        private XsltTransformer myTrans;
+        public XdmValue getValue()
+        {
+            return myValue;
+        }
+
+        private XdmValue myValue;
     }
 }
 
