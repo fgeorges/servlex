@@ -3,7 +3,7 @@
                 xmlns:web="http://expath.org/ns/webapp"
                 xmlns:app="http://expath.org/ns/test/servlex/mapping-webapp"
                 exclude-result-prefixes="#all"
-                version="2.0">
+                version="3.0">
 
    <pkg:import-uri>http://expath.org/ns/test/servlex/mapping-webapp/servlets.xsl</pkg:import-uri>
 
