@@ -1,3 +1,4 @@
+# run the tests (invoke the shell script with the right options)
 doit:
 	./do-it.sh                                                              \
 	    test-repo                                                           \
@@ -8,5 +9,29 @@ doit:
 	    webapps/filters-app/dist/filters-app-webapp-0.1.0.xaw   filters-app \
 	    webapps/mapping/dist/mapping-webapp-0.2.0.xaw           mapping     \
 	    webapps/xsltforms/dist/xsltforms-webapp-0.1.0.xaw       xsltforms   \
-	    ../samples/hello-world/dist/hello-world-0.9.0dev.xaw    hello-world \
-	    ../samples/webapp-manager/dist/webapp-manager-0.1.0.xaw manager
+	    ../samples/hello-world/dist/hello-world-0.9.3dev.xaw    hello-world \
+	    ../samples/webapp-manager/dist/webapp-manager-0.3.0.xaw manager
+
+# deploy the H2O website (just deploys the package and dependencies, Servlex must run)
+h2o:
+	curl --request POST --data-binary \
+	   "@/Users/fgeorges/projects/h2o/website/dist/h2o-website-0.6.0dev.xaw" \
+	   "http://localhost:9090/servlex/~rest/deploy/h2o"
+	xrepo --repo test-repo install \
+	    /Users/fgeorges/projects/expath/http-client-java/build/expath-http-client-saxon-0.12.0dev.xar
+	xrepo --repo test-repo install \
+	    /Users/fgeorges/projects/xlibs/serialize-xml/dist/serial-0.4.1.xar
+	xrepo --repo test-repo install \
+	    /Users/fgeorges/projects/xlibs/fxsl-pkg/build/fxsl-1.0.xar
+	mkdir h2o-website
+	git clone https://gitlab.com/h2o/web-content.git h2o-website/web-content
+	( cd h2o-website/web-content; git checkout sandbox )
+
+# delete Servlex and re-install it on Tomcat
+upgrade:
+	curl -u servlex:servlex "http://localhost:9090/manager/text/undeploy?path=/servlex"
+	curl -u servlex:servlex \
+	    "http://localhost:9090/manager/text/deploy?path=/servlex&config=/Users/fgeorges/projects/expath/servlex/test/servlex.xml&war=/Users/fgeorges/projects/expath/servlex/servlex/dist/servlex.war"
+
+
+.PHONY: doit h2o upgrade
