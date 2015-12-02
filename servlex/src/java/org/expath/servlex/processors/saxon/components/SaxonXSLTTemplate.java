@@ -9,6 +9,8 @@
 
 package org.expath.servlex.processors.saxon.components;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.TransformerException;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
@@ -22,6 +24,7 @@ import net.sf.saxon.s9api.Xslt30Transformer;
 import net.sf.saxon.s9api.XsltExecutable;
 import org.expath.pkg.repo.PackageException;
 import org.expath.servlex.ServerConfig;
+import org.expath.servlex.ServlexConstants;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.components.Component;
 import org.expath.servlex.components.ComponentInstance;
@@ -80,9 +83,11 @@ public class SaxonXSLTTemplate
             MyInstance instance = new MyInstance();
             connector.connectToXSLTComponent(instance, config);
             XdmDestination dest = new XdmDestination();
+            XdmValue value = instance.getValue();
+            Map<QName, XdmValue> params = new HashMap<>();
+            params.put(NAME, value);
+            trans.setInitialTemplateParameters(params, false);
             QName name = new QName(myNS, myLocal);
-            XdmValue[] args = { instance.getValue() };
-            // TODO: How to set template parameters? (for web:input)
             trans.callTemplate(name, dest);
             // TODO: As per XSLT, this is always a doc node.  Check that.  But for
             // now, I take the doc's children as the result sequence...
@@ -115,6 +120,10 @@ public class SaxonXSLTTemplate
 
     /** The logger. */
     private static final Log LOG = new Log(SaxonXSLTTemplate.class);
+
+    private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
+    private static final String NS     = ServlexConstants.WEBAPP_NS;
+    private static final QName  NAME   = new QName(PREFIX, NS, "input");
 
     private final Processor mySaxon;
     private final String myImportUri;
