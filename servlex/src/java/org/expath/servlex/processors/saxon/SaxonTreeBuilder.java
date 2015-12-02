@@ -12,7 +12,7 @@ package org.expath.servlex.processors.saxon;
 import org.expath.servlex.processors.saxon.model.SaxonDocument;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Builder;
-import net.sf.saxon.expr.parser.Location;
+//import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -55,7 +55,8 @@ class SaxonTreeBuilder
     {
         NodeName name = new FingerprintedQName(myNsPrefix, myNsUri, local);
         try {
-            myBuilder.startElement(name, Untyped.getInstance(), ourLocation, 0);
+            myBuilder.startElement(name, Untyped.getInstance(), 0, 0);
+//            myBuilder.startElement(name, Untyped.getInstance(), ourLocation, 0);
         }
         catch ( XPathException ex ) {
             throw new TechnicalException("Error starting element '" + local + "'", ex);
@@ -69,7 +70,8 @@ class SaxonTreeBuilder
         if ( value != null ) {
             NodeName name = new NoNamespaceName(local);
             try {
-                myBuilder.attribute(name, BuiltInAtomicType.UNTYPED_ATOMIC, value, ourLocation, 0);
+                myBuilder.attribute(name, BuiltInAtomicType.UNTYPED_ATOMIC, value, 0, 0);
+//                myBuilder.attribute(name, BuiltInAtomicType.UNTYPED_ATOMIC, value, ourLocation, 0);
             }
             catch ( XPathException ex ) {
                 throw new TechnicalException("Error building attribute '" + local + "'", ex);
@@ -94,7 +96,8 @@ class SaxonTreeBuilder
             throws TechnicalException
     {
         try {
-            myBuilder.characters(value, ourLocation, 0);
+            myBuilder.characters(value, 0, 0);
+//            myBuilder.characters(value, ourLocation, 0);
         }
         catch ( XPathException ex ) {
             throw new TechnicalException("Error building characters", ex);
@@ -143,36 +146,37 @@ class SaxonTreeBuilder
     private String myNsPrefix;
     private DocumentBuilder myDocBuilder;
     private Builder myBuilder;
-    private static Location ourLocation = new MyLocation();
+//    private static Location ourLocation = new MyLocation();
 
-    private static class MyLocation
-            implements Location
-    {
-        @Override
-        public String getSystemId() {
-            return null;
-        }
-
-        @Override
-        public String getPublicId() {
-            return null;
-        }
-
-        @Override
-        public int getLineNumber() {
-            return -1;
-        }
-
-        @Override
-        public int getColumnNumber() {
-            return -1;
-        }
-
-        @Override
-        public Location saveLocation() {
-            return this;
-        }
-    }
+// TODO: To use with Saxon 9.7, once Calabash has been adapted...
+//    private static class MyLocation
+//            implements Location
+//    {
+//        @Override
+//        public String getSystemId() {
+//            return null;
+//        }
+//
+//        @Override
+//        public String getPublicId() {
+//            return null;
+//        }
+//
+//        @Override
+//        public int getLineNumber() {
+//            return -1;
+//        }
+//
+//        @Override
+//        public int getColumnNumber() {
+//            return -1;
+//        }
+//
+//        @Override
+//        public Location saveLocation() {
+//            return this;
+//        }
+//    }
 }
 
 

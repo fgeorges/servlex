@@ -52,9 +52,9 @@ public class ComponentError
         return mySequence;
     }
 
-    private QName myName;
-    private String myMsg;
-    private Sequence mySequence;
+    private final QName myName;
+    private final String myMsg;
+    private final Sequence mySequence;
 }
 
 

@@ -10,7 +10,12 @@
 package org.expath.servlex;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,6 +188,8 @@ public class WebRepository
 
     /**
      * Remove a webapp in the repository.
+     * 
+     * @param appname The name of the webapp to delete.
      */
     public synchronized void remove(String appname)
             throws PackageException

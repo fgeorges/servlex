@@ -19,6 +19,8 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Attribute;
+import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Element;
 import org.expath.servlex.processors.Item;
 import org.expath.servlex.processors.Sequence;
@@ -247,6 +249,61 @@ public class SaxonSequence
             return null;
         }
         return isDocument(0);
+    }
+
+    @Override
+    public String describe()
+    {
+        StringBuilder buf = new StringBuilder("sequence #");
+        buf.append(this.toString());
+        buf.append(":\n");
+        Item item;
+        for ( int pos = 0; ( item = itemAt(pos) ) != null; ++pos ) {
+            buf.append("item #");
+            buf.append(Integer.toString(pos));
+            buf.append(": ");
+            if ( item instanceof Attribute ) {
+                Attribute attr = (Attribute) item;
+                buf.append("attribute(");
+                buf.append(attr.name());
+                buf.append(")");
+            }
+            else if ( item instanceof Document ) {
+                Document doc = (Document) item;
+                buf.append("document-node(");
+                try {
+                    buf.append(doc.getRootElement().name());
+                }
+                catch ( TechnicalException ex ) {
+                    // ignore, just not put any name if retrieving root element
+                    // throws an error
+                }
+                buf.append(")");
+            }
+            else if ( item instanceof Element ) {
+                Element elem = (Element) item;
+                buf.append("element(");
+                buf.append(elem.name());
+                buf.append(")");
+            }
+            else {
+                buf.append("ERROR: neither atribute, document nor element node?!?");
+                buf.append("\n    ");
+                buf.append(item.toString());
+                buf.append("\n    ");
+                buf.append(item.getClass().toString());
+                buf.append("\n    ");
+                buf.append(SaxonItem.asSaxonItem(item).getXdmItem().getClass().toString());
+                XdmNode node = (XdmNode) SaxonItem.asSaxonItem(item).getXdmItem();
+                buf.append("\n    ");
+                buf.append(node.getNodeKind());
+                buf.append("\n    ");
+                buf.append(node.getNodeName());
+                buf.append("\n    ");
+                buf.append(item.stringValue());
+            }
+        }
+        return buf.toString();
     }
 
     /** The items. */

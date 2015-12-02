@@ -19,7 +19,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import org.expath.servlex.processors.Attribute;
@@ -31,10 +30,7 @@ import org.expath.servlex.processors.Serializer;
 import org.expath.servlex.tools.Log;
 
 /**
- * TODO: ...
- *
- * TODO: ServletException is obviously not an adapted exception type here...
- * (and maybe even IOException).
+ * Handle responding the result back to the client.
  *
  * TODO: Refactor this code and integrate it all to XdmConnector.  Then remove
  * this class.
@@ -54,9 +50,13 @@ import org.expath.servlex.tools.Log;
 public class Result
 {
     /**
-     * TODO: ...
-     * @param sequence
-     * @throws ServletException
+     * Build a new result object, with the result sequence and the processor used.
+     * 
+     * @param sequence The result sequence.
+     * 
+     * @param procs The processor used for the request.
+     * 
+     * @throws ServlexException In case of error.
      */
     public Result(Sequence sequence, Processors procs)
             throws ServlexException
@@ -64,7 +64,7 @@ public class Result
         myProcs = procs;
         myStatus = -1;
         myMsg = null;
-        myHeaders = new ArrayList<Header>();
+        myHeaders = new ArrayList<>();
         // the web:response element
         Element resp;
         try {
@@ -90,12 +90,14 @@ public class Result
     }
 
     /**
-     * TODO: ...
-     * @param resp
+     * Respond to the client.
+     * 
+     * @param resp The servlet standard response object where to respond to.
+     * 
+     * @throws ServlexException In case of error.
      */
     public void respond(HttpServletResponse resp)
             throws ServlexException
-                 , IOException
     {
         resp.setStatus(myStatus, myMsg);
         for ( Result.Header h : myHeaders ) {
@@ -208,7 +210,7 @@ public class Result
                 error(500, "Unknown attribute on web:multipart: " + name);
             }
         }
-        myMultipart.bodies = new ArrayList<Body>();
+        myMultipart.bodies = new ArrayList<>();
         int body_count = 0;
         Iterator<Element> children = multipart.elements();
         while ( children.hasNext() ) {
@@ -323,7 +325,7 @@ public class Result
         }
         Iterator<Item> children = body.children();
         if ( children.hasNext() ) {
-            List<Item> nodes = new ArrayList<Item>();
+            List<Item> nodes = new ArrayList<>();
             while ( children.hasNext() ) {
                 Item next = children.next();
                 nodes.add(next);
@@ -340,7 +342,6 @@ public class Result
 
     private void respondBody(HttpServletResponse resp)
             throws ServlexException
-                 , IOException
     {
         URI src = null;
         try {
@@ -363,7 +364,7 @@ public class Result
                 if ( "jar".equals(src.getScheme()) ) {
                     in = resolveJarUri(src);
                 }
-                else if("file".equals(src.getScheme())) {
+                else if ("file".equals(src.getScheme())) {
                     in = new FileInputStream(new File(src));
                 }
                 else {
@@ -390,7 +391,7 @@ public class Result
             LOG.error("Page not found - " + myBody.src + " - " + src);
             error(404, "Page not found", ex);
         }
-        catch ( TechnicalException ex ) {
+        catch ( TechnicalException | IOException ex ) {
             error(500, "Internal error", ex);
         }
     }

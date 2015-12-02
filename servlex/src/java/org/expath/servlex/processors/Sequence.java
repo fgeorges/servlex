@@ -23,6 +23,10 @@ public interface Sequence
      * Return the item at {@code position}, first item is at position 0.
      * 
      * Return null if {@code position} is outside the sequence.
+     * 
+     * @param position The position of the item to return.
+     * 
+     * @return The item at {@code position}.
      */
     public Item itemAt(int position);
 
@@ -37,6 +41,13 @@ public interface Sequence
      * If the item at that position is exactly one document node, and its
      * children are exactly one element node (ignoring whitespace-only text
      * nodes), then it is returned directly instead.
+     * 
+     * @param position The position of the element to return.
+     * 
+     * @return The element at {@code position}.
+     * 
+     * @throws TechnicalException If the item at {@code position} is not an
+     * element.
      */
     public Element elementAt(int position)
             throws TechnicalException;
@@ -50,8 +61,27 @@ public interface Sequence
      * 
      * If the sequence is exactly one document node, then its children nodes
      * are used directly instead.
+     * 
+     * @param start The index of the first item in the sub-sequence to return.
+     * 
+     * @return The sub-sequence starting at {@code start}.
      */
     public Sequence subSequence(int start);
+
+    /**
+     * Return a string description of the sequence.
+     * 
+     * This method is for development purpose, logging, etc.  The format of the
+     * description is not precisely defined, but would like something like:
+     * 
+     *     sequence #32871259:
+     *     item #1: text()
+     *     item #2: document-node(element(root))
+     *     item #3: xs:integer
+     * 
+     * @return 
+     */
+    public String describe();
 }
 
 

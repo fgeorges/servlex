@@ -275,7 +275,7 @@ public class RequestParser
                 in = new TraceInputStream(in);
             }
             // either multipart or single part
-            if( ctype.isMultipart() ) {
+            if ( ctype.isMultipart() ) {
                 builder.startElem("multipart");
                 builder.startContent();
                 MimeTokenStream parser = new MimeTokenStream();
