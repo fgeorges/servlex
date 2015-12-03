@@ -2,7 +2,7 @@
 <installation version="1.0">
    <info>
       <appname>Servlex</appname>
-      <appversion>0.9.3dev</appversion>
+      <appversion>0.10.0</appversion>
       <appsubpath>servlex</appsubpath>
       <authors>
          <author email="fgeorges@servlex.net" name="Florent Georges"/>
@@ -37,22 +37,22 @@
       <pack name="Servlex" preselected="yes" required="yes">
          <description>The Servlex server, pre-packaged, including Apache Tomcat 8.0.22.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.3dev/hello-world/"             targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.9.3dev/hello-world-0.9.3dev.xaw" targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/LICENSE"        targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/NOTICE"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.10.0/hello-world/"             targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.10.0/hello-world-0.10.0.xaw" targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/LICENSE"        targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/NOTICE"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
          <!-- TODO: Add the execution bit to the files in bin/. -->
-         <file src="apache-tomcat-8.0.22/bin/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/conf/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/lib/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/logs/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/profiling/"     targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/repo/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/temp/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/webapps/"       targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.22/work/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/bin/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/conf/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/lib/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/logs/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/profiling/"     targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/repo/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/temp/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/webapps/"       targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-9.0.0.M1/work/"          targetdir="$INSTALL_PATH"/>
          <parsable targetfile="$INSTALL_PATH/conf/catalina.properties" type="java"/>
       </pack>
    </packs>

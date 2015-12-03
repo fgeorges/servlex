@@ -16,7 +16,7 @@ fi
 IZPACK=/Applications/IzPack/bin/compile
 
 # the Tomcat base name (both .tar.gz and dir must have the same name)
-TOMCAT_NAME=apache-tomcat-8.0.22
+TOMCAT_NAME=apache-tomcat-9.0.0.M1
 
 # the dir containing this script
 BASEDIR=`dirname $0`
@@ -78,9 +78,9 @@ chmod u+x "${TOMCAT}/bin/xrepo.sh"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
     install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/expath-http-client-saxon-0.11.0dev.xar"
+    install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0dev.xar"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/expath-zip-saxon-0.7.0pre1.xar"
+    install "${BASEDIR}/apps/expath-zip-saxon-0.7.0.xar"
 
 # replace the Servlex version number
 perl -e "s|<appversion>([-.0-9a-z]+)</appversion>|<appversion>${VERSION}</appversion>|g;" \
