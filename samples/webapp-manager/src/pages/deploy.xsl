@@ -30,13 +30,13 @@
                   from CXAN. If you deploy directly from CXAN, you can use either a
                   CXAN ID <bold>or</bold> a full package name. The version number is
                   optional (if not set, the latest one is picked).</para>
-               <subtitle>Local file:</subtitle>
+               <subtitle>Local file</subtitle>
                <form href="deploy-file" type="multipart/form-data">
                   <file name="xawfile" size="40"/>
                   <br/><br/>
                   <button label="Deploy"/>
                </form>
-               <subtitle>From CXAN:</subtitle>
+               <subtitle>From CXAN</subtitle>
                <form href="deploy-cxan" type="application/x-www-form-urlencoded">
                   <fields>
                      <field label="ID">
@@ -59,6 +59,17 @@
                      <button label="Deploy"/>
                   </para>
                </form>
+               <subtitle>Using REST</subtitle>
+               <para>You can always use the built-in Servlex REST endpoint for webapp
+                  installation, at <code>[servlex]/~rest/deploy/[appname]</code>.  You
+                  simply send a POST request to that endpoint.  The body of the request
+                  is the binary XAW file (the webapp package).  You need to replace
+                  <code>[appname]</code> with the context root under which you want
+                  your webapp to be accessible.  For instance, to install a webapp to
+                  be accessible at:</para>
+               <code>htpp://localhost:19757/servlex/my-app/</code>
+               <para>then send the XAW file as a HTTP POST request to:</para>
+               <code>htpp://localhost:19757/servlex/~rest/deploy/my-app</code>
             </xsl:when>
             <xsl:otherwise>
                <para><emphasis>Installation disabled (read-only storage).</emphasis></para>

@@ -233,6 +233,18 @@
       </li>
    </xsl:template>
 
+   <xsl:template match="code">
+      <code>
+         <xsl:apply-templates/>
+      </code>
+   </xsl:template>
+
+   <xsl:template match="page/code">
+      <pre>
+         <xsl:apply-templates/>
+      </pre>
+   </xsl:template>
+
    <xsl:template match="debug">
       <xsl:comment>
          <xsl:copy-of select="node()"/>

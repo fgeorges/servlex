@@ -1,7 +1,7 @@
 <project xmlns="http://expath.org/ns/project"
          name="http://servlex.net/app/manager"
          abbrev="webapp-manager"
-         version="0.3.0">
+         version="0.3.1">
 
    <title>Web application manager for a web container.</title>
 
