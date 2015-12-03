@@ -16,7 +16,7 @@ fi
 IZPACK=/Applications/IzPack/bin/compile
 
 # the Tomcat base name (both .tar.gz and dir must have the same name)
-TOMCAT_NAME=apache-tomcat-9.0.0.M1
+TOMCAT_NAME=apache-tomcat-8.0.29
 
 # the dir containing this script
 BASEDIR=`dirname $0`

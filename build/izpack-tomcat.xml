@@ -35,24 +35,24 @@
    </panels>
    <packs>
       <pack name="Servlex" preselected="yes" required="yes">
-         <description>The Servlex server, pre-packaged, including Apache Tomcat 8.0.22.</description>
+         <description>The Servlex server, bundled with Apache Tomcat 8.0.29.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.10.0/hello-world/"             targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.10.0/hello-world-0.10.0.xaw" targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/LICENSE"        targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/NOTICE"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/LICENSE"        targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/NOTICE"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
          <!-- TODO: Add the execution bit to the files in bin/. -->
-         <file src="apache-tomcat-9.0.0.M1/bin/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/conf/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/lib/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/logs/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/profiling/"     targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/repo/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/temp/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/webapps/"       targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-9.0.0.M1/work/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/bin/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/conf/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/lib/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/logs/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/profiling/"     targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/repo/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/temp/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/webapps/"       targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.29/work/"          targetdir="$INSTALL_PATH"/>
          <parsable targetfile="$INSTALL_PATH/conf/catalina.properties" type="java"/>
       </pack>
    </packs>
