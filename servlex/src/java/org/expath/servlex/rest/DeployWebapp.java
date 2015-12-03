@@ -15,7 +15,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -181,14 +184,21 @@ public class DeployWebapp
 //                    "Unsupported media type: " + req.getContentType()
 //                    + ", require application/x-expath-xar+zip.");
 //        }
-        String root = getContextRoot(req);
-        File archive = saveFile(req);
+        String              root    = getContextRoot(req);
+        Map<String, String> params  = new HashMap<>();
+        File                archive = saveFile(req);
+        for ( Entry<String, String[]> p : req.getParameterMap().entrySet() ) {
+            String   n = p.getKey();
+            String[] v = p.getValue();
+            if ( v.length != 1 ) {
+                error(400, "Bad Request", "Not exactly 1 value for param: " + n + ", " + v.length);
+            }
+            params.put(n, v[0]);
+        }
         try {
             // TODO: Set whether to override an existing package (instead of
             // false), from a request URI query parameter.
-            // TODO: Define a way to pass config parameters as well (instead of
-            // an empty map).
-            return myRepo.install(archive, root, false, new HashMap<String, String>());
+            return myRepo.install(archive, root, false, params);
         }
         catch ( Repository.AlreadyInstalledException ex ) {
             error(409, "Conflict", "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
@@ -202,13 +212,16 @@ public class DeployWebapp
 
     /**
      * Return the context root to install the webapp, at the end of the URL.
+     * 
+     * If none, return null.
      */
     private String getContextRoot(HttpServletRequest req)
             throws RestError
     {
         String info = req.getPathInfo();
-        if ( info == null ) {
-            error(500, "Internal Server Error", "Path info is null.");
+        if ( info == null || "".equals(info) ) {
+            // no context root provided, installing a library
+            return null;
         }
         if ( ! info.startsWith("/") ) {
             error(500, "Internal Server Error", "Path info does not start with /.");

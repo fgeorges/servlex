@@ -144,7 +144,8 @@ public class WebRepository
      * 
      * @param archive The package for the webapp, as a {@link File) object.
      * 
-     * @param root The context where to make the webapp available.
+     * @param root The context root under which to make the webapp available.
+     * Must be {@code null} for libraries.
      * 
      * @param force Whether or not to override the existing package with the
      * same name if one is already installed.
@@ -169,7 +170,8 @@ public class WebRepository
      * 
      * @param uri The package for the webapp, as a {@link URI) object.
      * 
-     * @param root The context where to make the webapp available.
+     * @param root The context root under which to make the webapp available.
+     * Must be {@code null} for libraries.
      * 
      * @param force Whether or not to override the existing package with the
      * same name if one is already installed.
@@ -286,6 +288,15 @@ public class WebRepository
         EXPathWebParser parser = new EXPathWebParser(myProcs);
         Application app = parser.loadPackage(pkg);
         if ( app == null ) {
+            if ( ! config.isEmpty() ) {
+                StringBuilder buf = new StringBuilder(
+                        "Context root in null, but config params are provided:");
+                for ( String key : config.keySet() ) {
+                    buf.append(' ');
+                    buf.append(key);
+                }
+                throw new InvalidContextRoot(buf.toString());
+            }
             // not a webapp
             return null;
         }

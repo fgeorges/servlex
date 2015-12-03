@@ -9,16 +9,19 @@ die() {
 deploy_pkg() {
     pkg="$1"
     root="$2"
+    # check options
     if [[ ! -f "$pkg" ]]; then
         die "Package file does not exist: $pkg"
-    fi
-    if [[ -z "$root" ]]; then
-        die "Root not given to deploy_pkg()"
     fi
     if [[ -n "$3" ]]; then
         die "Extra param to deploy_pkg(): $3 (all: $@)"
     fi
-    curl --request POST --data-binary "@$pkg" "$DEPLOY"/$root 2>/dev/null
+    # either deploy a webapp (with a cotext root), or install a library (with no root)
+    if [[ -n "$root" ]]; then
+        curl --request POST --data-binary "@${pkg}" "${DEPLOY}/${root}" 2>/dev/null
+    else
+        curl --request POST --data-binary "@${pkg}" "${DEPLOY}" 2>/dev/null
+    fi
 }
 
 start_tomcat() {
@@ -45,8 +48,8 @@ if [[ ! -d "${BASEDIR}" ]]; then
 fi
 
 # the Tomcat dir
-#TOMCAT=${BASEDIR}/apache-tomcat-8.0.29
-TOMCAT=${BASEDIR}/apache-tomcat-9.0.0.M1
+TOMCAT=${BASEDIR}/apache-tomcat-8.0.29
+#TOMCAT=${BASEDIR}/apache-tomcat-9.0.0.M1
 if [[ ! -d "${TOMCAT}" ]]; then
     die "INTERNAL ERROR: The install directory does not look to be correct?!?";
 fi
@@ -136,10 +139,11 @@ if [[ "${ROOT}" = `sed 's/.*://' < "$tmpfile" | grep ${ROOT}` ]]; then
     # undeploy Servlex
     curl -u servlex:servlex "$MANAGER/undeploy?path=/${ROOT}" 2> /dev/null > "$tmpfile"
     if [[ ! "OK - " = `head -n 1 < "$tmpfile" | cut -c 1-5` ]]; then
-        res=`cat $tmpfile`
+        res=`cat "$tmpfile"`
         die "Tomcat manager failed to undeploy Servlex
 Output: $res"
     fi
+    rm "$tmpfile"
 else
     echo "Servlex not deployed (at ${ROOT})"
 fi

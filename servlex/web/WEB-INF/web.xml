@@ -29,6 +29,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Deploy</servlet-name>
+        <url-pattern>/~rest/deploy</url-pattern>
         <url-pattern>/~rest/deploy/*</url-pattern>
     </servlet-mapping>
 </web-app>
