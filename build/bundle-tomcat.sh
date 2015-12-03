@@ -76,7 +76,7 @@ chmod u+x "${TOMCAT}/bin/xrepo.sh"
 
 # deploy the webapp manager
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/webapp-manager-0.3.0.xaw"
+    install "${BASEDIR}/apps/webapp-manager-0.3.1.xaw"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
     install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0dev.xar"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
