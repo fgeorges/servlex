@@ -70,6 +70,15 @@
                <code>htpp://localhost:19757/servlex/my-app/</code>
                <para>then send the XAW file as a HTTP POST request to:</para>
                <code>htpp://localhost:19757/servlex/~rest/deploy/my-app</code>
+               <para>E.g. if you want to use CURL from the command line:</para>
+               <code>curl --request POST --data-binary @../path/to/my-app.xaw \
+    htpp://localhost:19757/servlex/~rest/deploy/my-app</code>
+               <para>Or using the excellent <link href="http://httpie.org/">HTTPie</link>:</para>
+               <code>http POST :19757/servlex/~rest/deploy/my-app \
+    @../path/to/my-app.xaw</code>
+               <para>To install a library package, do not include a context root, and
+                  use the fix <code>deploy</code> endpoint:</para>
+               <code>http POST :19757/servlex/~rest/deploy @../to/lib.xar</code>
             </xsl:when>
             <xsl:otherwise>
                <para><emphasis>Installation disabled (read-only storage).</emphasis></para>
