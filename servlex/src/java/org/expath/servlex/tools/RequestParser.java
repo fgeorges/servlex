@@ -16,9 +16,9 @@ import java.util.List;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.field.AbstractField;
-import org.apache.james.mime4j.parser.Field;
-import org.apache.james.mime4j.parser.MimeTokenStream;
+import org.apache.james.mime4j.stream.EntityState;
+import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.model.Servlet;
@@ -281,12 +281,12 @@ public class RequestParser
                 MimeTokenStream parser = new MimeTokenStream();
                 parser.parseHeadless(in, ctype_raw);
                 int position = 1;
-                for ( int state = parser.getState();
-                      state != MimeTokenStream.T_END_OF_STREAM;
+                for ( EntityState state = parser.getState();
+                      state != EntityState.T_END_OF_STREAM;
                       state = parser.next() )
                 {
                     handleParserState(parser, builder, input, position, trace_content);
-                    if ( parser.getState() == MimeTokenStream.T_BODY ) {
+                    if ( parser.getState() == EntityState.T_BODY ) {
                         ++position;
                     }
                 }
@@ -313,7 +313,7 @@ public class RequestParser
                  , MimeException
                  , TechnicalException
     {
-        int state = parser.getState();
+        EntityState state = parser.getState();
         if ( LOG.debug() ) {
             LOG.debug("MIME parser state: " + MimeTokenStream.stateToString(state));
         }
@@ -322,18 +322,18 @@ public class RequestParser
             // right after START_MESSAGE (without the corresponding
             // START_HEADER).  So if headers == null, we can just ignore
             // this state.
-            case MimeTokenStream.T_END_HEADER: {
+            case T_END_HEADER: {
                 // TODO: Just ignore anyway...?
                 break;
             }
-            case MimeTokenStream.T_FIELD: {
+            case T_FIELD: {
                 Field f = parser.getField();
                 if ( LOG.debug() ) {
                     LOG.debug("  field: " + f);
                 }
                 String body  = Integer.toString(position);
                 String name  = f.getName().toLowerCase();
-                String value = AbstractField.parse(f.getRaw()).getBody();
+                String value = f.getBody();
                 builder.startElem("header");
                 builder.attribute("body", body);
                 builder.attribute("name", name);
@@ -342,7 +342,7 @@ public class RequestParser
                 builder.endElem();
                 break;
             }
-            case MimeTokenStream.T_BODY: {
+            case T_BODY: {
                 // TOD: Do I really need to maintain the subtype value, or has the
                 // body descriptor get it?
                 if ( LOG.debug()) {
@@ -364,15 +364,15 @@ public class RequestParser
                 break;
             }
             // START_HEADER is handled in the calling analyzeParts()
-            case MimeTokenStream.T_START_HEADER:
-            case MimeTokenStream.T_END_BODYPART:
-            case MimeTokenStream.T_END_MESSAGE:
-            case MimeTokenStream.T_END_MULTIPART:
-            case MimeTokenStream.T_EPILOGUE:
-            case MimeTokenStream.T_PREAMBLE:
-            case MimeTokenStream.T_START_BODYPART:
-            case MimeTokenStream.T_START_MESSAGE:
-            case MimeTokenStream.T_START_MULTIPART: {
+            case T_START_HEADER:
+            case T_END_BODYPART:
+            case T_END_MESSAGE:
+            case T_END_MULTIPART:
+            case T_EPILOGUE:
+            case T_PREAMBLE:
+            case T_START_BODYPART:
+            case T_START_MESSAGE:
+            case T_START_MULTIPART: {
                 // ignore
                 break;
             }
