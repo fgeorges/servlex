@@ -12,17 +12,11 @@ doit:
 	    ../samples/hello-world/dist/hello-world-0.9.3dev.xaw    hello-world \
 	    ../samples/webapp-manager/dist/webapp-manager-0.3.1.xaw manager
 
-# deploy the H2O website (just deploys the package and dependencies, Servlex must run)
+# deploy the H2O website (Servlex must run)
 h2o:
 	curl --request POST --data-binary \
-	   "@../../../h2o/website/dist/h2o-website-0.6.0dev.xaw" \
+	   "@../../../h2o/website/dist/h2o-website-0.6.0.xaw" \
 	   "http://localhost:9090/servlex/~rest/deploy/h2o"
-	xrepo --repo test-repo install \
-	    ../../http-client-java/build/expath-http-client-saxon-0.12.0dev.xar
-	xrepo --repo test-repo install \
-	    ../../../xlibs/serialize-xml/dist/serial-0.4.1.xar
-	xrepo --repo test-repo install \
-	    ../../../xlibs/fxsl-pkg/build/fxsl-1.0.xar
 	mkdir h2o-website
 	git clone https://gitlab.com/h2o/web-content.git h2o-website/web-content
 	( cd h2o-website/web-content; git checkout sandbox )
