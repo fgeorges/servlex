@@ -16,6 +16,8 @@ HELLO_src=$HELLO/src
 HELLO_proj=$HELLO/xproject
 HELLO_xaw=$HELLO_dist/hello-world-${DIST_VER}.xaw
 
+MANAGER_xaw=../samples/webapp-manager/dist/webapp-manager-0.3.1.xaw
+
 die() {
     echo
     echo "*** $@" 1>&2;
@@ -69,6 +71,12 @@ mkdir ${DIR}/hello-world/xproject
 cp $HELLO_proj/*.xml ${DIR}/hello-world/xproject/
 mkdir ${DIR}/hello-world/src
 cp $HELLO_src/hello.* ${DIR}/hello-world/src/
+
+# webapp-manager: the XAW
+if test \! -f "$MANAGER_xaw"; then
+    die "$MANAGER_xaw does not exist"
+fi
+cp "$MANAGER_xaw" ${DIR}/
 
 # zip up the whole thing
 zip -r ${DIR}.zip ${DIR}/
