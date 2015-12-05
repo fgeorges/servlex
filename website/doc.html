@@ -1,0 +1,112 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:web="http://expath.org/ns/webapp">
+   <head>
+      <title>Servlex</title>
+      <link rel="stylesheet" type="text/css" href="style/servlex.css"></link>
+      <link rel="stylesheet" type="text/css" href="js/highlight/styles/default.css"></link>
+      <link rel="shortcut icon" type="image/png" href="images/icon.png"></link>
+   </head>
+   <body>
+      <div id="upbg"></div>
+      <div id="outer">
+         <div id="header">
+            <div id="headercontent">
+               <h1>Servlex</h1>
+               <h2>(: <i>Web Applications and REST Services Framework for XQuery, XProc and XSLT.</i> :)
+               </h2>
+            </div>
+         </div>
+         <div id="menu">
+            <ul>
+               <li><a href='.' title='Servlex Home'>Home</a></li>
+               <li><a class='active' href='doc' title='User Guide'>Doc</a></li>
+               <li><a href='install' title='Installation Guide'>Install</a></li>
+               <li><a href='config' title='Configuration Options'>Config</a></li>
+               <li><a href='download' title='Download Servlex'>Download</a></li>
+               <li><a href='news' title='Servlex News'>News</a></li>
+            </ul>
+         </div>
+         <div id="menubottom"></div>
+         <div id="content">
+            <div class="normalcontent">
+<h3 id="user-guide">User Guide</h3>
+<p>For installation instructions, see the <a href="install">Installation Guide</a>.</p>
+<p>For configuration options, see the <a href="config">Reference</a>.</p>
+<p>For downloading Servlex, go to the <a href="download">Download Area</a>.</p>
+<h4 id="introduction">Introduction</h4>
+<p>Servlex is a container for EXPath Web Applications (or webapp for short).  It
+enables you to install and run such webapps, written in XML technologies (using
+XQuery, XSLT and/or XProc components).  Servlex handles all the networking, and
+connect the components to the HTTP layer.</p>
+<p>Day-to-day, the way you will interact most with Servlex is via the Webapp
+Manager and/or the REST API.</p>
+<h4 id="webapp-manager">Webapp Manager</h4>
+<p>The purpose of the Webapp Manager is to, well, let you manager webapps.  The
+Webapp Manager is itself a webapp.  It is not built-in Servlex, but uses its
+APIs to present the user with a web UI.</p>
+<p>Because the Webapp Manager is itself a webapp, it needs to be installed before
+you can use it.  If you used the Servlex Installer, bundled with Apache Tomcat,
+then the Webapp Manager is already pre-installed and configured in the
+repository created during the installation.  If you installed the WAR file
+yourself, you will have to install the Webapp Manager by using the built-in REST
+endpoint of Servlex for deploying webapps (see below).  The Webapp Manager XAW
+file comes with the Servlex WAR file.</p>
+<p>The [...] BLA BLA BLA BLA...</p>
+<h4 id="rest-api">REST API</h4>
+<p>In order to deploy a webapp, you can POST the XAW file to the endpoint
+<code>~rest/deploy/[my-app]</code>, where <code>[my-app]</code> must be replaced by the context root
+under which you want the webapp to be acessible.  For instance, to install a
+webapp to be accessible at:</p>
+<pre><code class="lang-text"><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/foobar/</span>
+</code></pre>
+<p>then send the XAW file as a HTTP POST request to:</p>
+<pre><code><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/foobar</span>
+</code></pre><p>For instance, if you want to use CURL from the command line, or the excellent
+<a href="http://httpie.org/">HTTPie</a>:</p>
+<pre><code class="lang-shell"><span class="hljs-comment"># using CURL</span>
+curl --request POST --data-binary @../path/to/my-app.xaw \
+    <span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/my-app
+
+# using HTTPie
+http POST :19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/my-app \
+    @../path</span><span class="hljs-regexp">/to/my</span>-app.xaw
+</code></pre>
+<p>You can set webapp config parameters by simply passing them as URL parameters.
+For instance, if the webapp <code>my-app.xaw</code> provides the parameter <code>content-dir</code>,
+the following command will install the webapp, and provide a value for that
+parameter at the same time:</p>
+<pre><code class="lang-shell"><span class="hljs-comment"># using HTTPie, note the endpoint</span>
+http POST :<span class="hljs-number">19757</span>/servlex/~<span class="hljs-built_in">rest</span>/deploy/<span class="hljs-keyword">my</span>-app?content-dir=/<span class="hljs-keyword">some</span>/server/dir/ \
+    @../path/<span class="hljs-keyword">to</span>/<span class="hljs-keyword">my</span>-app.xaw
+</code></pre>
+<p>To install a library package, do not include a context root, and use the fix
+deploy endpoint:</p>
+<pre><code class="lang-shell"><span class="hljs-comment"># using HTTPie, note the endpoint</span>
+http POST :<span class="hljs-number">19757</span>/servlex/~rest/deploy @../to/<span class="hljs-class"><span class="hljs-keyword">lib</span>.<span class="hljs-title">xar</span></span>
+</code></pre>
+<p>A new REST endpoint will be added, to remove libraries and webapps once they
+have been installed.</p>
+            </div>
+         </div>
+         <div id="footer">
+            <div class="right">
+               Servlex website version 0.3.0 <br/>
+               Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>
+               Powered by <a href="http://expath.org/">EXPath</a>
+               and <a href="http://code.google.com/p/servlex/">Servlex</a>
+            </div>
+         </div>
+      </div>
+      <script type="text/javascript">
+         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      </script>
+      <script type="text/javascript">
+         try {
+            var pageTracker = _gat._getTracker("UA-5463082-7");
+            pageTracker._trackPageview();
+         }
+         catch(err) {
+         }
+      </script>
+   </body>
+</html>
