@@ -2,6 +2,7 @@
    <head>
       <title>Servlex</title>
       <link rel="stylesheet" type="text/css" href="style/servlex.css"></link>
+      <link rel="stylesheet" type="text/css" href="js/highlight/styles/default.css"></link>
       <link rel="shortcut icon" type="image/png" href="images/icon.png"></link>
    </head>
    <body>
@@ -16,133 +17,104 @@
          </div>
          <div id="menu">
             <ul>
-               <li><a href="." title="Servlex Home">Home</a></li>
-               <li><a href="install" title="Installation Guide">Install</a></li>
-               <li><a href="config" title="Configuration Options" class="active">Config</a></li>
-               <li><a href="download" title="Download Servlex">Download</a></li>
-               <li><a href="news" title="Servlex News">News</a></li>
+               <li><a href='.' title='Servlex Home'>Home</a></li>
+               <li><a href='doc' title='User Guide'>Doc</a></li>
+               <li><a href='install' title='Installation Guide'>Install</a></li>
+               <li><a class='active' href='config' title='Configuration Options'>Config</a></li>
+               <li><a href='download' title='Download Servlex'>Download</a></li>
+               <li><a href='news' title='Servlex News'>News</a></li>
             </ul>
          </div>
          <div id="menubottom"></div>
          <div id="content">
             <div class="normalcontent">
-               <h3><strong>Configuration Options</strong></h3>
-               <div class="contentarea">
-                  <p>
-                     Servlex is a standard WAR file, and can be deployed in any compliant Java EE
-                     Servlet container.  It also comes with an automatic installer, pre-bundeled
-                     with Tomcat.  The purpose of this document is to document Servlex own
-                     configuration options, but it gives also a few recipes about Tomcat, e.g. how
-                     to change the port number.
-                  </p>
-
-                  <h4>Servlex options</h4>
-                  <p>
-                     The following options are Java system properties.  The way to set them to
-                     specific values is depending on the product you use.  Please see the
-                     documentation of your servlet container.  For instance, one way of achieving
-                     this with Tomcat is to add a line like the following in the config file
-                     <code>conf/catalina.properties</code>:
-                  </p>
-                  <pre>
-# this line is a comment
-# below line is the property name and its value
-org.expath.servlex.profile.dir=/some/place/to/save/profiling
-</pre>
-                  <p/>
-                  <h5>org.expath.servlex.repo.dir</h5>
-                  <p>
-                     This is the absolute directory identifying the root of the repository to be
-                     used by Servlex.  The repository contains all the webapps, as well as the
-                     libraries they (might) depend on.  The directory must exist.  This option is
-                     exlusive with the option <code>org.expath.servlex.repo.dir</code>.
-                  </p>
-                  <h5>org.expath.servlex.repo.classpath</h5>
-                  <p>
-                     This is the classpath prefix to be used by Servlex if the repository is
-                     provided within the classpath.  This is a very special use, for instance to
-                     use in Google App Engine.  Repositories in the classpath are read-only.  This
-                     option is exlusive with the option <code>org.expath.servlex.repo.dir</code>.
-                  </p>
-                  <h5>org.expath.servlex.profile.dir</h5>
-                  <p>
-                     Directory where to save profiling information.  When set, Servlex saves the
-                     XML representation of the incoming HTTP requests, as well as the Calabash's
-                     profile files (if you use XProc).
-                  </p>
-                  <h5>org.expath.servlex.trace.content</h5>
-                  <p>
-                     If this option is set to <code>true</code>, Servlex logs the entire entity
-                     content (that is, the "payload" or "body") of the requests, not only its XML
-                     representation.
-                  </p>
-                  <h5>org.expath.servlex.default.charset</h5>
-                  <p>
-                     The default charset to use if it is not explicitly defined on the request.
-                     The valid charsets are the same as the charsets accepted by the Java
-                     platform.
-                  </p>
-
-                  <h4>Options for the Saxon processor</h4>
-                  <p>
-                     If you use Saxon as the XSLT and XQuery processor (which is so far the only
-                     implementation in Servlex), you can use the following options to configure its
-                     behaviour.
-                  </p>
-                  <h5>org.expath.servlex.saxon.xslt.version</h5>
-                  <p>
-                     The XSLT and XQuery processor based on Saxon generates an XSLT stylesheet to
-                     implement XSLT function and named template components.  The value of this
-                     option is the version to use for those wrapper XSLT stylesheets.  By default
-                     it is <code>2.0</code>.
-                  </p>
-                  <h5>org.expath.servlex.saxon.config.file</h5>
-                  <p>
-                     Saxon defines its own configuration file format.  The value of this option, if
-                     any, must be the path to such a Saxon config file.  The file is used when
-                     instantiating Saxon, when starting Servlex.  By default, Servlex does not
-                     provide Saxon with any config file.
-                  </p>
-
-                  <h4>Useful recipes for Tomcat</h4>
-                  <p>
-                     If you use Tomcat (e.g. if you installed the Servlex installer, which
-                     contains Tomcat), you might be used by the following configuration tips.
-                  </p>
-                  <h5>Changing the port number</h5>
-                  <p>
-                     You can change the default port number in <code>conf/server.xml</code>.  By
-                     default, the Servlex installer uses the port number 19757.  Tomcat also uses
-                     a few other ports for its own purposes.  Just change all occurrences of the
-                     prefix "197" with a prefix of your own, to avoid any clash between two
-                     instances of Servlex.
-                  </p>
-                  <h5>Using Saxon-PE or Saxon-EE</h5>
-                  <p>
-                     Saxon-HE is free and open-source, but the versions PE and EE require a
-                     license, as well as their own JAR file.  If you are the happy owner of Saxon
-                     PE or EE, you can replace the Saxon JAR file in
-                     <code>webapps/ROOT/WEB-INF/lib/</code>, as well as copying you license file
-                     in th same directory.  And that's it, Servlex will detect the licensed
-                     version and will use it.
-                  </p>
-               </div>
+<h3 id="configuration-options">Configuration Options</h3>
+<p>Servlex is a standard WAR file, and can be deployed in any compliant Java EE
+Servlet container.  It also comes with an automatic installer, pre-bundeled with
+Tomcat.  The purpose of this document is to document Servlex own configuration
+options, but it gives also a few recipes about Tomcat, e.g. how to change the
+port number.</p>
+<h4 id="servlex-options">Servlex options</h4>
+<p>The following options are Java system properties.  The way to set them to
+specific values is depending on the product you use.  Please see the
+documentation of your servlet container.  For instance, one way of achieving
+this with Tomcat is to add a line like the following in the config file
+<code>conf/catalina.properties</code>:</p>
+<pre><code class="lang-shell"># this <span class="hljs-built_in">line</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">a</span> comment
+# below <span class="hljs-built_in">line</span> <span class="hljs-keyword">is</span> the property name <span class="hljs-built_in">and</span> its value
+org.expath.servlex.<span class="hljs-keyword">profile</span>.dir=/some/place/<span class="hljs-keyword">to</span>/save/profiling
+</code></pre>
+<p>The options are:</p>
+<h5 id="org-expath-servlex-repo-dir">org.expath.servlex.repo.dir</h5>
+<p>This is the absolute directory identifying the root of the repository to be used
+by Servlex.  The repository contains all the webapps, as well as the libraries
+they (might) depend on.  The directory must exist.  This option is exlusive with
+the option <code>org.expath.servlex.repo.dir</code>.</p>
+<h5 id="org-expath-servlex-repo-classpath">org.expath.servlex.repo.classpath</h5>
+<p>This is the classpath prefix to be used by Servlex if the repository is provided
+within the classpath.  This is a very special use, for instance to use in Google
+App Engine.  Repositories in the classpath are read-only.  This option is
+exlusive with the option <code>org.expath.servlex.repo.dir</code>.</p>
+<h5 id="org-expath-servlex-profile-dir">org.expath.servlex.profile.dir</h5>
+<p>Directory where to save profiling information.  When set, Servlex saves the XML
+representation of the incoming HTTP requests, as well as the Calabash&#39;s profile
+files (if you use XProc).</p>
+<h5 id="org-expath-servlex-trace-content">org.expath.servlex.trace.content</h5>
+<p>If this option is set to <code>true</code>, Servlex logs the entire entity content (that
+is, the &quot;payload&quot; or &quot;body&quot;) of the requests, not only its XML representation.</p>
+<h5 id="org-expath-servlex-default-charset">org.expath.servlex.default.charset</h5>
+<p>The default charset to use if it is not explicitly defined on the request.  The
+valid charsets are the same as the charsets accepted by the Java platform.</p>
+<h4 id="options-for-the-saxon-processor">Options for the Saxon processor</h4>
+<p>If you use Saxon as the XSLT and XQuery processor (which is so far the only
+implementation in Servlex), you can use the following options to configure its
+behaviour.</p>
+<h5 id="org-expath-servlex-saxon-xslt-version">org.expath.servlex.saxon.xslt.version</h5>
+<p>The XSLT and XQuery processor based on Saxon generates an XSLT stylesheet to
+implement XSLT function and named template components.  The value of this
+option is the version to use for those wrapper XSLT stylesheets.  By default
+it is <code>2.0</code>.</p>
+<h5 id="org-expath-servlex-saxon-config-file">org.expath.servlex.saxon.config.file</h5>
+<p>Saxon defines its own configuration file format.  The value of this option, if
+any, must be the path to such a Saxon config file.  The file is used when
+instantiating Saxon, when starting Servlex.  By default, Servlex does not
+provide Saxon with any config file.</p>
+<h4 id="useful-recipes-for-tomcat">Useful recipes for Tomcat</h4>
+<p>If you use Tomcat (e.g. if you installed the Servlex installer, which contains
+Tomcat), you might be used by the following configuration tips.</p>
+<h5 id="changing-the-port-number">Changing the port number</h5>
+<p>You can change the default port number in <code>conf/server.xml</code>.  By default, the
+Servlex installer uses the port number 19757.  Tomcat also uses a few other
+ports for its own purposes.  Just change all occurrences of the prefix &quot;197&quot;
+with a prefix of your own, to avoid any clash between two instances of Servlex.</p>
+<h5 id="using-saxon-pe-or-saxon-ee">Using Saxon-PE or Saxon-EE</h5>
+<p>Saxon-HE is free and open-source, but the versions PE and EE require a license,
+as well as their own JAR file.  If you are the happy owner of Saxon PE or EE,
+you can replace the Saxon JAR file in <code>webapps/ROOT/WEB-INF/lib/</code>, as well as
+copying you license file in th same directory.  And that&#39;s it, Servlex will
+detect the licensed version and will use it.</p>
             </div>
          </div>
-         <!--div id="footer">
-            <div class="left"><a href="http://validator.w3.org/check?uri=referer"><img src="images/valid-xhtml11.gif" alt="Valid XHTML 1.1" style="border: 0;"></img></a><a href="http://jigsaw.w3.org/css-validator/check/referer"><img src="images/valid-css.gif" alt="Valid CSS!" style="border: 0;"></img></a></div>
-            <div class="right">Servlex website version 0.1.0 (revision #888ee7a)<br/>Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>Powered by <a href="http://expath.org/">EXPath</a> and <a href="http://code.google.com/p/servlex/">Servlex</a></div>
-         </div-->
-      </div><script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-         </script>
-         <script type="text/javascript">
-            try {
-               var pageTracker = _gat._getTracker("UA-5463082-7");
-               pageTracker._trackPageview();
-            }
-            catch(err) {
-            }
-         </script></body>
+         <div id="footer">
+            <div class="right">
+               Servlex website version 0.3.0 <br/>
+               Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>
+               Powered by <a href="http://expath.org/">EXPath</a>
+               and <a href="http://code.google.com/p/servlex/">Servlex</a>
+            </div>
+         </div>
+      </div>
+      <script type="text/javascript">
+         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      </script>
+      <script type="text/javascript">
+         try {
+            var pageTracker = _gat._getTracker("UA-5463082-7");
+            pageTracker._trackPageview();
+         }
+         catch(err) {
+         }
+      </script>
+   </body>
 </html>

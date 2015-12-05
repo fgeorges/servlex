@@ -2,6 +2,7 @@
    <head>
       <title>Servlex</title>
       <link rel="stylesheet" type="text/css" href="style/servlex.css"></link>
+      <link rel="stylesheet" type="text/css" href="js/highlight/styles/default.css"></link>
       <link rel="shortcut icon" type="image/png" href="images/icon.png"></link>
    </head>
    <body>
@@ -16,169 +17,149 @@
          </div>
          <div id="menu">
             <ul>
-               <li><a href="." title="Servlex Home">Home</a></li>
-               <li><a href="install" title="Installation Guide" class="active">Install</a></li>
-               <li><a href="config" title="Configuration Options">Config</a></li>
-               <li><a href="download" title="Download Servlex">Download</a></li>
-               <li><a href="news" title="Servlex News">News</a></li>
+               <li><a href='.' title='Servlex Home'>Home</a></li>
+               <li><a href='doc' title='User Guide'>Doc</a></li>
+               <li><a class='active' href='install' title='Installation Guide'>Install</a></li>
+               <li><a href='config' title='Configuration Options'>Config</a></li>
+               <li><a href='download' title='Download Servlex'>Download</a></li>
+               <li><a href='news' title='Servlex News'>News</a></li>
             </ul>
          </div>
          <div id="menubottom"></div>
          <div id="content">
             <div class="normalcontent">
-               <h3><strong>Installation Guide</strong></h3>
-               <div class="contentarea">
-                  <p>
-                     Servlex can be installed either using a graphical installer, or by deploying
-                     the standalone WAR file in the servlet container of your choice.  The former
-                     approach is indeed the easiest one, whilst the latter is the most flexible.
-                  </p>
-                  <h4>Installer</h4>
-                  <p>
-                     This method requires you to download a file, execute it, choose the directory
-                     where to install Servlex, and that is pretty much it! It comes with Tomcat
-                     pre-bundeled, so you do not have to worry about scarry details.  The only
-                     pre-requisite is to have Java installed, with JAVA_HOME properly set.  Please
-                     follow <a
-                     href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">those
-                     instructions</a> if you do not have Java yet (choose the latest JDK for your
-                     platform).
-                  </p>
-                  <p>
-                     Download the latest installer from the <a href="download">download area</a>,
-                     and execute it.  You can simply double-click on it, or from the command-line
-                     just execute: <code>java -jar servlex-x.y.z-installer.jar</code>.  Follow the
-                     instructions, that's it!  If you have a graphical interface (like on most
-                     desktops and laptops), it will use friendly dialog boxes, and if you do not
-                     (like on most distant servers) it will use a textual interface.
-                  </p>
-                  <p style="text-align: center">
-                     <img src="images/izpack-screenshot.png" style="border: 0"/>
-                  </p>
-                  <p>
-                     At this point, you might want to have a look at the available
-                     <a href="config">configuration options</a> before starting Servlex, for
-                     instance if you want to change the port Servlex listen to (by default it is
-                     <a href="http://en.wikipedia.org/wiki/Document_Schema_Definition_Languages">19757</a>).
-                     To start Servlex, just execute <code>bin/startup.sh</code> (resp.
-                     <code>bin/startup.bat</code> on Windows) and go to
-                     <a href="http://localhost:19757/">http://localhost:19757/</a>.
-                  </p>
-                  <h4>WAR file</h4>
-                  <p>
-                     If you want to install Servlex into the servlet container of your choice,
-                     download the latest ZIP file from the <a href="download">download area</a>.
-                     It contains a suitable WAR file and installation instructions.  Once installed
-                     in your servlet container, you might want to have a look at the available
-                     <a href="config">configuration options</a> as well.
-                  </p>
-                  <p>
-                     If you install the WAR file, you will have to set up the repository for web
-                     applications.  You will have to install the webapp manager as well, if you
-                     need it (by using the REST API or the command line tools).  For reference,
-                     here is what the build process exactly does with the WAR file to bundle it
-                     with Tomcat, in order to create the installer:
-                  </p>
-                  <ul>
-                     <li>mkdir [tomcat]/repo</li>
-                     <li>mkdir [tomcat]/repo/.expath-web</li>
-                     <li>mkdir [tomcat]/profiling</li>
-                     <li>create the file [tomcat]/repo/.expath-web/webapps.xml, with the content
-                        detailed below</li>
-                     <li>install latest webapp-manager-x.y.z.xaw</li>
-                     <li>install latest expath-http-client-saxon-x.y.z.xaw (the manager depends on it)</li>
-                     <li>install latest expath-zip-saxon-x.y.z.xaw (the manager depends on it)</li>
-                     <li>add some properties to [tomcat]/conf/catalina.properties</li>
-                  </ul>
-                  <p></p>
-                  <p>
-                     The content of the webapps.xml file is:
-                  </p>
-                  <pre>
-&lt;webapps xmlns="http://expath.org/ns/webapp">
+<h3 id="installation-guide">Installation Guide</h3>
+<p>Servlex can be installed either using a graphical installer, or by deploying the
+standalone WAR file in the servlet container of your choice.  The former
+approach is indeed the easiest one, whilst the latter is the most flexible.</p>
+<h4 id="installer">Installer</h4>
+<p>This method requires you to download a file, execute it, choose the directory
+where to install Servlex, and that is pretty much it! It comes with Tomcat
+pre-bundeled, so you do not have to worry about scarry details.  The only
+pre-requisite is to have Java installed, with JAVA_HOME properly set.  Please
+follow <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">those instructions</a>
+if you do not have Java yet (choose the latest JDK for your platform).</p>
+<p>Download the latest installer from the <a href="download">download area</a>, and execute
+it.  You can simply double-click on it, or from the command-line just execute:
+<code>java -jar servlex-x.y.z-installer.jar</code>.  Follow the instructions, that&#39;s it!
+If you have a graphical interface (like on most desktops and laptops), it will
+use friendly dialog boxes, and if you do not (like on most distant servers) it
+will use a textual interface.</p>
+<p style="text-align: center">
+<img src="images/izpack-screenshot.png" style="border: 0"></img>
+</p>
 
-   &lt;!--
+<p>At this point, you might want to have a look at the available <a href="config">configuration
+options</a> before starting Servlex, for instance if you want to change the
+port Servlex listen to (by default it is
+<a href="http://en.wikipedia.org/wiki/Document_Schema_Definition_Languages">19757</a>).  To
+start Servlex, just execute <code>bin/startup.sh</code> (resp.  <code>bin/startup.bat</code> on
+Windows) and go to <a href="http://localhost:19757/">http://localhost:19757/</a>.</p>
+<h4 id="war-file">WAR file</h4>
+<p>If you want to install Servlex into the servlet container of your choice,
+download the latest ZIP file from the <a href="download">download area</a>.  It contains a
+suitable WAR file and installation instructions.  Once installed in your servlet
+container, you might want to have a look at the available <a href="config">configuration
+options</a> as well.</p>
+<p>If you install the WAR file, you will have to set up the repository for web
+applications.  You will have to install the webapp manager as well, if you need
+it (by using the REST API or the command line tools).  For reference, here is
+what the build process exactly does with the WAR file to bundle it with Tomcat,
+in order to create the installer:</p>
+<ul>
+<li><code>mkdir [tomcat]/repo</code></li>
+<li><code>mkdir [tomcat]/repo/.expath-web</code></li>
+<li><code>mkdir [tomcat]/profiling</code></li>
+<li>create the file <code>[tomcat]/repo/.expath-web/webapps.xml</code>, with the content detailed below</li>
+<li>install latest <code>webapp-manager-x.y.z.xaw</code></li>
+<li>install latest <code>expath-http-client-saxon-x.y.z.xaw</code> (the manager depends on it)</li>
+<li>install latest <code>expath-zip-saxon-x.y.z.xaw</code> (the manager depends on it)</li>
+<li>add some properties to <code>[tomcat]/conf/catalina.properties</code></li>
+</ul>
+<p></p>
+
+<p>The content of the <code>webapps.xml</code> file is:</p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">webapps</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://expath.org/ns/webapp"</span>&gt;</span>
+
+   <span class="hljs-comment">&lt;!--
        Contains elements like:
 
-       &lt;webapp root="myapp" enabled="true">
-          &lt;package name="http://example.org/my/webapp"/>
-       &lt;/webapp>
-   -->
+       &lt;webapp root="myapp" enabled="true"&gt;
+          &lt;package name="http://example.org/my/webapp"/&gt;
+       &lt;/webapp&gt;
+   --&gt;</span>
 
-   &lt;webapp root="manager">
-      &lt;package name="http://servlex.net/app/manager"/>
-   &lt;/webapp>
+   <span class="hljs-tag">&lt;<span class="hljs-name">webapp</span> <span class="hljs-attr">root</span>=<span class="hljs-string">"manager"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">package</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"http://servlex.net/app/manager"</span>/&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">webapp</span>&gt;</span>
 
-&lt;/webapps>
-</pre>
-                  <p></p>
-                  <p>
-                     The properties added to the Tomcat configuration file are as following.
-                     Most of them are commented out, but they serve as a reference for what
-                     properties exist.
-                  </p>
-                  <pre>
-# Added by Servlex bundler for Tomcat
+<span class="hljs-tag">&lt;/<span class="hljs-name">webapps</span>&gt;</span>
+</code></pre>
+<p></p>
+
+<p>The properties added to the Tomcat configuration file are as following.  Most of
+them are commented out, but they serve as a reference for what properties exist.</p>
+<pre><code class="lang-text"># Added by Servlex bundler for Tomcat
 # 
-# The processors implementation class to use
+# The processors implementation class to <span class="hljs-keyword">use</span>
 org.expath.servlex.processors=org.expath.servlex.processors.saxon.SaxonCalabash
-# The location of the repository
+# The location <span class="hljs-keyword">of</span> the repository
 org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
-# Uncomment to have Calabash generating profiling data
+# Uncomment <span class="hljs-keyword">to</span> have Calabash generating profiling <span class="hljs-keyword">data</span>
 # org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling
-# Uncomment to log (in trace level) the actual content of requests/responses
-# org.expath.servlex.trace.content=true
-# Uncomment to set the default charset of requests (if not set in a request)
-# org.expath.servlex.default.charset=UTF-8
-</pre>
-                  <p></p>
-                  <h4>Try it</h4>
-                  <p>
-                     Once installed, you can access the Servlex Admin Console at <a
-                     href="http://localhost:19757/manager/home">http://localhost:19757/manager/home</a>.
-                     The Console let you manage the webapps in a Servlex instance, by listing them,
-                     removing them, deploying a webapp from a XAW file, or directly from CXAN.
-                  </p>
-                  <p style="text-align: center">
-                     <img src="images/console-screenshot.png" style="border: 0"/>
-                  </p>
-                  <p>
-                     If you are eager to test Servlex, you can deploy the sample web application
-                     available in the installation dir, as <code>hello-world-0.9-2.xaw</code>.  Go
-                     to the Console, to the "<em>Deploy</em>" tab, fill in the form by choosing the
-                     file and press <code>deploy</code>.  Check the abstract you get on the next page
-                     looks OK, keep the default context root suggested, and press <code>deploy</code>
-                     again.  You can now access the example application by visiting
-                     <a href="http://localhost:19757/hello-world/">http://localhost:19757/hello-world/</a>.
-                     The sources are available in the dir <code>hello-world/</code> in the installation dir.
-                  </p>
-                  <p>
-                     This sample application is just a few forms, each one-field, sending a string
-                     to either an XSLT function, an XQuery function or an XProc step, which in turn
-                     responds with a page based on this parameter.  You can use the <a
-                     href="http://h2oconsulting.be/tools/dump">dump tool</a> provided by <a
-                     href="http://h2oconsulting.be/">H2O Consulting</a> to display the XML
-                     representation of the HTTP request which is sent to the XSLT, XQuery and/or
-                     XProc components in a web application.
-                  </p>
-               </div>
+# Uncomment <span class="hljs-keyword">to</span> <span class="hljs-keyword">log</span> (<span class="hljs-keyword">in</span> <span class="hljs-keyword">trace</span> <span class="hljs-keyword">level</span>) the actual <span class="hljs-keyword">content</span> <span class="hljs-keyword">of</span> requests/responses
+# org.expath.servlex.<span class="hljs-keyword">trace</span>.<span class="hljs-keyword">content</span>=<span class="hljs-literal">true</span>
+# Uncomment <span class="hljs-keyword">to</span> <span class="hljs-keyword">set</span> the <span class="hljs-keyword">default</span> <span class="hljs-keyword">charset</span> <span class="hljs-keyword">of</span> requests (<span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">set</span> <span class="hljs-keyword">in</span> a request)
+# org.expath.servlex.<span class="hljs-keyword">default</span>.<span class="hljs-keyword">charset</span>=UTF<span class="hljs-number">-8</span>
+</code></pre>
+<p></p>
+
+<h4 id="try-it">Try it</h4>
+<p>Once installed, you can access the Servlex Admin Console at
+<a href="http://localhost:19757/manager/home">http://localhost:19757/manager/home</a>.  The
+Console let you manage the webapps in a Servlex instance, by listing them,
+removing them, deploying a webapp from a XAW file, or directly from CXAN.</p>
+<p style="text-align: center">
+<img src="images/console-screenshot.png" style="border: 0"></img>
+</p>
+
+<p>If you are eager to test Servlex, you can deploy the sample web application
+available in the installation dir, as <code>hello-world-0.9-2.xaw</code>.  Go to the
+Console, to the &quot;<em>Deploy</em>&quot; tab, fill in the form by choosing the file and press
+<code>deploy</code>.  Check the abstract you get on the next page looks OK, keep the
+default context root suggested, and press <code>deploy</code> again.  You can now access
+the example application by visiting
+<a href="http://localhost:19757/hello-world/">http://localhost:19757/hello-world/</a>.  The
+sources are available in the dir <code>hello-world/</code> in the installation dir.</p>
+<p>This sample application is just a few forms, each one-field, sending a string to
+either an XSLT function, an XQuery function or an XProc step, which in turn
+responds with a page based on this parameter.  You can use the <a href="http://h2oconsulting.be/tools/dump">dump
+tool</a> provided by <a href="http://h2oconsulting.be/">H2O
+Consulting</a> to display the XML representation of the
+HTTP request which is sent to the XSLT, XQuery and/or XProc components in a web
+application.</p>
             </div>
          </div>
-         <!--div id="footer">
-            <div class="left"><a href="http://validator.w3.org/check?uri=referer"><img src="images/valid-xhtml11.gif" alt="Valid XHTML 1.1" style="border: 0;"></img></a><a href="http://jigsaw.w3.org/css-validator/check/referer"><img src="images/valid-css.gif" alt="Valid CSS!" style="border: 0;"></img></a></div>
-            <div class="right">Servlex website version 0.1.0 (revision #888ee7a)<br/>Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>Powered by <a href="http://expath.org/">EXPath</a> and <a href="http://code.google.com/p/servlex/">Servlex</a></div>
-         </div-->
-      </div><script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-         </script>
-         <!-- TODO: Create a dedicated Google Analytics account fpr Servlex. -->
-         <script type="text/javascript">
-            try {
-               var pageTracker = _gat._getTracker("UA-5463082-7");
-               pageTracker._trackPageview();
-            }
-            catch(err) {
-            }
-         </script></body>
+         <div id="footer">
+            <div class="right">
+               Servlex website version 0.3.0 <br/>
+               Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>
+               Powered by <a href="http://expath.org/">EXPath</a>
+               and <a href="http://code.google.com/p/servlex/">Servlex</a>
+            </div>
+         </div>
+      </div>
+      <script type="text/javascript">
+         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      </script>
+      <script type="text/javascript">
+         try {
+            var pageTracker = _gat._getTracker("UA-5463082-7");
+            pageTracker._trackPageview();
+         }
+         catch(err) {
+         }
+      </script>
+   </body>
 </html>
