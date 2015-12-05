@@ -80,4 +80,8 @@
        </jar>
     </target>
 
+    <target name="javadoc-build">
+       <!-- nothing -->
+    </target>
+
 </project>
