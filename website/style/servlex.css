@@ -1,6 +1,3 @@
-/*ff7e00*/
-/* 770037 */
-
 .btn {
     border-style: solid;
     border-width: 1px;
@@ -13,10 +10,6 @@
     font-size: 17.5px;
     padding: 11px 19px;
     /* warning */
-    /*
-    background-color: #FAA732;
-    background-image: linear-gradient(to bottom, #FBB450, #F89406);
-    */
     background-color: #770037;
     background-image: linear-gradient(to bottom, #900045, #660030);
     border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
@@ -24,7 +17,8 @@
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
-code {
+ p code ,
+li code {
     white-space: nowrap;
     background-color: #F8F8F8;
     border: 1px solid #EAEAEA;
@@ -33,7 +27,7 @@ code {
     padding: 0 5px;
     font-family: Consolas,"Liberation Mono",Courier,monospace;
     font-size: 0.9em;
-    color: #333333;
+    color: #646464;
 }
 
 .right {
@@ -48,15 +42,11 @@ pre {
     background-color: #eee;
     margin-left: 5%;
     margin-right: 5%;
-    margin-bottom: 5pt;
+    margin-bottom: 10pt;
 }
 
 .syntaxhighlighter {
     overflow: auto;
-}
-
-code {
-    color: #646464;
 }
 
 /*
@@ -65,12 +55,10 @@ code {
 */
 
 * {
-    /* padding: 0em; */
     margin: 0em;
 }
 
 body {
-    /* background: #fff url('../images/bg1.jpg'); */
     background-color: #eee;
     padding: 35px 0px 35px 0px;
 }
@@ -93,7 +81,6 @@ fieldset {
 
 a {
     color: #AA0050;
-    /*color: #770037;*/
     text-decoration: none;
 }
 
@@ -101,31 +88,20 @@ a:hover {
     text-decoration: none;
 }
 
-h3 span {
-    font-weight: normal;
-}
-
-h3,h4 {
-    display: inline;
-    font-weight: bold;
-    background-repeat: no-repeat;
-    background-position: right;
-}
-
 h3 {
     font-size: 1.7em;
-    padding-right: 34px;
-    background-image: url('../images/db1.gif');
+    margin-bottom: 30px;
 }
 
 h4 {
     font-size: 1.2em;
-    padding-right: 28px;
-    background-image: url('../images/db2.gif');
+    margin-top: 30px;
+    margin-bottom: 20px;
 }
 
-.contentarea {
-    padding-top: 1.3em;
+h5 {
+    font-size: 0.9em;
+    margin-bottom: 5px;
 }
 
 img {
@@ -227,7 +203,6 @@ ul.linklist li {
     left: 0px;
     width: 100%;
     height: 275px;
-    /* background: #fff url('../images/bg2.jpg') repeat-x; */
     background-color: #eee;
     z-index: 1;
 }
@@ -403,11 +378,6 @@ th.rowTitle {
     font-weight: bold;
 }
 
-/* --fgeorges --drkm
-tr td {
-    padding: 2em;
-}
-*/
 td {
     padding-left: 4pt; padding-right:  4pt;
     padding-top:  1pt; padding-bottom: 1pt;
