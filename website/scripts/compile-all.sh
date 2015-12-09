@@ -4,10 +4,10 @@
 tmp=tmp-marked.out
 
 # loop over all markdown files
-for md in *.md
+for md in ../src/*.md
 do
     # the entry name, with no extension
-    name=`echo $md | sed s/.md//`
+    name=`echo $md | sed s/\\\\.\\\\.\\\\/src\\\\/// | sed s/.md//`
     html=../${name}.html
     # index's href is "."
     if [ "$name" = index ]; then
