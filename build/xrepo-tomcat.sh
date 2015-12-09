@@ -22,34 +22,34 @@ if test \! -d "${LIB}"; then
     die "INTERNAL ERROR: The lib directory is not a directory?!? ($LIB)"
 fi
 
-# # tools-java.jar
-# tools_java="$LIB/tools-java.jar"
-# if test \! -f "$tools_java"; then
-#     die "Cannot find tools-java.jar: $tools_java"
-# fi
+# tools-java
+tools_java="$LIB/expath-tools-java-0.1.0.jar"
+if test \! -f "$tools_java"; then
+    die "Cannot find tools-java JAR: $tools_java"
+fi
 
-# # tools-saxon.jar
-# tools_saxon="$LIB/tools-saxon.jar"
-# if test \! -f "$tools_saxon"; then
-#     die "Cannot find tools-saxon.jar: $tools_saxon"
-# fi
+# tools-saxon
+tools_saxon="$LIB/expath-tools-saxon-0.1.0.jar"
+if test \! -f "$tools_saxon"; then
+    die "Cannot find tools-saxon JAR: $tools_saxon"
+fi
 
-# pkg-java.jar
-pkg_java="$LIB/pkg-java.jar"
+# pkg-java
+pkg_java="$LIB/pkg-java-0.13.1.jar"
 if test \! -f "$pkg_java"; then
-    die "Cannot find pkg-java.jar: $pkg_java"
+    die "Cannot find pkg-java JAR: $pkg_java"
 fi
 
-# pkg-saxon.jar
-pkg_saxon="$LIB/pkg-saxon.jar"
+# pkg-saxon
+pkg_saxon="$LIB/pkg-saxon-0.13.1.jar"
 if test \! -f "$pkg_saxon"; then
-    die "Cannot find pkg-saxon.jar: $pkg_saxon"
+    die "Cannot find pkg-saxon JAR: $pkg_saxon"
 fi
 
-# pkg-calabash.jar
-pkg_calabash="$LIB/pkg-calabash.jar"
+# pkg-calabash
+pkg_calabash="$LIB/pkg-calabash-0.13.1.jar"
 if test \! -f "$pkg_calabash"; then
-    die "Cannot find pkg-calabash.jar: $pkg_calabash"
+    die "Cannot find pkg-calabash JAR: $pkg_calabash"
 fi
 
 # saxon.jar
@@ -59,8 +59,7 @@ if test \! -f "$saxon"; then
 fi
 
 # the classpath
-# CP=$tools_java:$tools_saxon:$pkg_java:$pkg_saxon:$pkg_calabash:$saxon
-CP=$pkg_java:$pkg_saxon:$pkg_calabash:$saxon
+CP=$tools_java:$tools_saxon:$pkg_java:$pkg_saxon:$pkg_calabash:$saxon
 
 # do it!
 "$JAVA" -cp "$CP" org.expath.pkg.repo.tui.Main "$@"
