@@ -1,5 +1,30 @@
 #! /bin/bash
 
+# 
+# This script sets the classpath, starts the JVM, and invokes the main
+# class that provides the command-line interface to the EXPath Package
+# Repository manager.  It adds the following JARs to the classpath
+# (all are included in the Servlex WAR file):
+# 
+# - tools-java
+# - tools-saxon
+# - pkg-java
+# - pkg-saxon
+# - pkg-calabash
+# - saxon
+#
+# The main class to invoke is: `org.expath.pkg.repo.tui.Main`.
+#
+# The script assumes all JAR files are in the directory (relatively to
+# its own directory): `../webapps/ROOT/WEB-INF/lib`.  This is the case
+# when it sits in Tomcat's bin/ directory and Servlex WAR is installed
+# as Tomcat ROOT webapp, as in the pre-bundled Tomcat installed by the
+# Servlex installer.
+#
+# You might need to tweak it to correspond to your own install, if you
+# do not use Servlex installer.
+# 
+
 die() {
     echo
     echo "*** $@" 1>&2;
@@ -52,7 +77,7 @@ if test \! -f "$pkg_calabash"; then
     die "Cannot find pkg-calabash JAR: $pkg_calabash"
 fi
 
-# saxon.jar
+# saxon
 saxon="$LIB/saxon9he.jar"
 if test \! -f "$saxon"; then
     die "Cannot find Saxon: $saxon"
