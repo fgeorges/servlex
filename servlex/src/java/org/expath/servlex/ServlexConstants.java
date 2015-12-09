@@ -1,16 +1,16 @@
 /****************************************************************************/
 /*  File:       ServlexConstants.java                                       */
-/*  Author:     F. Georges - fgeorges.org                                   */
+/*  Author:     F. Georges - H2O Consulting                                 */
 /*  Date:       2010-06-10                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2010-2015 Florent Georges (see end of file.)          */
 /* ------------------------------------------------------------------------ */
 
 
 package org.expath.servlex;
 
 /**
- * TODO: Doc...
+ * Global constants.
  *
  * @author Florent Georges
  */
