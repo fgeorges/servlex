@@ -79,16 +79,16 @@ public class RequestParserTest
                 "end elem\n" +
                 "end elem\n" +
                 "start elem: param\n" +
-                "attribute: name: simple\n" +
-                "attribute: value: value\n" +
-                "end elem\n" +
-                "start elem: param\n" +
                 "attribute: name: double\n" +
                 "attribute: value: value-1\n" +
                 "end elem\n" +
                 "start elem: param\n" +
                 "attribute: name: double\n" +
                 "attribute: value: value-2\n" +
+                "end elem\n" +
+                "start elem: param\n" +
+                "attribute: name: simple\n" +
+                "attribute: value: value\n" +
                 "end elem\n" +
                 "start elem: header\n" +
                 "attribute: name: x-simple\n" +
@@ -103,6 +103,8 @@ public class RequestParserTest
                 "attribute: value: value-2\n" +
                 "end elem\n" +
                 "end elem\n";
+        System.err.println("EXPECTED:\n" + expected);
+        System.err.println("ACTUAL:\n" + builder);
         Assert.assertEquals("Tree builder events", expected, builder.toString());
     }
 }
