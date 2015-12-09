@@ -9,8 +9,7 @@
 
 package org.expath.servlex.tools;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -22,7 +21,7 @@ public class Log
 {
     public Log(Class c)
     {
-        myLogger = LogManager.getLogger(c);
+        myLogger = LogFactory.getLog(c);
     }
 
     public boolean trace()
@@ -85,7 +84,7 @@ public class Log
         myLogger.error(msg, ex);
     }
 
-    private Logger myLogger;
+    private final org.apache.commons.logging.Log myLogger;
 }
 
 
