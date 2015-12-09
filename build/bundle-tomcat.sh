@@ -59,8 +59,13 @@ cp "${BASEDIR}/bundle-tomcat-users.xml" "${TOMCAT}/conf/tomcat-users.xml"
 rm -r "${TOMCAT}"/webapps/*
 
 # unzip the WAR into webapps/ROOT
+# TODO: Should we deploy it throught the REST API instead?
+# (means starting Tomcat, sending the WAR file over HTTP, etc.)
 mkdir "${TOMCAT}/webapps/ROOT"
 ( cd "${TOMCAT}/webapps/ROOT"; unzip ../../../../servlex/dist/servlex.war )
+
+# copy servlex loader JAR into lib
+cp ../servlex-loader/dist/servlex-loader.jar "${TOMCAT}/lib/"
 
 # creating the repo and the profiling directory
 mkdir "${TOMCAT}/repo"
@@ -71,16 +76,24 @@ mkdir "${TOMCAT}/profiling"
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
 
 # the xrepo.sh script
+# TODO: Why did I copy xrepo.sh here?  Why don't I copy the original?
 cp "${BASEDIR}/xrepo-tomcat.sh" "${TOMCAT}/bin/xrepo.sh"
 chmod u+x "${TOMCAT}/bin/xrepo.sh"
 
+# the saxon script
+cp "${BASEDIR}/../../pkg-java/bin/saxon" "${TOMCAT}/bin/"
+chmod u+x "${TOMCAT}/bin/saxon"
+
 # deploy the webapp manager
-"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/webapp-manager-0.3.1.xaw"
-"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0dev.xar"
-"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo" \
-    install "${BASEDIR}/apps/expath-zip-saxon-0.7.0.xar"
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"       \
+    install "${BASEDIR}/apps/webapp-manager-0.3.1.xaw" \
+    || die "Error deploying webapp manager XAW"
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"                  \
+    install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0.xar" \
+    || die "Error deploying http-client XAW"
+"${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"         \
+    install "${BASEDIR}/apps/expath-zip-saxon-0.8.0.xar" \
+    || die "Error deploying zip XAW"
 
 # replace the Servlex version number
 perl -e "s|<appversion>([-.0-9a-z]+)</appversion>|<appversion>${VERSION}</appversion>|g;" \
@@ -95,5 +108,6 @@ perl -e "s|apache-tomcat-[.0-9]+/|${TOMCAT_NAME}/|g;" \
 # create the installer
 # TODO: IzPack outputs a lot of helpless warnings, hope it will be fixed in a future version...
 "${IZPACK}" izpack-tomcat.xml -o "servlex-installer-${VERSION}.jar" 2>&1 \
-    | grep -v "com.sun.java.util.jar.pack.Utils$Pack200Logger warning"   \
-    | grep -v "bytes of LocalVariableTable attribute in"
+    | grep -v 'com.sun.java.util.jar.pack.Utils$Pack200Logger warning'   \
+    | grep -v "bytes of LocalVariableTable attribute in"                 \
+    | grep -v "bytes of LineNumberTable attribute in"

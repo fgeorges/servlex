@@ -9,6 +9,7 @@ REVISION=`git describe --always`
 
 WAR=../servlex/dist/servlex.war
 JAR=../servlex/dist/servlex.jar
+LOADER=../servlex-loader/dist/servlex-loader.jar
 
 HELLO=../samples/hello-world
 HELLO_dist=$HELLO/dist
@@ -45,8 +46,8 @@ VERSION_PROP=../servlex/src/java/org/expath/servlex/tools/version.properties
 echo "org.expath.servlex.version=${DIST_VER}" > ${VERSION_PROP}
 echo "org.expath.servlex.revision=${REVISION}" >> ${VERSION_PROP}
 
-# build it
-( cd ../servlex/ && ant ) || die "Build failed"
+# build servlex
+( cd ../servlex/ && ant ) || die "Servlex build failed"
 if test \! -f "$WAR"; then
     die "$WAR does not exist"
 fi
@@ -54,10 +55,20 @@ if test \! -f "$JAR"; then
     die "$JAR does not exist"
 fi
 
-# WAR and JAR
+# servlex WAR and JAR
 cp "$WAR" ${DIR}/
 cp "$JAR" ${DIR}/
 
+# build servlex-loader
+( cd ../servlex-loader/ && ant ) || die "Servlex Loader build failed"
+if test \! -f "$LOADER"; then
+    die "$LOADER does not exist"
+fi
+
+# servlex loader JAR
+cp "$LOADER" ${DIR}/
+
+# hello world XAW
 ( cd ../samples/hello-world && xproj build ) || die "Hello world build failed"
 if test \! -f "$HELLO_xaw"; then
     die "$HELLO_xaw does not exist"
