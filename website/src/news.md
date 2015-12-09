@@ -4,19 +4,6 @@ Servlex news.
 
 #### Version 0.9.2
 
-<p style="color:#787878;margin-top:-20px"><small>February 27, 2015</small></p>
-
-New release of Servlex, version 0.9.2.
-
-This minor version adds support for a single one root webapp (one with no
-context root), and upgrade Calabash to 1.0.25.  The bundled version comes with
-an `xrepo` shell script (as it already contains the repo manager JAR files).
-
-Download [servlex-installer-0.9.2.jar](file/servlex-installer-0.9.2.jar)
-[servlex-0.9.2.zip](file/servlex-0.9.2.zip).
-
-#### Version 0.9.2
-
 <p style="color:#787878;margin-top:-20px"><small>February 27, 2015</small>
 
 New release of Servlex, version 0.9.2.
