@@ -11,6 +11,7 @@ package org.expath.servlex.parser;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.expath.pkg.repo.Package;
@@ -221,7 +222,12 @@ public class EXPathWebParserTest
         public URI getContentDirBaseURI()
                 throws PackageException
         {
-            throw new UnsupportedOperationException();
+            try {
+                return new URI("fake-uri");
+            }
+            catch ( URISyntaxException ex ) {
+                throw new PackageException("Error instantiating a URI", ex);
+            }
         }
     }
 
