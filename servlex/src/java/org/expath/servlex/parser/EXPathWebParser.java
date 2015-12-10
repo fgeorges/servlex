@@ -192,7 +192,7 @@ public class EXPathWebParser
         // TODO: Check the value returned for 'abbrev'.
         String abbrev = parser.getAttribute("abbrev");
         ctxt.setAbbrev(abbrev);
-        LOG.info("  webapp abbrev:" + abbrev);
+        LOG.info("  webapp abbrev: " + abbrev);
 
         for ( ; /* ever */; ) {
             parser.nextTag();
