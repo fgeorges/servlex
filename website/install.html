@@ -2,7 +2,7 @@
    <head>
       <title>Servlex</title>
       <link rel="stylesheet" type="text/css" href="style/servlex.css"></link>
-      <link rel="stylesheet" type="text/css" href="js/highlight/styles/default.css"></link>
+      <link rel="stylesheet" type="text/css" href="style/highlight/default.css"></link>
       <link rel="shortcut icon" type="image/png" href="images/icon.png"></link>
    </head>
    <body>
@@ -41,7 +41,7 @@ follow <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.ht
 if you do not have Java yet (choose the latest JDK for your platform).</p>
 <p>Download the latest installer from the <a href="download">download area</a>, and execute
 it.  You can simply double-click on it, or from the command-line just execute:
-<code>java -jar servlex-x.y.z-installer.jar</code>.  Follow the instructions, that&#39;s it!
+<code>java -jar servlex-n.n.n-installer.jar</code>.  Follow the instructions, that&#39;s it!
 If you have a graphical interface (like on most desktops and laptops), it will
 use friendly dialog boxes, and if you do not (like on most distant servers) it
 will use a textual interface.</p>
@@ -49,36 +49,70 @@ will use a textual interface.</p>
 <img src="images/izpack-screenshot.png" style="border: 0"></img>
 </p>
 
-<p>At this point, you might want to have a look at the available <a href="config">configuration
-options</a> before starting Servlex, for instance if you want to change the
-port Servlex listen to (by default it is
+<p>At this point, you might want to have a look at the available
+<a href="config">configuration options</a> before starting Servlex, for instance if you
+want to change the port Servlex listen to (by default it is
 <a href="http://en.wikipedia.org/wiki/Document_Schema_Definition_Languages">19757</a>).  To
 start Servlex, just execute <code>bin/startup.sh</code> (resp.  <code>bin/startup.bat</code> on
-Windows) and go to <a href="http://localhost:19757/">http://localhost:19757/</a>.</p>
+Windows) and go to <a href="http://localhost:19757/manager/">http://localhost:19757/manager/</a>.</p>
+<p>Now you can have a look at the <a href="doc">User Guide</a>.</p>
 <h4 id="war-file">WAR file</h4>
 <p>If you want to install Servlex into the servlet container of your choice,
 download the latest ZIP file from the <a href="download">download area</a>.  It contains a
 suitable WAR file and installation instructions.  Once installed in your servlet
-container, you might want to have a look at the available <a href="config">configuration
-options</a> as well.</p>
+container, you might want to have a look at the available
+<a href="config">configuration options</a> as well.</p>
 <p>If you install the WAR file, you will have to set up the repository for web
 applications.  You will have to install the webapp manager as well, if you need
 it (by using the REST API or the command line tools).  For reference, here is
 what the build process exactly does with the WAR file to bundle it with Tomcat,
 in order to create the installer:</p>
 <ul>
+<li>setup Tomcat class loader to support extension package JARs from the repo</li>
 <li><code>mkdir [tomcat]/repo</code></li>
 <li><code>mkdir [tomcat]/repo/.expath-web</code></li>
 <li><code>mkdir [tomcat]/profiling</code></li>
 <li>create the file <code>[tomcat]/repo/.expath-web/webapps.xml</code>, with the content detailed below</li>
-<li>install latest <code>webapp-manager-x.y.z.xaw</code></li>
-<li>install latest <code>expath-http-client-saxon-x.y.z.xaw</code> (the manager depends on it)</li>
-<li>install latest <code>expath-zip-saxon-x.y.z.xaw</code> (the manager depends on it)</li>
+<li>install latest <code>webapp-manager-n.n.n.xaw</code></li>
+<li>install latest <code>expath-http-client-saxon-n.n.n.xaw</code> (the manager depends on it)</li>
+<li>install latest <code>expath-zip-saxon-n.n.n.xaw</code> (the manager depends on it)</li>
 <li>add some properties to <code>[tomcat]/conf/catalina.properties</code></li>
 </ul>
 <p></p>
 
-<p>The content of the <code>webapps.xml</code> file is:</p>
+<h5 id="deploy-the-war">Deploy the WAR</h5>
+<p>There are a lot of different Java EE Servlet containers out there.  Each has its
+own ways to deploy a WAR file, and to be configured.  This documentation
+describes how to install Servlex on Tomcat.  If you use another one, you will
+have to adapt the steps.  If you do, please share your experience on the EXPath
+<a href="http://expath.org/lists">mailing list</a>.</p>
+<p>The ZIP release file contains the WAR file to deploy (as well as the simple JAR
+file, would you ever need it.)  It contains also the JAR file providing the
+repo-aware class loader for Tomcat, called <code>servlex-loader</code>.  This class loader
+is necessary because extensions for Saxon and Calabash can be installed as XAR
+files, in the package repository.  It is specific to Tomcat.  To install it:</p>
+<ul>
+<li>copy the JAR file to <code>[tomcat]/lib/</code> (it must be Tomcat&#39;s own lib/ directory)</li>
+<li>create the file <code>[tomcat]/conf/catalina/localhost/servlex.xml</code>, with the
+following content:</li>
+</ul>
+<p></p>
+
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Context</span> <span class="hljs-attr">path</span>=<span class="hljs-string">'/servlex'</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">Loader</span> <span class="hljs-attr">loaderClass</span>=<span class="hljs-string">"net.servlex.loader.RepoClassLoader"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">Context</span>&gt;</span>
+</code></pre>
+<p>The ZIP release file also contains two scripts: <code>xrepo.sh</code> and <code>saxon.sh</code>.  They
+are convenience shell scripts to launch the command-line versions of resp. the
+EXPath Repository Manager and Saxon.  They are setup to work from within
+<code>[tomcat]/bin/</code>.  If you put them some place else, they are well documented, and
+you should be able to adapt the few paths to accomodate your own configuration.</p>
+<h5 id="setup-the-repo">Setup the repo</h5>
+<p>You need an EXPath package repository in order to install the webapps managed by
+Servlex.  This is a regular repository, augmented with a private directory
+dedicated to web applications: <code>.expath-web/</code>.  Just create the repo directory,
+and create the file <code>.expath-web/webapps.xml</code> within it, with the following
+content:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">webapps</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://expath.org/ns/webapp"</span>&gt;</span>
 
    <span class="hljs-comment">&lt;!--
@@ -95,8 +129,27 @@ in order to create the installer:</p>
 
 <span class="hljs-tag">&lt;/<span class="hljs-name">webapps</span>&gt;</span>
 </code></pre>
+<p>Then install the three following webapps (the Webapp Manager and both its
+dependencies):</p>
+<ul>
+<li><code>webapp-manager-n.n.n.xaw</code></li>
+<li><code>expath-http-client-saxon-n.n.n.xaw</code></li>
+<li><code>expath-zip-saxon-n.n.n.xaw</code></li>
+</ul>
 <p></p>
 
+<p>In order to do so, you can use the REST deploy endpoint of Servlex.  See the
+<a href="doc">User Guide</a> for comprehensive documentation, but you can use the following
+commands and adapt them as needed (I use <a href="http://httpie.org/">HTTPie</a> myself,
+but you can use CURL as well, as detailed in the User Guide):</p>
+<pre><code class="lang-shell">http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy/manager @webapp-manager-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
+http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy @expath-http-client-saxon-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
+http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy @expath-<span class="hljs-keyword">zip</span>-saxon-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
+</code></pre>
+<p>Of course, if you do not want to use the web interface Webapp Manager, and
+install packages only through the REST endpoint, you do not have to install the
+manager (and none of its dependencies.)</p>
+<h5 id="configuration-properties">Configuration properties</h5>
 <p>The properties added to the Tomcat configuration file are as following.  Most of
 them are commented out, but they serve as a reference for what properties exist.</p>
 <pre><code class="lang-text"># Added by Servlex bundler for Tomcat
@@ -114,35 +167,15 @@ org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
 </code></pre>
 <p></p>
 
-<h4 id="try-it">Try it</h4>
-<p>Once installed, you can access the Servlex Admin Console at
-<a href="http://localhost:19757/manager/home">http://localhost:19757/manager/home</a>.  The
-Console let you manage the webapps in a Servlex instance, by listing them,
-removing them, deploying a webapp from a XAW file, or directly from CXAN.</p>
-<p style="text-align: center">
-<img src="images/console-screenshot.png" style="border: 0"></img>
-</p>
-
-<p>If you are eager to test Servlex, you can deploy the sample web application
-available in the installation dir, as <code>hello-world-0.9-2.xaw</code>.  Go to the
-Console, to the &quot;<em>Deploy</em>&quot; tab, fill in the form by choosing the file and press
-<code>deploy</code>.  Check the abstract you get on the next page looks OK, keep the
-default context root suggested, and press <code>deploy</code> again.  You can now access
-the example application by visiting
-<a href="http://localhost:19757/hello-world/">http://localhost:19757/hello-world/</a>.  The
-sources are available in the dir <code>hello-world/</code> in the installation dir.</p>
-<p>This sample application is just a few forms, each one-field, sending a string to
-either an XSLT function, an XQuery function or an XProc step, which in turn
-responds with a page based on this parameter.  You can use the <a href="http://h2oconsulting.be/tools/dump">dump
-tool</a> provided by <a href="http://h2oconsulting.be/">H2O
-Consulting</a> to display the XML representation of the
-HTTP request which is sent to the XSLT, XQuery and/or XProc components in a web
-application.</p>
+<h5 id="that-should-be-it-">That (should be) it!</h5>
+<p>You can now access the Webapp Manager at (depending on the port number Servlex
+runs on): <a href="http://localhost:8080/servlex/manager/">http://localhost:8080/servlex/manager/</a>.</p>
+<p>The following step is to have a look at the <a href="doc">User Guide</a>.</p>
             </div>
          </div>
          <div id="footer">
             <div class="right">
-               Servlex website version 0.3.0 <br/>
+               Servlex website version 0.4.0 <br/>
                Hosted by <a href="http://h2oconsulting.be/">H2O Consulting</a><br/>
                Powered by <a href="http://expath.org/">EXPath</a>
                and <a href="http://code.google.com/p/servlex/">Servlex</a>
