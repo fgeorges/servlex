@@ -5,6 +5,8 @@
 # too: samples/hello-world/xproject/project.xml
 DIST_VER=0.10.0
 DIR=servlex-${DIST_VER}
+BIN="${DIR}/bin"
+SAMPLES="${DIR}/samples"
 REVISION=`git describe --always`
 
 WAR=../servlex/dist/servlex.war
@@ -68,26 +70,36 @@ fi
 # servlex loader JAR
 cp "$LOADER" ${DIR}/
 
-# hello world XAW
+# the bin dir
+mkdir ${BIN}
+
+cp xrepo-tomcat.sh ${BIN}/xrepo.sh
+cp ../../pkg-java/bin/saxon ${BIN}/saxon.sh
+chmod u+x ${BIN}/*
+
+# the samples dir
+mkdir ${SAMPLES}
+
+# hello world: the XAW...
 ( cd ../samples/hello-world && xproj build ) || die "Hello world build failed"
 if test \! -f "$HELLO_xaw"; then
     die "$HELLO_xaw does not exist"
 fi
+cp "$HELLO_xaw" ${SAMPLES}/
 
-# hello-world: the XAW...
-cp "$HELLO_xaw" ${DIR}/
 # ...and the project sources
-mkdir ${DIR}/hello-world
-mkdir ${DIR}/hello-world/xproject
-cp $HELLO_proj/*.xml ${DIR}/hello-world/xproject/
-mkdir ${DIR}/hello-world/src
-cp $HELLO_src/hello.* ${DIR}/hello-world/src/
+HW=${SAMPLES}/hello-world
+mkdir ${HW}
+mkdir ${HW}/xproject
+cp $HELLO_proj/*.xml ${HW}/xproject/
+mkdir ${HW}/src
+cp $HELLO_src/hello.* ${HW}/src/
 
 # webapp-manager: the XAW
 if test \! -f "$MANAGER_xaw"; then
     die "$MANAGER_xaw does not exist"
 fi
-cp "$MANAGER_xaw" ${DIR}/
+cp "$MANAGER_xaw" ${SAMPLES}/
 
 # zip up the whole thing
 zip -r ${DIR}.zip ${DIR}/

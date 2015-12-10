@@ -6,6 +6,9 @@
 
 
 
+     For up-to-date information on Servlex, for the complete Install
+   Guide and User Guide, please visit http://servlex.net/.
+
      Servlex is an open-source implementation of the EXPath Webapp
    specification <http://expath.org/wiki/Webapp>, based on Saxon and
    Calabash as its XSLT, XQuery and XProc processors.  It is developed
