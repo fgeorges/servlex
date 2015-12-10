@@ -5,7 +5,7 @@ side.  It implements the [EXPath](http://expath.org/) specification for
 "[Web Applications](http://expath.org/spec/webapp)".
 
 <p style="text-align: center">
-<a class="btn" href="file/servlex-installer-0.9.2.jar">Download »</a>
+<a class="btn" href="file/servlex-installer-0.10.0.jar">Download »</a>
 </p>
 
 It is maintained on [GitHub](http://github.com/fgeorges/servlex).  See
