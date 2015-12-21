@@ -252,6 +252,11 @@ public class Servlex
             LOG.error("Servlet threw an exception", ex);
             ex.sendError(resp);
         }
+        catch ( Throwable ex ) {
+            // in last resort... (this function is the main entry point in Servlex)
+            LOG.error("Servlet threw an unexpected exception", ex);
+            resp.sendError(500, "Internal Server Error");
+        }
         finally {
             myCurrentRequest.remove();
             myCurrentApplication.remove();
