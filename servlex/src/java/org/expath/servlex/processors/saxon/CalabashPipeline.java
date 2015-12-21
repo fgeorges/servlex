@@ -83,6 +83,7 @@ public class CalabashPipeline
         auditor.cleanup("calabash pipleline, close the runtime object");
         if ( myRuntime != null ) {
             myRuntime.close();
+            myRuntime = null;
         }
     }
 
@@ -158,59 +159,11 @@ public class CalabashPipeline
         XProcConfiguration xconf = new XProcConfiguration(saxon);
         // < temporary >
         temporary_FIX_BECAUSE_OF_CALABASH(xconf);
+        XProcRuntime runtime = new SafeCloseXProcRuntime(xconf);
         // </ temporary >
-        XProcRuntime runtime = new XProcRuntime(xconf);
         SaxonRepository repo = myCalabash.getRepository();
         PkgConfigurer configurer = new PkgConfigurer(runtime, repo.getUnderlyingRepo());
         runtime.setConfigurer(configurer);
-//        runtime.setMessageListener(new XProcMessageListener() {
-//            @Override
-//            public void error(XProcRunnable xpr, XdmNode xn, String string, QName qname) {
-//                System.out.println("MY MESSAGE: ERROR: " + string);
-//                System.out.println("                   " + qname);
-//                System.out.println("                   " + xpr);
-//            }
-//
-//            @Override
-//            public void error(Throwable thrwbl) {
-//                System.out.println("MY MESSAGE: ERROR: " + thrwbl);
-//            }
-//
-//            @Override
-//            public void warning(XProcRunnable xpr, XdmNode xn, String string) {
-//                System.out.println("MY MESSAGE: WARNING: " + string);
-//                System.out.println("                     " + xpr);
-//            }
-//
-//            @Override
-//            public void warning(Throwable thrwbl) {
-//                System.out.println("MY MESSAGE: WARNING: " + thrwbl);
-//            }
-//
-//            @Override
-//            public void info(XProcRunnable xpr, XdmNode xn, String string) {
-//                System.out.println("MY MESSAGE: INFO: " + string);
-//                System.out.println("                  " + xpr);
-//            }
-//
-//            @Override
-//            public void fine(XProcRunnable xpr, XdmNode xn, String string) {
-//                System.out.println("MY MESSAGE: FINE: " + string);
-//                System.out.println("                  " + xpr);
-//            }
-//
-//            @Override
-//            public void finer(XProcRunnable xpr, XdmNode xn, String string) {
-//                System.out.println("MY MESSAGE: FINER: " + string);
-//                System.out.println("                   " + xpr);
-//            }
-//
-//            @Override
-//            public void finest(XProcRunnable xpr, XdmNode xn, String string) {
-////                System.out.println("MY MESSAGE: FINEST: " + string);
-////                System.out.println("                    " + xpr);
-//            }
-//        });
         File profiling = myConfig.getProfileFile("xproc-profile");
         if ( profiling != null ) {
             try {
@@ -229,6 +182,31 @@ public class CalabashPipeline
         ConfigHelper helper = new ConfigHelper(repo);
         helper.config(saxon.getUnderlyingConfiguration());
         return runtime;
+    }
+
+    /**
+     * Make sure that `super.close()` is never called twice (because it does not
+     * prevent using `for (... : exFuncs) ...` when `exFuncs` is `null`.  Should
+     * be fixed in Calabash itself.
+     */
+    private static class SafeCloseXProcRuntime
+            extends XProcRuntime
+    {
+        public SafeCloseXProcRuntime(XProcConfiguration conf)
+        {
+            super(conf);
+        }
+
+        @Override
+        public synchronized void close()
+        {
+            if ( ! myClosed ) {
+                super.close();
+                myClosed = true;
+            }
+        }
+
+        private boolean myClosed = false;
     }
 
     // When instantiated with an existing Saxon processor, an XProcConfiguration
@@ -468,16 +446,16 @@ public class CalabashPipeline
     private static final QName WRAPPER_NAME
             = new QName(ServlexConstants.WEBAPP_PREFIX, ServlexConstants.WEBAPP_NS, "wrapper");
 
+    /** The Calabash processor. */
+    private final CalabashXProc myCalabash;
+    /** The configuration object. */
+    private final ServerConfig myConfig;
+    /** The audit trail object. */
+    private final Auditor myAuditor;
+    /** The processors object. */
+    private final Processors myProcs;
     /** The compiled pipeline, to be used only once. */
     private XPipeline myCompiled;
-    /** The Calabash processor. */
-    private CalabashXProc myCalabash;
-    /** The configuration object. */
-    private ServerConfig myConfig;
-    /** The audit trail object. */
-    private Auditor myAuditor;
-    /** The processors object. */
-    private Processors myProcs;
     /** The Calabash runtime object. */
     private XProcRuntime myRuntime;
     /**
@@ -492,6 +470,7 @@ public class CalabashPipeline
             myProcs = procs;
         }
 
+        @Override
         public void connect(Sequence input)
                 throws TechnicalException
         {
@@ -504,6 +483,7 @@ public class CalabashPipeline
 
         // TODO: error(), setErrorOptions(), writeErrorRequest(), writeErrorData()
         // and the several constants are mostly duplicated in SaxonXSLTTransform...
+        @Override
         public void error(ComponentError error, Document request)
                 throws TechnicalException
         {
@@ -515,21 +495,28 @@ public class CalabashPipeline
         private void setErrorOptions(ComponentError error)
                 throws TechnicalException
         {
-            // the code-name
-            String prefix = error.getName().getPrefix();
-            String local  = error.getName().getLocalPart();
-            String name = local;
-            if ( prefix != null && ! prefix.equals("") ) {
-                name = prefix + ":" + local;
+            // the original QName
+            javax.xml.namespace.QName name = error.getName();
+            if ( name != null ) {
+                // the code-name
+                String prefix = name.getPrefix();
+                String local  = name.getLocalPart();
+                if ( prefix != null && ! prefix.equals("") ) {
+                    String n = prefix + ":" + local;
+                    myPipe.passOption(CODE_NAME, new RuntimeValue(n));
+                }
+                else {
+                    myPipe.passOption(CODE_NAME, new RuntimeValue(local));
+                }
+                // the code-namespace
+                String ns = name.getNamespaceURI();
+                myPipe.passOption(CODE_NS, new RuntimeValue(ns));
             }
-            // the code-namespace
-            String ns     = error.getName().getNamespaceURI();
             // the message
-            String msg    = error.getMsg();
-            // set them as options
-            myPipe.passOption(CODE_NAME, new RuntimeValue(name));
-            myPipe.passOption(CODE_NS, new RuntimeValue(ns));
-            myPipe.passOption(MESSAGE, new RuntimeValue(msg));
+            String msg = error.getMsg();
+            if ( msg != null ) {
+                myPipe.passOption(MESSAGE, new RuntimeValue(msg));
+            }
         }
 
         private void writeErrorRequest(Document request)
@@ -555,15 +542,15 @@ public class CalabashPipeline
             }
         }
 
-        private static final String NAME      = org.expath.servlex.processors.XProcProcessor.INPUT_PORT_NAME;
-        private static final String ERROR     = org.expath.servlex.processors.XProcProcessor.ERROR_PORT_NAME;
-        private static final String PREFIX    = ServlexConstants.WEBAPP_PREFIX;
-        private static final String NS        = ServlexConstants.WEBAPP_NS;
-        private static final QName  CODE_NAME = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NAME);
-        private static final QName  CODE_NS   = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NS);
-        private static final QName  MESSAGE   = new QName(PREFIX, NS, ServlexConstants.OPTION_MESSAGE);
-        private XPipeline myPipe;
-        private Processors myProcs;
+        private static final String NAME   = org.expath.servlex.processors.XProcProcessor.INPUT_PORT_NAME;
+        private static final String ERROR  = org.expath.servlex.processors.XProcProcessor.ERROR_PORT_NAME;
+        private static final String PREFIX = ServlexConstants.WEBAPP_PREFIX;
+        private static final String NS     = ServlexConstants.WEBAPP_NS;
+        private static final QName CODE_NAME = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NAME);
+        private static final QName CODE_NS   = new QName(PREFIX, NS, ServlexConstants.OPTION_CODE_NS);
+        private static final QName MESSAGE   = new QName(PREFIX, NS, ServlexConstants.OPTION_MESSAGE);
+        private final XPipeline  myPipe;
+        private final Processors myProcs;
     }
 }
 

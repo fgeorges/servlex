@@ -136,10 +136,10 @@ public class ErrorConnector
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    private ComponentError   myError;
-    private RequestConnector myRequest;
+    private final ComponentError   myError;
+    private final RequestConnector myRequest;
     /** The auditor object. */
-    private Auditor          myAuditor;
+    private final Auditor          myAuditor;
 }
 
 

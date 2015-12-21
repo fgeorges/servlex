@@ -116,8 +116,8 @@ public class CalabashXProcPipeline
     /** The logger. */
     private static final Log LOG = new Log(CalabashXProcPipeline.class);
 
-    private CalabashXProc myCalabash;
-    private String myPipe;
+    private final CalabashXProc myCalabash;
+    private final String myPipe;
     private CalabashPipeline myPipeline;
 }
 
