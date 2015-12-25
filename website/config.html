@@ -93,6 +93,18 @@ as well as their own JAR file.  If you are the happy owner of Saxon PE or EE,
 you can replace the Saxon JAR file in <code>webapps/ROOT/WEB-INF/lib/</code>, as well as
 copying you license file in th same directory.  And that&#39;s it, Servlex will
 detect the licensed version and will use it.</p>
+<h5 id="increase-log-level">Increase log level</h5>
+<p>In <code>[servlex]/webapps/ROOT/WEB-INF/classes/logging.properties</code>, save
+the following content:</p>
+<pre><code>handlers = <span class="hljs-keyword">org.apache.juli.FileHandler, </span><span class="hljs-keyword">java.util.logging.ConsoleHandler
+</span>
+<span class="hljs-keyword">org.apache.juli.FileHandler.level </span>= FINE
+<span class="hljs-keyword">org.apache.juli.FileHandler.directory </span>= ${catalina.<span class="hljs-keyword">base}/logs
+</span><span class="hljs-keyword">org.apache.juli.FileHandler.prefix </span>= ${classloader.webappName}.
+
+<span class="hljs-keyword">java.util.logging.ConsoleHandler.level </span>= FINE
+<span class="hljs-keyword">java.util.logging.ConsoleHandler.formatter </span>= <span class="hljs-keyword">java.util.logging.SimpleFormatter</span>
+</code></pre><p>Change <code>FINE</code> (debug) to <code>FINEST</code>, for trace-level logging.</p>
             </div>
          </div>
          <div id="footer">
