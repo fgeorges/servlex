@@ -156,6 +156,9 @@ public class Application
         // TODO: Create a property to control logging the applicaiton structure
         if ( LOG.debug()) {
             LOG.debug("*** Application: " + myName);
+            for ( ConfigParam p : myConfigParams.values() ) {
+                p.logApplication(LOG);
+            }
             for ( AddressHandler h : myHandlers ) {
                 h.logApplication(LOG);
             }
