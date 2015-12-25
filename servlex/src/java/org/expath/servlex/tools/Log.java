@@ -9,7 +9,8 @@
 
 package org.expath.servlex.tools;
 
-import org.apache.commons.logging.LogFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -21,70 +22,92 @@ public class Log
 {
     public Log(Class c)
     {
-        myLogger = LogFactory.getLog(c);
+        myLogger = Logger.getLogger(c.getName());
     }
 
     public boolean trace()
     {
-        return myLogger.isTraceEnabled();
+        return enabled(TRACE);
     }
 
     public void trace(String msg)
     {
-        myLogger.trace(msg);
+        log(TRACE, msg);
     }
 
     public boolean debug()
     {
-        return myLogger.isDebugEnabled();
+        return enabled(DEBUG);
     }
 
     public void debug(String msg)
     {
-        myLogger.debug(msg);
+        log(DEBUG, msg);
     }
 
     public void debug(String msg, Throwable ex)
     {
-        myLogger.debug(msg, ex);
+        log(DEBUG, msg, ex);
     }
 
     public boolean info()
     {
-        return myLogger.isInfoEnabled();
+        return enabled(INFO);
     }
 
     public void info(String msg)
     {
-        myLogger.info(msg);
+        log(INFO, msg);
     }
 
     public void info(String msg, Throwable ex)
     {
-        myLogger.info(msg, ex);
+        log(INFO, msg, ex);
     }
 
     public void warn(String msg)
     {
-        myLogger.warn(msg);
+        log(WARN, msg);
     }
 
     public void warn(String msg, Throwable ex)
     {
-        myLogger.warn(msg, ex);
+        log(WARN, msg, ex);
     }
 
     public void error(String msg)
     {
-        myLogger.error(msg);
+        log(ERROR, msg);
     }
 
     public void error(String msg, Throwable ex)
     {
-        myLogger.error(msg, ex);
+        log(ERROR, msg, ex);
     }
 
-    private final org.apache.commons.logging.Log myLogger;
+    private boolean enabled(Level lvl)
+    {
+        return myLogger.isLoggable(lvl);
+    }
+
+    private void log(Level lvl, String msg)
+    {
+        myLogger.log(lvl, msg);
+    }
+
+    private void log(Level lvl, String msg, Throwable ex)
+    {
+        myLogger.log(lvl, msg, ex);
+    }
+
+    @SuppressWarnings("NonConstantLogger")
+    private final Logger myLogger;
+
+    private static final Level TRACE = Level.FINEST;
+    private static final Level DEBUG = Level.FINE;
+    private static final Level INFO  = Level.INFO;
+    private static final Level WARN  = Level.WARNING;
+    private static final Level ERROR = Level.SEVERE;
 }
 
 
