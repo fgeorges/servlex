@@ -100,12 +100,12 @@ the following content:
 ```
 handlers = org.apache.juli.FileHandler, java.util.logging.ConsoleHandler
 
-org.apache.juli.FileHandler.level = FINE
+org.expath.servlex.level = FINE
+
 org.apache.juli.FileHandler.directory = ${catalina.base}/logs
 org.apache.juli.FileHandler.prefix = ${classloader.webappName}.
 
-java.util.logging.ConsoleHandler.level = FINE
 java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 ```
 
-Change `FINE` (debug) to `FINEST`, for trace-level logging.
+Change `FINE` (debug) to `FINEST` or `ALL`, for trace-level logging.

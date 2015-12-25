@@ -153,7 +153,7 @@ public class Application
 
     public void logApplication()
     {
-        // TODO: Create a property to control logging the applicaiton structure
+        // TODO: Create a property to control logging the application structure
         if ( LOG.debug()) {
             LOG.debug("*** Application: " + myName);
             for ( ConfigParam p : myConfigParams.values() ) {
