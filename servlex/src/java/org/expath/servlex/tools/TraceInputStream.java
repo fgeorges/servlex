@@ -10,6 +10,7 @@
 package org.expath.servlex.tools;
 
 import java.io.IOException;
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 
 /**
@@ -165,10 +166,30 @@ public class TraceInputStream
         return res;
     }
 
+    @Override
+    public boolean isFinished() {
+        boolean res = myIn.isFinished();
+        LOG.trace("isFinished(): " + res);
+        return res;
+    }
+
+    @Override
+    public boolean isReady() {
+        boolean res = myIn.isReady();
+        LOG.trace("isReady(): " + res);
+        return res;
+    }
+
+    @Override
+    public void setReadListener(ReadListener rl) {
+        LOG.trace("setReadListener()");
+        myIn.setReadListener(rl);
+    }
+
     /** The logger. */
     private static final Log LOG = new Log(TraceInputStream.class);
     /** The proxied input stream. */
-    private ServletInputStream myIn;
+    private final ServletInputStream myIn;
 }
 
 

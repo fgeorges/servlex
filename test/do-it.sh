@@ -48,8 +48,9 @@ if [[ ! -d "${BASEDIR}" ]]; then
 fi
 
 # the Tomcat dir
-TOMCAT=${BASEDIR}/apache-tomcat-8.0.29
-#TOMCAT=${BASEDIR}/apache-tomcat-9.0.0.M1
+TOMCAT=${BASEDIR}/apache-tomcat-8.0.33
+#TOMCAT=${BASEDIR}/apache-tomcat-8.5.0
+#TOMCAT=${BASEDIR}/apache-tomcat-9.0.0.M4
 if [[ ! -d "${TOMCAT}" ]]; then
     die "INTERNAL ERROR: The install directory does not look to be correct?!?";
 fi

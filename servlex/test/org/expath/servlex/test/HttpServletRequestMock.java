@@ -31,6 +31,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 /**
@@ -314,6 +315,11 @@ public class HttpServletRequestMock
     }
 
     @Override
+    public long getContentLengthLong() {
+        return getContentLength();
+    }
+
+    @Override
     public ServletInputStream getInputStream() throws IOException {
         throw new UnsupportedOperationException();
     }
@@ -450,6 +456,16 @@ public class HttpServletRequestMock
 
     @Override
     public DispatcherType getDispatcherType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String changeSessionId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> type) throws IOException, ServletException {
         throw new UnsupportedOperationException();
     }
 }
