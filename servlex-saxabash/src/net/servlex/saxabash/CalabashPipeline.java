@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import net.servlex.saxon.SaxonHelper;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -51,12 +52,12 @@ import org.expath.servlex.connectors.XdmConnector;
 import org.expath.servlex.processors.Document;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
-import net.servlex.saxabash.model.SaxonSequence;
+import net.servlex.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
 
 import static org.expath.servlex.processors.XProcProcessor.OUTPUT_PORT_NAME;
-import net.servlex.saxabash.model.SaxonDocument;
+import net.servlex.saxon.model.SaxonDocument;
 import org.expath.servlex.tools.Cleanable;
 import org.expath.servlex.tools.Log;
 

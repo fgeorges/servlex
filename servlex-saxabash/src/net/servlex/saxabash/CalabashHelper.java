@@ -12,6 +12,7 @@ package net.servlex.saxabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.runtime.XPipeline;
 import javax.xml.namespace.QName;
+import net.servlex.saxon.Saxon;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
@@ -21,8 +22,8 @@ import org.expath.servlex.TechnicalException;
 import org.expath.servlex.processors.Processors;
 import org.expath.servlex.processors.Sequence;
 import org.expath.servlex.processors.TreeBuilder;
-import net.servlex.saxabash.model.SaxonDocument;
-import net.servlex.saxabash.model.SaxonSequence;
+import net.servlex.saxon.model.SaxonDocument;
+import net.servlex.saxon.model.SaxonSequence;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Log;
 
@@ -52,7 +53,7 @@ public class CalabashHelper
         XdmValue sequence = ex.getNode();
         LOG.error("TODO: Cannot get the p:error input out of an XProcException");
         Sequence seq = sequence == null
-                ? SaxonCalabash.makeEmptySequence()
+                ? Saxon.makeEmptySequence()
                 : new SaxonSequence(sequence);
         return new ComponentError(ex, name, msg, seq);
     }

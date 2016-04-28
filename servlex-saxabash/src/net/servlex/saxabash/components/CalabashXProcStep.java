@@ -25,7 +25,7 @@ import net.servlex.saxabash.CalabashPipeline;
 import net.servlex.saxabash.CalabashXProc;
 import org.expath.servlex.runtime.ComponentError;
 import org.expath.servlex.tools.Auditor;
-import net.servlex.saxabash.SaxonHelper;
+import net.servlex.saxon.SaxonHelper;
 import org.expath.servlex.tools.Log;
 
 /**
