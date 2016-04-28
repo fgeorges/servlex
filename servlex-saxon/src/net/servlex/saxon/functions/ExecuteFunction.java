@@ -21,16 +21,16 @@ import org.expath.servlex.processors.Processors;
  *
  *     web:execute($exec as element(web:exec-program)) as element(web:exec-result)
  * 
- * <exec-program>
- *    <cwd>/home/servlex/expath-web-content</cwd>
- *    <program>git</program>
- *    <option>update</option>
- * </exec-program>
+ * &lt;exec-program&gt;
+ *    &lt;cwd&gt;/home/servlex/expath-web-content&lt;/cwd&gt;
+ *    &lt;program&gt;git&lt;/program&gt;
+ *    &lt;option&gt;update&lt;/option&gt;
+ * &lt;/exec-program&gt;
  * 
- * <exec-result code="0">
- *    <stdout>...</stdout>
- *    <stderr>...</stderr>
- * </exec-result>
+ * &lt;exec-result code="0"&gt;
+ *    &lt;stdout&gt;...&lt;/stdout&gt;
+ *    &lt;stderr&gt;...&lt;/stderr&gt;
+ * &lt;/exec-result&gt;
  * 
  * TODO: Explicitly allow some webapps to use this extension (through a white
  * list, in system properties).

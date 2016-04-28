@@ -22,17 +22,17 @@ import org.expath.servlex.processors.Processors;
  *     web:parse-header-value($value as xs:string) as element(web:header)
  *
  * web:parse-header-value('text/html,application/xhtml+xml,application/xml;q=0.9,* /*;q=0.8')
- * =>
- *    <web:header>
- *       <web:element name="text/html"/>
- *       <web:element name="application/xhtml+xml"/>
- *       <web:element name="application/xml">
- *          <web:param name="q" value="0.9"/>
- *       </web:element>
- *       <web:element name="* /*">
- *          <web:param name="q" value="0.8"/>
- *       </web:element>
- *    </web:header>
+ * =&gt;
+ *    &lt;web:header&gt;
+ *       &lt;web:element name="text/html"/&gt;
+ *       &lt;web:element name="application/xhtml+xml"/&gt;
+ *       &lt;web:element name="application/xml"&gt;
+ *          &lt;web:param name="q" value="0.9"/&gt;
+ *       &lt;/web:element&gt;
+ *       &lt;web:element name="* /*"&gt;
+ *          &lt;web:param name="q" value="0.8"/&gt;
+ *       &lt;/web:element&gt;
+ *    &lt;/web:header&gt;
  *
  * @author Florent Georges
  */

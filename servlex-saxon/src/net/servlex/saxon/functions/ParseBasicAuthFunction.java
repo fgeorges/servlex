@@ -21,7 +21,7 @@ import org.expath.servlex.processors.Processors;
  * 
  *     web:parse-basic-auth($header as xs:string) as element(web:basic-auth)
  * 
- *     <web:basic-auth username="..." password="..."/>
+ *     &lt;web:basic-auth username="..." password="..."/&gt;
  * 
  * The value of $header is the value of the Authorization header.  It must be
  * of the form "Basic XXX" where XXX is "user:password" encoded using Base64.
