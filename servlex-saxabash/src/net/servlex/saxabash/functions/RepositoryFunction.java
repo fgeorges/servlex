@@ -1,67 +1,64 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       RepositoryFunction.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-09-15                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.value.SequenceType;
+import org.expath.servlex.ServerConfig;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * Implements web:repository().
+ * 
+ * The XPath signatures:
+ *
+ *     web:repository() as item()
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class RepositoryFunction
+        extends ExtensionFunctionDefinition
 {
-    public RegexPattern(String regex)
+    public RepositoryFunction(ServerConfig config)
     {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        myConfig = config;
     }
 
     @Override
-    public String toString()
+    public StructuredQName getFunctionQName()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return FunTypes.qname(LOCAL_NAME);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public SequenceType[] getArgumentTypes()
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return FunTypes.types();
     }
 
-    private final String myRegex;
+    @Override
+    public SequenceType getResultType(SequenceType[] params)
+    {
+        return FunTypes.SEVERAL_ITEM;
+    }
+
+    @Override
+    public ExtensionFunctionCall makeCallExpression()
+    {
+        return new RepositoryCall(myConfig);
+    }
+
+    static final String LOCAL_NAME = "repository";
+
+    private ServerConfig myConfig;
 }
 
 

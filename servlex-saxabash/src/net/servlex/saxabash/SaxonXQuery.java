@@ -1,67 +1,50 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonXQuery.java                                            */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.servlex.saxabash.components.SaxonXQueryFunction;
+import net.servlex.saxabash.components.SaxonXQueryModule;
+import net.sf.saxon.s9api.Processor;
+import org.expath.pkg.repo.Repository;
+import org.expath.servlex.components.Component;
+import org.expath.servlex.processors.XQueryProcessor;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * The Saxon implementation of the XQuery processor.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+class SaxonXQuery
+        implements XQueryProcessor
 {
-    public RegexPattern(String regex)
+    // FIXME: Repo shoud not be needed here...
+    public SaxonXQuery(Processor saxon, Repository repo)
     {
-        myRegex = regex;
+        mySaxon = saxon;
+        myRepo = repo;
     }
 
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
+    public Component makeQuery(String uri)
     {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
+        return new SaxonXQueryModule(mySaxon, myRepo, uri);
     }
 
-    public String replace(String value, String rewrite)
-            throws TechnicalException
+    public Component makeFunction(String ns, String localname)
     {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        return new SaxonXQueryFunction(mySaxon, ns, localname);
     }
 
-    @Override
-    public String toString()
-    {
-        return "#<regex-pattern " + myRegex + ">";
-    }
-
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
-    {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
-    }
-
-    private final String myRegex;
+    /** FIXME: Should not be needed here. */
+    private Repository myRepo;
+    /** The Saxon instance. */
+    private Processor mySaxon;
 }
 
 

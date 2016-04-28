@@ -1,67 +1,59 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       GetRequestFieldFunction.java                                */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2010-11-22                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.value.SequenceType;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * TODO: Doc...
+ *
+ *     web:get-request-field($name as xs:string) as item()*
+ *
+ * TODO: Add a second arity with the default value to use in case the request
+ * field for that name is not defined:
+ *
+ *     web:get-request-field($name as xs:string, $default as item()*) as item()*
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class GetRequestFieldFunction
+        extends ExtensionFunctionDefinition
 {
-    public RegexPattern(String regex)
+    @Override
+    public StructuredQName getFunctionQName()
     {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        return FunTypes.qname(LOCAL_NAME);
     }
 
     @Override
-    public String toString()
+    public SequenceType[] getArgumentTypes()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return FunTypes.types(FunTypes.SINGLE_STRING);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public SequenceType getResultType(SequenceType[] params)
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return FunTypes.ANY_ITEM;
     }
 
-    private final String myRegex;
+    @Override
+    public ExtensionFunctionCall makeCallExpression()
+    {
+        return new GetRequestFieldCall();
+    }
+
+    static final String LOCAL_NAME = "get-request-field";
 }
 
 

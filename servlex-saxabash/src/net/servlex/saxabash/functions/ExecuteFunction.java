@@ -1,67 +1,82 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       ExecuteFunction.java                                        */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-12-06                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.value.SequenceType;
+import org.expath.servlex.processors.Processors;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * TODO: Doc...
  *
+ *     web:execute($exec as element(web:exec-program)) as element(web:exec-result)
+ * 
+ * <exec-program>
+ *    <cwd>/home/servlex/expath-web-content</cwd>
+ *    <program>git</program>
+ *    <option>update</option>
+ * </exec-program>
+ * 
+ * <exec-result code="0">
+ *    <stdout>...</stdout>
+ *    <stderr>...</stderr>
+ * </exec-result>
+ * 
+ * TODO: Explicitly allow some webapps to use this extension (through a white
+ * list, in system properties).
+ * 
  * @author Florent Georges
  */
-public class RegexPattern
+public class ExecuteFunction
+        extends ExtensionFunctionDefinition
 {
-    public RegexPattern(String regex)
+    public ExecuteFunction(Processors procs, Processor saxon)
     {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        myProcs = procs;
+        mySaxon = saxon;
     }
 
     @Override
-    public String toString()
+    public StructuredQName getFunctionQName()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return FunTypes.qname(LOCAL_NAME);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public SequenceType[] getArgumentTypes()
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return FunTypes.types(
+                FunTypes.single_element(PROGRAM_NAME, mySaxon));
     }
 
-    private final String myRegex;
+    @Override
+    public SequenceType getResultType(SequenceType[] params)
+    {
+        return FunTypes.single_element(RESULT_NAME, mySaxon);
+    }
+
+    @Override
+    public ExtensionFunctionCall makeCallExpression()
+    {
+        return new ExecuteCall(myProcs);
+    }
+
+    static final String LOCAL_NAME = "execute";
+
+    private static final String PROGRAM_NAME = "exec-program";
+    private static final String RESULT_NAME  = "exec-result";
+    private final Processor  mySaxon;
+    private final Processors myProcs;
 }
 
 

@@ -18,6 +18,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,10 +36,15 @@ import org.apache.catalina.loader.WebappClassLoader;
  * This loader scans the repository when it is started, and add the JAR files
  * from Saxon and Calabash extensions to the classpath.
  * 
+ * In addition to the JAR files of the packages in the repository, this loader
+ * also adds all JAR files under the directory `.servlex/lib/` at the repository
+ * root.  This is the idiomatic way to plug the `Processors` implementation to
+ * the classpath.
+ * 
  * One way of plugging it into Tomcat is to add the following `Loader` element
  * within the `Context` element in `conf/catalina/localhost/servlex.xml`:
  * 
- *     &lt;Loader loaderClass="net.servlex.loader.RepoClassLoader"/>
+ *     &lt;Loader loaderClass="net.servlex.loader.RepoClassLoader"/&gt;
  * 
  * The JAR file containing this class must be put in Tomcat's own `lib/`
  * directory.
@@ -83,6 +89,17 @@ public class RepoClassLoader
         }
     }
 
+    private DirectoryStream<Path> children(Path dir, String glob)
+    {
+        try {
+            return Files.newDirectoryStream(dir);
+        }
+        catch ( IOException ex ) {
+            error("Error browsing the children of the Servlex lib dir", ex);
+            return null; // can't happen, make compiler happy
+        }
+    }
+
     private Path getRepoDir()
     {
         // get the repo dir path
@@ -96,12 +113,10 @@ public class RepoClassLoader
         return dir;
     }
 
-    private Set<Path> getPackageDirs()
+    private Set<Path> getPackageDirs(Path repo)
     {
-        // the repo
-        Path repo = getRepoDir();
         // the private repo dir
-        Path cellar = repo.resolve(".expath-pkg");
+        Path cellar = repo.resolve(CELLAR_DIR);
         ensureDir(cellar, "Private EXPath dir");
         // the repo package list
         Path pkgs = cellar.resolve("packages.txt");
@@ -133,8 +148,18 @@ public class RepoClassLoader
      */
     private void initRepo()
     {
+        // the repo
+        Path repo = getRepoDir();
+        // scan the .servlex/lib/ dir, if present
+        Path own = repo.resolve(OWN_LIB_DIR);
+        if ( Files.exists(own) ) {
+            ensureDir(own, "Servlex lib dir");
+            for ( Path p : children(own, "*.jar") ) {
+                addClasspathEntry(p.toUri());
+            }
+        }
         // browse the children of the repo dir
-        for ( Path pkg : getPackageDirs() ) {
+        for ( Path pkg : getPackageDirs(repo) ) {
             // [repo]/[pkg]/.saxon
             Path saxon = pkg.resolve(".saxon");
             if ( Files.exists(saxon) ) {
@@ -186,14 +211,13 @@ public class RepoClassLoader
         URI  root = abs.toUri();
         // read lines
         for ( String line : readLines(cp) ) {
-            // should be relative to package content dir
-            // but allows it to be absolute as well
+            // should be relative to `root` but allows it to be absolute as well
             URI uri = root.resolve(line);
-            addClasspathLine(uri);
+            addClasspathEntry(uri);
         }
     }
 
-    private void addClasspathLine(URI uri)
+    private void addClasspathEntry(URI uri)
     {
         // Use proper logging here? Beware we are in Tomcat top-level
         // classloader context, here.
@@ -227,6 +251,16 @@ public class RepoClassLoader
      * from here.
      */
     public static final String REPO_DIR_PROPERTY = "org.expath.servlex.repo.dir";
+
+    /**
+     * The name of the cellar directory in the repository.
+     */
+    public static final String CELLAR_DIR = ".expath-pkg";
+
+    /**
+     * The name of Servlex's own library directory in the repository.
+     */
+    public static final String OWN_LIB_DIR = ".servlex/lib";
 }
 
 

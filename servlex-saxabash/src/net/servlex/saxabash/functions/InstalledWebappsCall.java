@@ -1,67 +1,54 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       InstalledWebappsCall.java                                   */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-09-15                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import java.util.Set;
+import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.om.Sequence;
+import net.sf.saxon.trans.XPathException;
+import org.expath.servlex.WebRepository;
+import org.expath.servlex.tools.Log;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * Implements web:installed-webapps().
+ * 
+ * The XPath signature:
  *
+ *     web:installed-webapps($repo as item()) as xs:string*
+ * 
+ * The parameter $repo must be a {@link RepositoryItem}.
+ * 
+ * TODO: Maybe return more information about each webapp, as XML elements.
+ * 
  * @author Florent Georges
  */
-public class RegexPattern
+public class InstalledWebappsCall
+        extends ExtensionFunctionCall
 {
-    public RegexPattern(String regex)
-    {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
-    }
-
     @Override
-    public String toString()
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
+            throws XPathException
     {
-        return "#<regex-pattern " + myRegex + ">";
+        // the params
+        FunParams params = new FunParams(orig_params, 1, 1);
+        WebRepository repo = params.asRepository(0, false);
+        // log it
+        LOG.debug(params.format(InstalledWebappsFunction.LOCAL_NAME).param(repo).value());
+        // do it
+        Set<String> value = repo.getContextRoots();
+        return FunReturn.value(value);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
-    {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
-    }
-
-    private final String myRegex;
+    /** The logger. */
+    private static final Log LOG = new Log(InstalledWebappsCall.class);
 }
 
 

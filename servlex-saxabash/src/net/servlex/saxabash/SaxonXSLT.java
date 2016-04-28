@@ -1,67 +1,52 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonXSLT.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-04-15                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.servlex.saxabash.components.SaxonXSLTTransform;
+import net.servlex.saxabash.components.SaxonXSLTFunction;
+import net.servlex.saxabash.components.SaxonXSLTTemplate;
+import org.expath.servlex.components.Component;
+import org.expath.servlex.processors.XSLTProcessor;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * The Saxon implementation of the XSLT processor.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+class SaxonXSLT
+        implements XSLTProcessor
 {
-    public RegexPattern(String regex)
+    public SaxonXSLT(SaxonCalabash saxon)
     {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        mySaxon = saxon;
     }
 
     @Override
-    public String toString()
+    public Component makeTransform(String uri)
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return new SaxonXSLTTransform(mySaxon, uri);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public Component makeFunction(String uri, String ns, String localname)
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return new SaxonXSLTFunction(mySaxon, uri, ns, localname);
     }
 
-    private final String myRegex;
+    @Override
+    public Component makeTemplate(String uri, String ns, String localname)
+    {
+        return new SaxonXSLTTemplate(mySaxon, uri, ns, localname);
+    }
+
+    private final SaxonCalabash mySaxon;
 }
 
 

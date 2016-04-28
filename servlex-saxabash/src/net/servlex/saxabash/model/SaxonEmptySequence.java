@@ -1,67 +1,69 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonEmptySequence.java                                     */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-05-07                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import java.util.ArrayList;
+import java.util.List;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmValue;
+import org.expath.servlex.processors.Element;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Sequence;
 
 /**
- * Encapsulate XPath regex matching and replacing.
- *
+ * An empty sequence for Saxon.
+ * 
  * @author Florent Georges
  */
-public class RegexPattern
+public class SaxonEmptySequence
+        extends SaxonSequence
 {
-    public RegexPattern(String regex)
+    private static final List<XdmItem> ourItemsList = new ArrayList<XdmItem>();
+    private static final XdmValue ourXdmValue = new XdmValue(ourItemsList);
+    private static final SaxonEmptySequence ourInstance = new SaxonEmptySequence();
+
+    public static SaxonEmptySequence getInstance()
     {
-        myRegex = regex;
+        return ourInstance;
     }
 
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
+    private SaxonEmptySequence()
     {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        super(ourXdmValue);
     }
 
     @Override
-    public String toString()
+    public Item itemAt(int position)
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return null;
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public Element elementAt(int position)
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return null;
     }
 
-    private final String myRegex;
+    @Override
+    public Sequence subSequence(int start)
+    {
+        return ourInstance;
+    }
+
+    // TODO: Should be package visible, but is used in XdmConnector (which
+    // should use instead a method on SaxonHelper which should be move here...)
+    @Override
+    public XdmValue makeSaxonValue()
+    {
+        return ourXdmValue;
+    }
 }
 
 

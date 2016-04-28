@@ -13,8 +13,6 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import net.sf.saxon.type.ValidationException;
-import net.sf.saxon.value.DayTimeDurationValue;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.Servlex;
 import org.expath.servlex.ServlexException;
@@ -247,18 +245,53 @@ public class Auditor
 
     /**
      * Return a literal XML Schema duration, from a number of milliseconds.
+     * 
+     * Stolen from DayTimeDurationValue, to remove the dependency on Saxon.
      */
     private String duration(long millis)
             throws ServlexException
     {
-        try {
-            DayTimeDurationValue duration = DayTimeDurationValue.fromMilliseconds(millis);
-            return duration.getStringValue();
+        int days    = (int) (millis / (24L * 60L * 60L * 1000L));
+        int hours   = (int) (millis % (24L * 60L * 60L * 1000L) / (60L * 60L * 1000L));
+        int minutes = (int) (millis % (60L * 60L * 1000L) / (60L * 1000L));
+        int seconds = (int) (millis % (60L * 1000L) / 1000L);
+        int ms      = (int) (millis % 1000L);
+
+        StringBuilder buf = new StringBuilder("P");
+        if (days != 0) {
+            buf.append(days + "D");
         }
-        catch ( ValidationException ex ) {
-            String msg = "Internal error, computing duration from: " + millis;
-            throw new ServlexException(500, msg, ex);
+        if (days == 0 || hours != 0 || minutes != 0 || seconds != 0 || ms != 0) {
+            buf.append('T');
         }
+        if (hours != 0) {
+            buf.append(hours + "H");
+        }
+        if (minutes != 0) {
+            buf.append(minutes + "M");
+        }
+        if (seconds != 0 || ms != 0 || (days == 0 && minutes == 0 && hours == 0)) {
+            if (ms == 0) {
+                buf.append(seconds + "S");
+            }
+            else {
+                long total = (seconds * 1000) + ms;
+                String mss = total + "";
+                if (seconds == 0) {
+                    mss = "0000" + mss;
+                    mss = mss.substring(mss.length() - 4);
+                }
+                buf.append(mss.substring(0, mss.length() - 3));
+                buf.append('.');
+                int lastSigDigit = mss.length() - 1;
+                while (mss.charAt(lastSigDigit) == '0') {
+                    lastSigDigit--;
+                }
+                buf.append(mss.substring(mss.length() - 3, lastSigDigit + 1));
+                buf.append('S');
+            }
+        }
+        return buf.toString();
     }
 
     private ServerConfig myConfig;

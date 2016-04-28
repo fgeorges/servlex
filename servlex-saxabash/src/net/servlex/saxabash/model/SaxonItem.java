@@ -1,67 +1,88 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonItem.java                                              */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.s9api.XdmItem;
+import org.expath.servlex.processors.Item;
+import org.expath.servlex.processors.Sequence;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * A document for Saxon.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class SaxonItem
+        implements Item
 {
-    public RegexPattern(String regex)
+    public SaxonItem(XdmItem item)
     {
-        myRegex = regex;
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
+        }
+        myItem = item;
     }
 
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
+    public SaxonItem(net.sf.saxon.om.Item item)
     {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
+        if ( item == null ) {
+            throw new NullPointerException("Underlying item is null for Saxon item");
         }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        myItem = AccessProtectedItem.wrap(item);
     }
 
     @Override
-    public String toString()
+    public Sequence asSequence()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return new SaxonSequence(myItem);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public String stringValue()
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return myItem.getStringValue();
     }
 
-    private final String myRegex;
+    // TODO: Should be package visible, but is used in ParseBasicAuthCall
+    // (which should use instead a method on SaxonHelper which should be moved
+    // here...)
+    public XdmItem getXdmItem()
+    {
+        return myItem;
+    }
+
+    static SaxonItem asSaxonItem(Item item)
+    {
+        if ( ! (item instanceof SaxonItem) ) {
+            throw new IllegalStateException("Not a Saxon item: " + item);
+        }
+        return (SaxonItem) item;
+    }
+
+    // TODO: Should be package visible, but is used in SaxonHelper (which
+    // should be moved here...)
+    public static XdmItem getXdmItem(Item item)
+    {
+        SaxonItem sitem = asSaxonItem(item);
+        return sitem.getXdmItem();
+    }
+
+    private XdmItem myItem;
+
+    private static class AccessProtectedItem
+            extends XdmItem
+    {
+        public static XdmItem wrap(net.sf.saxon.om.Item item)
+        {
+            return wrapItem(item);
+        }
+    }
 }
 
 

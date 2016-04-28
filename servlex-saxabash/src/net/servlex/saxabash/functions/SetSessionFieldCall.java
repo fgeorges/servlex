@@ -1,67 +1,60 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SetSessionFieldCall.java                                    */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2010-06-10                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.om.Sequence;
+import net.sf.saxon.trans.XPathException;
+import org.expath.servlex.Servlex;
 import org.expath.servlex.TechnicalException;
+import net.servlex.saxabash.model.SaxonSequence;
+import org.expath.servlex.tools.Log;
+import org.expath.servlex.tools.Properties;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * Set the value of a property in the session.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class SetSessionFieldCall
+        extends ExtensionFunctionCall
 {
-    public RegexPattern(String regex)
-    {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
-    }
-
     @Override
-    public String toString()
+    public Sequence call(XPathContext ctxt, Sequence[] orig_params)
+            throws XPathException
     {
-        return "#<regex-pattern " + myRegex + ">";
+        // the params
+        FunParams params = new FunParams(orig_params, 2, 2);
+        String name = params.asString(0, false);
+        Sequence value = orig_params[1];
+        // log it
+        LOG.debug(params.format(SetSessionFieldFunction.LOCAL_NAME).param(name).param(value).value());
+        // setting the sequence in the session
+        try {
+            Properties props = Servlex.getSessionMap();
+            org.expath.servlex.processors.Sequence seq = new SaxonSequence(value);
+            props.set(name, seq);
+            if ( LOG.trace()) {
+                LOG.trace("Use session map: " + props);
+                LOG.trace("Set key: " + name + ", to: " + seq + " (" + value + ")");
+            }
+            return FunReturn.empty();
+        }
+        catch ( TechnicalException ex ) {
+            throw new XPathException("Error in the Servlex session management", ex);
+        }
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
-    {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
-    }
-
-    private final String myRegex;
+    /** The logger. */
+    private static final Log LOG = new Log(SetSessionFieldCall.class);
 }
 
 

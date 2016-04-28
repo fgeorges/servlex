@@ -1,67 +1,68 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonDocument.java                                          */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-04-30                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Document;
+import org.expath.servlex.processors.Element;
+import net.servlex.saxabash.SaxonHelper;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * A document for Saxon.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class SaxonDocument
+        extends SaxonItem
+        implements Document
 {
-    public RegexPattern(String regex)
-    {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
+    public SaxonDocument(XdmNode doc)
             throws TechnicalException
     {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
+        super(doc);
+        if ( doc == null ) {
+            throw new NullPointerException("Underlying node is null for Saxon document");
         }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
+        XdmNodeKind kind = doc.getNodeKind();
+        if ( kind != XdmNodeKind.DOCUMENT ) {
+            throw new TechnicalException("Node is not a document, for Saxon document: " + kind);
         }
+        myDoc = doc;
     }
 
     @Override
-    public String toString()
-    {
-        return "#<regex-pattern " + myRegex + ">";
-    }
-
-    private Matcher toJavaMatcher(String value)
+    public Element getRootElement()
             throws TechnicalException
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        XdmNode elem = SaxonHelper.getDocumentRootElement(this);
+        return new SaxonElement(elem);
     }
 
-    private final String myRegex;
+    // TODO: Should be package visible, but is used in CalabashHelper (which
+    // should be moved in this package...)
+    public XdmNode getSaxonNode()
+    {
+        return myDoc;
+    }
+
+    SaxonSequence getChildren()
+    {
+        XdmSequenceIterator children = myDoc.axisIterator(Axis.CHILD);
+        return new SaxonSequence(children);
+    }
+
+    private XdmNode myDoc;
 }
 
 

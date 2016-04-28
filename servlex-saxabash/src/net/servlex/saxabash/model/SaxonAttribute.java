@@ -1,67 +1,54 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       SaxonAttribute.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2013-05-06                                                  */
 /*  Tags:                                                                   */
 /*      Copyright (c) 2013 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javax.xml.namespace.QName;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
 import org.expath.servlex.TechnicalException;
+import org.expath.servlex.processors.Attribute;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * An element for Saxon.
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class SaxonAttribute
+        extends SaxonItem
+        implements Attribute
 {
-    public RegexPattern(String regex)
-    {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
+    public SaxonAttribute(XdmNode attr)
             throws TechnicalException
     {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
+        super(attr);
+        if ( attr == null ) {
+            throw new NullPointerException("Underlying node is null for Saxon attribute");
         }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
+        XdmNodeKind kind = attr.getNodeKind();
+        if ( kind != XdmNodeKind.ATTRIBUTE ) {
+            throw new TechnicalException("Node is not an attribute, for Saxon attribute: " + kind);
         }
+        myAttr = attr;
     }
 
     @Override
-    public String toString()
+    public QName name()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        net.sf.saxon.s9api.QName name = myAttr.getNodeName();
+        String ns     = name.getNamespaceURI();
+        String local  = name.getLocalName();
+        String prefix = name.getPrefix();
+        return new QName(ns, local, prefix);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
-    {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
-    }
-
-    private final String myRegex;
+    private XdmNode myAttr;
 }
 
 

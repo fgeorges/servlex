@@ -1,67 +1,79 @@
 /****************************************************************************/
-/*  File:       RegexPattern.java                                           */
+/*  File:       ParseHeaderValueFunction.java                               */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-12-21                                                  */
+/*  Date:       2010-11-26                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2010 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.servlex.tools;
+package net.servlex.saxabash.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.expath.servlex.TechnicalException;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.value.SequenceType;
+import org.expath.servlex.processors.Processors;
 
 /**
- * Encapsulate XPath regex matching and replacing.
+ * TODO: Doc...
+ *
+ *     web:parse-header-value($value as xs:string) as element(web:header)
+ *
+ * web:parse-header-value('text/html,application/xhtml+xml,application/xml;q=0.9,* /*;q=0.8')
+ * =>
+ *    <web:header>
+ *       <web:element name="text/html"/>
+ *       <web:element name="application/xhtml+xml"/>
+ *       <web:element name="application/xml">
+ *          <web:param name="q" value="0.9"/>
+ *       </web:element>
+ *       <web:element name="* /*">
+ *          <web:param name="q" value="0.8"/>
+ *       </web:element>
+ *    </web:header>
  *
  * @author Florent Georges
  */
-public class RegexPattern
+public class ParseHeaderValueFunction
+        extends ExtensionFunctionDefinition
 {
-    public RegexPattern(String regex)
+    public ParseHeaderValueFunction(Processors procs, Processor saxon)
     {
-        myRegex = regex;
-    }
-
-    public RegexMatcher matcher(String value)
-            throws TechnicalException
-    {
-        Matcher m = toJavaMatcher(value);
-        return new RegexMatcher(m, value);
-    }
-
-    public String replace(String value, String rewrite)
-            throws TechnicalException
-    {
-        if ( rewrite == null ) {
-            return value;
-        }
-        else {
-            try {
-                return toJavaMatcher(value).replaceAll(rewrite);
-            }
-            catch ( IndexOutOfBoundsException ex ) {
-                throw new TechnicalException("Error replacing matches in pattern", ex);
-            }
-        }
+        myProcs = procs;
+        mySaxon = saxon;
     }
 
     @Override
-    public String toString()
+    public StructuredQName getFunctionQName()
     {
-        return "#<regex-pattern " + myRegex + ">";
+        return FunTypes.qname(LOCAL_NAME);
     }
 
-    private Matcher toJavaMatcher(String value)
-            throws TechnicalException
+    @Override
+    public SequenceType[] getArgumentTypes()
     {
-        Pattern p = Pattern.compile(myRegex);
-        return p.matcher(value);
+        return FunTypes.types(FunTypes.SINGLE_STRING);
     }
 
-    private final String myRegex;
+    @Override
+    public SequenceType getResultType(SequenceType[] params)
+    {
+        return FunTypes.single_element(ELEMENT_NAME, mySaxon);
+    }
+
+    @Override
+    public ExtensionFunctionCall makeCallExpression()
+    {
+        return new ParseHeaderValueCall(myProcs);
+    }
+
+    static final String LOCAL_NAME = "parse-header-value";
+
+    private static final String ELEMENT_NAME = "header";
+    private Processors myProcs;
+    private Processor mySaxon;
 }
 
 
