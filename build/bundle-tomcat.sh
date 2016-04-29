@@ -6,6 +6,11 @@ die() {
     exit 1;
 }
 
+SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
+SAXON_DEPS=../servlex-saxon/lib
+SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
+SAXABASH_DEPS=../servlex-saxabash/lib
+
 VERSION="$1"
 # the Servlex version number
 if [[ -z "${VERSION}" ]]; then
@@ -16,7 +21,7 @@ fi
 IZPACK=/Applications/IzPack/bin/compile
 
 # the Tomcat base name (both .tar.gz and dir must have the same name)
-TOMCAT_NAME=apache-tomcat-8.0.29
+TOMCAT_NAME=apache-tomcat-8.0.33
 
 # the dir containing this script
 BASEDIR=`dirname $0`
@@ -38,7 +43,7 @@ echo >> "${PROPS}"
 echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
 echo "# " >> "${PROPS}"
 echo "# The processors implementation class to use" >> "${PROPS}"
-echo 'org.expath.servlex.processors=org.expath.servlex.processors.saxon.SaxonCalabash' >> "${PROPS}"
+echo 'org.expath.servlex.processors=net.servlex.saxabash.Saxabash' >> "${PROPS}"
 echo "# The location of the repository" >> "${PROPS}"
 echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
 echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
@@ -70,10 +75,18 @@ cp ../servlex-loader/dist/servlex-loader.jar "${TOMCAT}/lib/"
 # creating the repo and the profiling directory
 mkdir "${TOMCAT}/repo"
 mkdir "${TOMCAT}/repo/.expath-web"
+mkdir "${TOMCAT}/repo/.servlex"
+mkdir "${TOMCAT}/repo/.servlex/lib"
 mkdir "${TOMCAT}/profiling"
 
 # empty webapps.xml file
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
+
+# the processors JAR files and their dependencies
+cp "${SAXON_PROC}"          "${TOMCAT}/repo/.servlex/lib/"
+cp "${SAXON_DEPS}"/*.jar    "${TOMCAT}/repo/.servlex/lib/"
+cp "${SAXABASH_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
+cp "${SAXABASH_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
 
 # the xrepo.sh script
 # TODO: Why did I copy xrepo.sh here?  Why don't I copy the original?

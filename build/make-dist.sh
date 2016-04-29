@@ -3,7 +3,7 @@
 # The version number to build a release for.  To edit when changing
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml
-DIST_VER=0.10.0
+DIST_VER=0.11.0pre1
 DIR=servlex-${DIST_VER}
 BIN="${DIR}/bin"
 SAMPLES="${DIR}/samples"
@@ -12,6 +12,10 @@ REVISION=`git show-ref --hash --abbrev HEAD`
 WAR=../servlex/dist/servlex.war
 JAR=../servlex/dist/servlex.jar
 LOADER=../servlex-loader/dist/servlex-loader.jar
+SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
+SAXON_DEPS=../servlex-saxon/lib
+SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
+SAXABASH_DEPS=../servlex-saxabash/lib
 
 HELLO=../samples/hello-world
 HELLO_dist=$HELLO/dist
@@ -69,6 +73,28 @@ fi
 
 # servlex loader JAR
 cp "$LOADER" ${DIR}/
+
+# build servlex-saxon
+( cd ../servlex-saxon/ && ant ) || die "Servlex Saxon processor build failed"
+if test \! -f "$SAXON_PROC"; then
+    die "$SAXON_PROC does not exist"
+fi
+
+# servlex saxon JAR
+mkdir ${DIR}/saxon
+cp "$SAXON_PROC"       ${DIR}/saxon/
+cp "$SAXON_DEPS"/*.jar ${DIR}/saxon/
+
+# build servlex-saxabash
+( cd ../servlex-saxabash/ && ant ) || die "Servlex Saxabash processor build failed"
+if test \! -f "$SAXABASH_PROC"; then
+    die "$SAXABASH_PROC does not exist"
+fi
+
+# servlex saxabash JAR
+mkdir ${DIR}/saxabash
+cp "$SAXABASH_PROC"       ${DIR}/saxabash/
+cp "$SAXABASH_DEPS"/*.jar ${DIR}/saxabash/
 
 # the bin dir
 mkdir ${BIN}

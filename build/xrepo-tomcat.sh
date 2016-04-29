@@ -34,6 +34,7 @@ die() {
 if test -z "${JAVA_HOME}"; then
     JAVA=java
 else
+    echo "Java home set to: ${JAVA_HOME}"
     JAVA="${JAVA_HOME}/bin/java"
 fi
 
@@ -65,26 +66,34 @@ if test \! -f "$pkg_java"; then
     die "Cannot find pkg-java JAR: $pkg_java"
 fi
 
+# the classpath
+CP=$tools_java:$tools_saxon:$pkg_java
+
+SERVLEX_LIB="${SERVLEX}/repo/.servlex/lib"
+
 # pkg-saxon
-pkg_saxon="$LIB/pkg-saxon-0.13.1.jar"
+pkg_saxon=`echo $SERVLEX_LIB/pkg-saxon-*.jar`
 if test \! -f "$pkg_saxon"; then
-    die "Cannot find pkg-saxon JAR: $pkg_saxon"
+    echo "Warning: Cannot find pkg-saxon JAR: $pkg_saxon"
+else
+    CP="$CP:$pkg_saxon"
 fi
 
 # pkg-calabash
-pkg_calabash="$LIB/pkg-calabash-0.13.1.jar"
+pkg_calabash=`echo $SERVLEX_LIB/pkg-calabash-*.jar`
 if test \! -f "$pkg_calabash"; then
-    die "Cannot find pkg-calabash JAR: $pkg_calabash"
+    echo "Warning: Cannot find pkg-calabash JAR: $pkg_calabash"
+else
+    CP="$CP:$pkg_calabash"
 fi
 
 # saxon
-saxon="$LIB/saxon9he.jar"
+saxon="$SERVLEX_LIB/saxon9he.jar"
 if test \! -f "$saxon"; then
-    die "Cannot find Saxon: $saxon"
+    echo "Warning: Cannot find Saxon: $saxon"
+else
+    CP="$CP:$saxon"
 fi
-
-# the classpath
-CP=$tools_java:$tools_saxon:$pkg_java:$pkg_saxon:$pkg_calabash:$saxon
 
 # do it!
 "$JAVA" -cp "$CP" org.expath.pkg.repo.tui.Main "$@"

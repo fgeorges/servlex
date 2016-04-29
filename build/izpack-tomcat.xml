@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="US-ASCII" standalone="yes"?>
-<installation version="1.0">
+<izpack:installation version="5.0"
+              xmlns:izpack="http://izpack.org/schema/installation"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="
+                  http://izpack.org/schema/installation
+                  http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
+
    <info>
       <appname>Servlex</appname>
-      <appversion>0.10.0</appversion>
+      <appversion>0.11.0pre1</appversion>
       <appsubpath>servlex</appsubpath>
+      <javaversion>1.8</javaversion>
       <authors>
          <author email="fgeorges@servlex.net" name="Florent Georges"/>
       </authors>
@@ -14,13 +21,16 @@
       <pack200/>
       <run-privileged condition="izpack.windowsinstall.vista|izpack.windowsinstall.7"/>
    </info>
+
+   <locale>
+      <langpack iso3="eng"/>
+   </locale>
+
    <guiprefs height="480" resizable="no" width="640">
       <modifier key="useFlags" value="yes"/>
       <modifier key="langDisplayType" value="default"/>
    </guiprefs>
-   <locale>
-      <langpack iso3="eng"/>
-   </locale>
+
    <!-- TODO: Add a panel at the end, pointing to the home page of
         the newly installed server, and to the README file in the
         install dir. -->
@@ -28,32 +38,34 @@
         installation process. -->
    <panels>
       <panel classname="CheckedHelloPanel"/>
-      <panel classname="PacksPanel"/>
       <panel classname="TargetPanel"/>
+      <panel classname="PacksPanel"/>
       <panel classname="InstallPanel"/>
       <panel classname="FinishPanel"/>
    </panels>
+
    <packs>
       <pack name="Servlex" preselected="yes" required="yes">
          <description>The Servlex server, bundled with Apache Tomcat 8.0.29.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.10.0/samples/hello-world/"           targetdir="$INSTALL_PATH"/>
          <file src="servlex-0.10.0/samples/hello-world-0.10.0.xaw" targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/LICENSE"        targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/NOTICE"         targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/LICENSE"        targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/NOTICE"         targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/RUNNING.txt"    targetdir="$INSTALL_PATH"/>
          <!-- TODO: Add the execution bit to the files in bin/. -->
-         <file src="apache-tomcat-8.0.29/bin/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/conf/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/lib/"           targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/logs/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/profiling/"     targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/repo/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/temp/"          targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/webapps/"       targetdir="$INSTALL_PATH"/>
-         <file src="apache-tomcat-8.0.29/work/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/bin/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/conf/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/lib/"           targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/logs/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/profiling/"     targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/repo/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/temp/"          targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/webapps/"       targetdir="$INSTALL_PATH"/>
+         <file src="apache-tomcat-8.0.33/work/"          targetdir="$INSTALL_PATH"/>
          <parsable targetfile="$INSTALL_PATH/conf/catalina.properties" type="java"/>
       </pack>
    </packs>
-</installation>
+
+</izpack:installation>
