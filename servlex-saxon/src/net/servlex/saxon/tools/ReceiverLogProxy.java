@@ -11,6 +11,7 @@ package net.servlex.saxon.tools;
 
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.om.NamespaceBinding;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.trans.XPathException;
@@ -73,7 +74,7 @@ public class ReceiverLogProxy
     }
 
     @Override
-    public void startElement(NodeName name, SchemaType type, int loc, int props) throws XPathException {
+    public void startElement(NodeName name, SchemaType type, Location loc, int props) throws XPathException {
         LOG.error("startElement: " + name + ", " + type + ", " + loc + ", " + props);
         myProxied.startElement(name, type, loc, props);
     }
@@ -85,7 +86,7 @@ public class ReceiverLogProxy
     }
 
     @Override
-    public void attribute(NodeName name, SimpleType type, CharSequence value, int loc, int props) throws XPathException {
+    public void attribute(NodeName name, SimpleType type, CharSequence value, Location loc, int props) throws XPathException {
         LOG.error("attribute: " + name + ", " + type + ", " + value + ", " + loc + ", " + props);
         myProxied.attribute(name, type, value, loc, props);
     }
@@ -103,19 +104,19 @@ public class ReceiverLogProxy
     }
 
     @Override
-    public void characters(CharSequence chars, int loc, int props) throws XPathException {
+    public void characters(CharSequence chars, Location loc, int props) throws XPathException {
         LOG.error("characters: " + chars + ", " + loc + ", " + props);
         myProxied.characters(chars, loc, props);
     }
 
     @Override
-    public void processingInstruction(String name, CharSequence data, int loc, int props) throws XPathException {
+    public void processingInstruction(String name, CharSequence data, Location loc, int props) throws XPathException {
         LOG.error("processingInstruction: " + name + ", " + data + ", " + loc + ", " + props);
         myProxied.processingInstruction(name, data, loc, props);
     }
 
     @Override
-    public void comment(CharSequence content, int loc, int props) throws XPathException {
+    public void comment(CharSequence content, Location loc, int props) throws XPathException {
         LOG.error("comment: " + content + ", " + loc + ", " + props);
         myProxied.comment(content, loc, props);
     }

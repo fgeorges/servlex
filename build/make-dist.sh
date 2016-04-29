@@ -14,7 +14,7 @@ JAR=../servlex/dist/servlex.jar
 LOADER=../servlex-loader/dist/servlex-loader.jar
 
 SHIP_SERVLEX_SAXON=true
-SHIP_SERVLEX_SAXABASH=true
+SHIP_SERVLEX_SAXABASH=false
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar

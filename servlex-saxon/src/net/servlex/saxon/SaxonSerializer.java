@@ -194,7 +194,7 @@ class SaxonSerializer
             method = "text";
             out = new Base64OutputStream(out, false);
         }
-        net.sf.saxon.s9api.Serializer serial = new net.sf.saxon.s9api.Serializer();
+        net.sf.saxon.s9api.Serializer serial = mySaxon.newSerializer();
         serial.setOutputStream(out);
         if ( myMethod == null && myMediaType != null ) {
             myMethod = method;
