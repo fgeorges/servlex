@@ -12,6 +12,9 @@ REVISION=`git show-ref --hash --abbrev HEAD`
 WAR=../servlex/dist/servlex.war
 JAR=../servlex/dist/servlex.jar
 LOADER=../servlex-loader/dist/servlex-loader.jar
+
+SHIP_SERVLEX_SAXON=true
+SHIP_SERVLEX_SAXABASH=true
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
@@ -74,27 +77,31 @@ fi
 # servlex loader JAR
 cp "$LOADER" ${DIR}/
 
-# build servlex-saxon
-( cd ../servlex-saxon/ && ant ) || die "Servlex Saxon processor build failed"
-if test \! -f "$SAXON_PROC"; then
-    die "$SAXON_PROC does not exist"
+if "$SHIP_SERVLEX_SAXON" = "true"; then
+    # build servlex-saxon
+    ( cd ../servlex-saxon/ && ant ) || die "Servlex Saxon processor build failed"
+    if test \! -f "$SAXON_PROC"; then
+        die "$SAXON_PROC does not exist"
+    fi
+
+    # servlex saxon JAR
+    mkdir ${DIR}/saxon
+    cp "$SAXON_PROC"       ${DIR}/saxon/
+    cp "$SAXON_DEPS"/*.jar ${DIR}/saxon/
 fi
 
-# servlex saxon JAR
-mkdir ${DIR}/saxon
-cp "$SAXON_PROC"       ${DIR}/saxon/
-cp "$SAXON_DEPS"/*.jar ${DIR}/saxon/
+if "$SHIP_SERVLEX_SAXABASH" = "true"; then
+    # build servlex-saxabash
+    ( cd ../servlex-saxabash/ && ant ) || die "Servlex Saxabash processor build failed"
+    if test \! -f "$SAXABASH_PROC"; then
+        die "$SAXABASH_PROC does not exist"
+    fi
 
-# build servlex-saxabash
-( cd ../servlex-saxabash/ && ant ) || die "Servlex Saxabash processor build failed"
-if test \! -f "$SAXABASH_PROC"; then
-    die "$SAXABASH_PROC does not exist"
+    # servlex saxabash JAR
+    mkdir ${DIR}/saxabash
+    cp "$SAXABASH_PROC"       ${DIR}/saxabash/
+    cp "$SAXABASH_DEPS"/*.jar ${DIR}/saxabash/
 fi
-
-# servlex saxabash JAR
-mkdir ${DIR}/saxabash
-cp "$SAXABASH_PROC"       ${DIR}/saxabash/
-cp "$SAXABASH_DEPS"/*.jar ${DIR}/saxabash/
 
 # the bin dir
 mkdir ${BIN}

@@ -6,6 +6,8 @@ die() {
     exit 1;
 }
 
+SHIP_SERVLEX_SAXON=true
+SHIP_SERVLEX_SAXABASH=true
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
@@ -43,7 +45,13 @@ echo >> "${PROPS}"
 echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
 echo "# " >> "${PROPS}"
 echo "# The processors implementation class to use" >> "${PROPS}"
-echo 'org.expath.servlex.processors=net.servlex.saxabash.Saxabash' >> "${PROPS}"
+if "$SHIP_SERVLEX_SAXABASH" = "true"; then
+    echo "org.expath.servlex.processors=net.servlex.saxabash.Saxabash" >> "${PROPS}"
+elif "$SHIP_SERVLEX_SAXON" = "true"; then
+    echo "org.expath.servlex.processors=net.servlex.saxon.Saxon" >> "${PROPS}"
+else
+    echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash" >> "${PROPS}"
+fi
 echo "# The location of the repository" >> "${PROPS}"
 echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
 echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
@@ -83,10 +91,14 @@ mkdir "${TOMCAT}/profiling"
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
 
 # the processors JAR files and their dependencies
-cp "${SAXON_PROC}"          "${TOMCAT}/repo/.servlex/lib/"
-cp "${SAXON_DEPS}"/*.jar    "${TOMCAT}/repo/.servlex/lib/"
-cp "${SAXABASH_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
-cp "${SAXABASH_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
+if "$SHIP_SERVLEX_SAXON" = "true" -o "$SHIP_SERVLEX_SAXABASH" = "true"; then
+    cp "${SAXON_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
+    cp "${SAXON_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
+fi
+if "$SHIP_SERVLEX_SAXABASH" = "true"; then
+    cp "${SAXABASH_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
+    cp "${SAXABASH_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
+fi
 
 # the xrepo.sh script
 # TODO: Why did I copy xrepo.sh here?  Why don't I copy the original?
