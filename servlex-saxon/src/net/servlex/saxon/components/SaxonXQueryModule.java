@@ -73,6 +73,7 @@ public class SaxonXQueryModule
             throws ServlexException
                  , ComponentError
     {
+        LOG.debug("Going to run query: " + myUri);
         auditor.run("query");
         XQueryExecutable exec = getCompiled(config);
         XQueryEvaluator eval = exec.load();

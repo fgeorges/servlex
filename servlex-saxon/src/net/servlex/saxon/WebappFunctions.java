@@ -35,6 +35,7 @@ import net.servlex.saxon.functions.InstalledWebappsFunction;
 import net.servlex.saxon.functions.ReloadWebappsFunction;
 import net.servlex.saxon.functions.RemoveWebappFunction;
 import net.servlex.saxon.functions.RepositoryFunction;
+// import net.servlex.saxon.functions.XQueryFunction;
 
 /**
  * Facade for all extensions functions in {@code org.expath.servlex.functions}.
@@ -99,6 +100,8 @@ public class WebappFunctions
         saxon.registerExtensionFunction(new ConfigParamFunction());
         // the execute function
         saxon.registerExtensionFunction(new ExecuteFunction(procs, saxon));
+        // the xquery evaluation function
+        // saxon.registerExtensionFunction(new XQueryFunction(saxon));
     }
 }
 

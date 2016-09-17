@@ -1,9 +1,9 @@
 /****************************************************************************/
-/*  File:       ParseBasicAuthFunction.java                                 */
+/*  File:       XQueryFunction.java                                         */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2012-05-04                                                  */
+/*  Date:       2016-09-11                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2012 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2016 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
@@ -14,26 +14,22 @@ import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.value.SequenceType;
-import org.expath.servlex.processors.Processors;
 
 /**
- * Parse the value of an Authorization HTTP header with Basic scheme.
+ * Implements web:xquery().
  * 
- *     web:parse-basic-auth($header as xs:string) as element(web:basic-auth)
- * 
- *     &lt;web:basic-auth username="..." password="..."/&gt;
- * 
- * The value of $header is the value of the Authorization header.  It must be
- * of the form "Basic XXX" where XXX is "user:password" encoded using Base64.
+ *     web:xquery($query as xs:string,
+ *                $input as document-node()) as item()*
  *
  * @author Florent Georges
+ * 
+ * TODO: Externalize it in a package?
  */
-public class ParseBasicAuthFunction
+public class XQueryFunction
         extends ExtensionFunctionDefinition
 {
-    public ParseBasicAuthFunction(Processors procs, Processor saxon)
+    public XQueryFunction(Processor saxon)
     {
-        myProcs = procs;
         mySaxon = saxon;
     }
 
@@ -44,27 +40,32 @@ public class ParseBasicAuthFunction
     }
 
     @Override
+    public int getMinimumNumberOfArguments()
+    {
+        return 2;
+    }
+
+    @Override
     public SequenceType[] getArgumentTypes()
     {
-        return FunTypes.types(FunTypes.SINGLE_STRING);
+        return FunTypes.types(FunTypes.SINGLE_STRING, FunTypes.SINGLE_DOCUMENT);
     }
 
     @Override
     public SequenceType getResultType(SequenceType[] params)
     {
-        return FunTypes.single_element(ELEMENT_NAME, mySaxon);
+        return FunTypes.ANY_ITEM;
     }
 
     @Override
     public ExtensionFunctionCall makeCallExpression()
     {
-        return new ParseBasicAuthCall(myProcs);
+        return new XQueryCall(mySaxon);
     }
 
-    static final String LOCAL_NAME = "parse-basic-auth";
-
-    private static final String ELEMENT_NAME = "basic-auth";
-    private final Processors myProcs;
+    /** The local name of the function. */
+    static final String LOCAL_NAME = "xquery";
+    /** The Saxon processor. */
     private final Processor mySaxon;
 }
 

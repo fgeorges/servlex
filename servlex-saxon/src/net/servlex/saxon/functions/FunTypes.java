@@ -13,6 +13,7 @@ import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.NameTest;
+import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.type.AnyItemType;
 import net.sf.saxon.type.BuiltInAtomicType;
@@ -37,97 +38,136 @@ class FunTypes
     // one or more ("+" in XPath)
     private static final int SEVERAL  = StaticProperty.ALLOWS_ONE_OR_MORE;
 
-    // item()
-    private static final ItemType ITEM     = AnyItemType.getInstance();
-    // built-in atomic types
-    private static final ItemType BASE64   = BuiltInAtomicType.BASE64_BINARY;
-    private static final ItemType BOOLEAN  = BuiltInAtomicType.BOOLEAN;
-    private static final ItemType BYTE     = BuiltInAtomicType.BYTE;
-    private static final ItemType DATE     = BuiltInAtomicType.DATE;
-    private static final ItemType DATETIME = BuiltInAtomicType.DATE_TIME;
-    private static final ItemType DECIMAL  = BuiltInAtomicType.DECIMAL;
-    private static final ItemType DOUBLE   = BuiltInAtomicType.DOUBLE;
-    private static final ItemType FLOAT    = BuiltInAtomicType.FLOAT;
-    private static final ItemType INT      = BuiltInAtomicType.INT;
-    private static final ItemType INTEGER  = BuiltInAtomicType.INTEGER;
-    private static final ItemType LONG     = BuiltInAtomicType.LONG;
-    private static final ItemType SHORT    = BuiltInAtomicType.SHORT;
-    private static final ItemType STRING   = BuiltInAtomicType.STRING;
-
     // the empty sequence
     public static final SequenceType EMPTY_SEQUENCE = SequenceType.EMPTY_SEQUENCE;
 
+    // item()
+    private static final ItemType ITEM      = AnyItemType.getInstance();
+    // built-in atomic types
+    private static final ItemType BASE64    = BuiltInAtomicType.BASE64_BINARY;
+    private static final ItemType BOOLEAN   = BuiltInAtomicType.BOOLEAN;
+    private static final ItemType BYTE      = BuiltInAtomicType.BYTE;
+    private static final ItemType DATE      = BuiltInAtomicType.DATE;
+    private static final ItemType DATETIME  = BuiltInAtomicType.DATE_TIME;
+    private static final ItemType DECIMAL   = BuiltInAtomicType.DECIMAL;
+    private static final ItemType DOUBLE    = BuiltInAtomicType.DOUBLE;
+    private static final ItemType FLOAT     = BuiltInAtomicType.FLOAT;
+    private static final ItemType INT       = BuiltInAtomicType.INT;
+    private static final ItemType INTEGER   = BuiltInAtomicType.INTEGER;
+    private static final ItemType LONG      = BuiltInAtomicType.LONG;
+    private static final ItemType SHORT     = BuiltInAtomicType.SHORT;
+    private static final ItemType STRING    = BuiltInAtomicType.STRING;
+    private static final ItemType ATTRIBUTE = NodeKindTest.ATTRIBUTE;
+    private static final ItemType COMMENT   = NodeKindTest.COMMENT;
+    private static final ItemType DOCUMENT  = NodeKindTest.DOCUMENT;
+    private static final ItemType ELEMENT   = NodeKindTest.ELEMENT;
+    private static final ItemType NAMESPACE = NodeKindTest.NAMESPACE;
+    private static final ItemType PI        = NodeKindTest.PROCESSING_INSTRUCTION;
+    private static final ItemType TEXT      = NodeKindTest.TEXT;
+
     // singles
-    public static final SequenceType SINGLE_ITEM     = SequenceType.SINGLE_ITEM;
+    public static final SequenceType SINGLE_ITEM      = SequenceType.SINGLE_ITEM;
     // atomic types
-    public static final SequenceType SINGLE_BASE64   = make(SINGLE, BASE64);
-    public static final SequenceType SINGLE_BOOLEAN  = SequenceType.SINGLE_BOOLEAN;
-    public static final SequenceType SINGLE_BYTE     = SequenceType.SINGLE_BYTE;
-    public static final SequenceType SINGLE_DATE     = make(SINGLE, DATE);
-    public static final SequenceType SINGLE_DATETIME = make(SINGLE, DATETIME);
-    public static final SequenceType SINGLE_DECIMAL  = make(SINGLE, DECIMAL);
-    public static final SequenceType SINGLE_DOUBLE   = SequenceType.SINGLE_DOUBLE;
-    public static final SequenceType SINGLE_FLOAT    = SequenceType.SINGLE_FLOAT;
-    public static final SequenceType SINGLE_INT      = SequenceType.SINGLE_INT;
-    public static final SequenceType SINGLE_INTEGER  = SequenceType.SINGLE_INTEGER;
-    public static final SequenceType SINGLE_LONG     = SequenceType.SINGLE_LONG;
-    public static final SequenceType SINGLE_SHORT    = SequenceType.SINGLE_SHORT;
-    public static final SequenceType SINGLE_STRING   = SequenceType.SINGLE_STRING;
+    public static final SequenceType SINGLE_BASE64    = make(SINGLE, BASE64);
+    public static final SequenceType SINGLE_BOOLEAN   = SequenceType.SINGLE_BOOLEAN;
+    public static final SequenceType SINGLE_BYTE      = SequenceType.SINGLE_BYTE;
+    public static final SequenceType SINGLE_DATE      = make(SINGLE, DATE);
+    public static final SequenceType SINGLE_DATETIME  = make(SINGLE, DATETIME);
+    public static final SequenceType SINGLE_DECIMAL   = make(SINGLE, DECIMAL);
+    public static final SequenceType SINGLE_DOUBLE    = SequenceType.SINGLE_DOUBLE;
+    public static final SequenceType SINGLE_FLOAT     = SequenceType.SINGLE_FLOAT;
+    public static final SequenceType SINGLE_INT       = SequenceType.SINGLE_INT;
+    public static final SequenceType SINGLE_INTEGER   = SequenceType.SINGLE_INTEGER;
+    public static final SequenceType SINGLE_LONG      = SequenceType.SINGLE_LONG;
+    public static final SequenceType SINGLE_SHORT     = SequenceType.SINGLE_SHORT;
+    public static final SequenceType SINGLE_STRING    = SequenceType.SINGLE_STRING;
+    // nodes
+    public static final SequenceType SINGLE_NODE      = SequenceType.SINGLE_NODE;
+    public static final SequenceType SINGLE_ATTRIBUTE = make(SINGLE, ATTRIBUTE);
+    public static final SequenceType SINGLE_COMMENT   = make(SINGLE, COMMENT);
+    public static final SequenceType SINGLE_DOCUMENT  = make(SINGLE, DOCUMENT);
+    public static final SequenceType SINGLE_ELEMENT   = SequenceType.SINGLE_ELEMENT_NODE;
+    public static final SequenceType SINGLE_NAMESPACE = make(SINGLE, NAMESPACE);
+    public static final SequenceType SINGLE_PI        = make(SINGLE, PI);
+    public static final SequenceType SINGLE_TEXT      = make(SINGLE, TEXT);
 
     // optionals
-    public static final SequenceType OPTIONAL_ITEM     = SequenceType.OPTIONAL_ITEM;
+    public static final SequenceType OPTIONAL_ITEM      = SequenceType.OPTIONAL_ITEM;
     // atomic types
-    public static final SequenceType OPTIONAL_BASE64   = make(OPTIONAL, BASE64);
-    public static final SequenceType OPTIONAL_BOOLEAN  = SequenceType.OPTIONAL_BOOLEAN;
-    public static final SequenceType OPTIONAL_BYTE     = SequenceType.OPTIONAL_BYTE;
-    public static final SequenceType OPTIONAL_DATE     = make(OPTIONAL, DATE);
-    public static final SequenceType OPTIONAL_DATETIME = SequenceType.OPTIONAL_DATE_TIME;
-    public static final SequenceType OPTIONAL_DECIMAL  = SequenceType.OPTIONAL_DECIMAL;
-    public static final SequenceType OPTIONAL_DOUBLE   = SequenceType.OPTIONAL_DOUBLE;
-    public static final SequenceType OPTIONAL_FLOAT    = SequenceType.OPTIONAL_FLOAT;
-    public static final SequenceType OPTIONAL_INT      = SequenceType.OPTIONAL_INT;
-    public static final SequenceType OPTIONAL_INTEGER  = SequenceType.OPTIONAL_INTEGER;
-    public static final SequenceType OPTIONAL_LONG     = SequenceType.OPTIONAL_LONG;
-    public static final SequenceType OPTIONAL_SHORT    = SequenceType.OPTIONAL_SHORT;
-    public static final SequenceType OPTIONAL_STRING   = SequenceType.OPTIONAL_STRING;
+    public static final SequenceType OPTIONAL_BASE64    = make(OPTIONAL, BASE64);
+    public static final SequenceType OPTIONAL_BOOLEAN   = SequenceType.OPTIONAL_BOOLEAN;
+    public static final SequenceType OPTIONAL_BYTE      = SequenceType.OPTIONAL_BYTE;
+    public static final SequenceType OPTIONAL_DATE      = make(OPTIONAL, DATE);
+    public static final SequenceType OPTIONAL_DATETIME  = SequenceType.OPTIONAL_DATE_TIME;
+    public static final SequenceType OPTIONAL_DECIMAL   = SequenceType.OPTIONAL_DECIMAL;
+    public static final SequenceType OPTIONAL_DOUBLE    = SequenceType.OPTIONAL_DOUBLE;
+    public static final SequenceType OPTIONAL_FLOAT     = SequenceType.OPTIONAL_FLOAT;
+    public static final SequenceType OPTIONAL_INT       = SequenceType.OPTIONAL_INT;
+    public static final SequenceType OPTIONAL_INTEGER   = SequenceType.OPTIONAL_INTEGER;
+    public static final SequenceType OPTIONAL_LONG      = SequenceType.OPTIONAL_LONG;
+    public static final SequenceType OPTIONAL_SHORT     = SequenceType.OPTIONAL_SHORT;
+    public static final SequenceType OPTIONAL_STRING    = SequenceType.OPTIONAL_STRING;
     // nodes
-    // TODO: Add other node kinds, and document nodes for other arities...
-    // (as well as document node tests with root element name...)
-    public static final SequenceType OPTIONAL_DOCUMENT = SequenceType.OPTIONAL_DOCUMENT_NODE;
+    public static final SequenceType OPTIONAL_NODE      = SequenceType.OPTIONAL_NODE;
+    public static final SequenceType OPTIONAL_ATTRIBUTE = make(OPTIONAL, ATTRIBUTE);
+    public static final SequenceType OPTIONAL_COMMENT   = make(OPTIONAL, COMMENT);
+    public static final SequenceType OPTIONAL_DOCUMENT  = SequenceType.OPTIONAL_DOCUMENT_NODE;
+    public static final SequenceType OPTIONAL_ELEMENT   = SequenceType.OPTIONAL_ELEMENT_NODE;
+    public static final SequenceType OPTIONAL_NAMESPACE = make(OPTIONAL, NAMESPACE);
+    public static final SequenceType OPTIONAL_PI        = make(OPTIONAL, PI);
+    public static final SequenceType OPTIONAL_TETX      = make(OPTIONAL, TEXT);
 
     // anys
-    public static final SequenceType ANY_ITEM     = make(ANY, ITEM);
+    public static final SequenceType ANY_ITEM      = make(ANY, ITEM);
     // atomic types
-    public static final SequenceType ANY_BASE64   = make(ANY, BASE64);
-    public static final SequenceType ANY_BOOLEAN  = make(ANY, BOOLEAN);
-    public static final SequenceType ANY_BYTE     = make(ANY, BYTE);
-    public static final SequenceType ANY_DATE     = make(ANY, DATE);
-    public static final SequenceType ANY_DATETIME = make(ANY, DATETIME);
-    public static final SequenceType ANY_DECIMAL  = make(ANY, DECIMAL);
-    public static final SequenceType ANY_DOUBLE   = make(ANY, DOUBLE);
-    public static final SequenceType ANY_FLOAT    = make(ANY, FLOAT);
-    public static final SequenceType ANY_INT      = make(ANY, INT);
-    public static final SequenceType ANY_INTEGER  = make(ANY, INTEGER);
-    public static final SequenceType ANY_LONG     = make(ANY, LONG);
-    public static final SequenceType ANY_SHORT    = make(ANY, SHORT);
-    public static final SequenceType ANY_STRING   = make(ANY, STRING);
+    public static final SequenceType ANY_BASE64    = make(ANY, BASE64);
+    public static final SequenceType ANY_BOOLEAN   = make(ANY, BOOLEAN);
+    public static final SequenceType ANY_BYTE      = make(ANY, BYTE);
+    public static final SequenceType ANY_DATE      = make(ANY, DATE);
+    public static final SequenceType ANY_DATETIME  = make(ANY, DATETIME);
+    public static final SequenceType ANY_DECIMAL   = make(ANY, DECIMAL);
+    public static final SequenceType ANY_DOUBLE    = make(ANY, DOUBLE);
+    public static final SequenceType ANY_FLOAT     = make(ANY, FLOAT);
+    public static final SequenceType ANY_INT       = make(ANY, INT);
+    public static final SequenceType ANY_INTEGER   = make(ANY, INTEGER);
+    public static final SequenceType ANY_LONG      = make(ANY, LONG);
+    public static final SequenceType ANY_SHORT     = make(ANY, SHORT);
+    public static final SequenceType ANY_STRING    = make(ANY, STRING);
+    // nodes
+    // public static final SequenceType ANYL_NODE     = make(ANY, NODE);
+    public static final SequenceType ANY_ATTRIBUTE = make(ANY, ATTRIBUTE);
+    public static final SequenceType ANY_COMMENT   = make(ANY, COMMENT);
+    public static final SequenceType ANY_DOCUMENT  = make(ANY, DOCUMENT);
+    public static final SequenceType ANY_ELEMENT   = make(ANY, ELEMENT);
+    public static final SequenceType ANY_NAMESPACE = make(ANY, NAMESPACE);
+    public static final SequenceType ANY_PI        = make(ANY, PI);
+    public static final SequenceType ANY_TETX      = make(ANY, TEXT);
 
     // severals
-    public static final SequenceType SEVERAL_ITEM     = make(SEVERAL, ITEM);
+    public static final SequenceType SEVERAL_ITEM      = make(SEVERAL, ITEM);
     // atomic types
-    public static final SequenceType SEVERAL_BASE64   = make(SEVERAL, BASE64);
-    public static final SequenceType SEVERAL_BOOLEAN  = make(SEVERAL, BOOLEAN);
-    public static final SequenceType SEVERAL_BYTE     = make(SEVERAL, BYTE);
-    public static final SequenceType SEVERAL_DATE     = make(SEVERAL, DATE);
-    public static final SequenceType SEVERAL_DATETIME = make(SEVERAL, DATETIME);
-    public static final SequenceType SEVERAL_DECIMAL  = make(SEVERAL, DECIMAL);
-    public static final SequenceType SEVERAL_DOUBLE   = make(SEVERAL, DOUBLE);
-    public static final SequenceType SEVERAL_FLOAT    = make(SEVERAL, FLOAT);
-    public static final SequenceType SEVERAL_INT      = make(SEVERAL, INT);
-    public static final SequenceType SEVERAL_INTEGER  = make(SEVERAL, INTEGER);
-    public static final SequenceType SEVERAL_LONG     = make(SEVERAL, LONG);
-    public static final SequenceType SEVERAL_SHORT    = make(SEVERAL, SHORT);
-    public static final SequenceType SEVERAL_STRING   = make(SEVERAL, STRING);
+    public static final SequenceType SEVERAL_BASE64    = make(SEVERAL, BASE64);
+    public static final SequenceType SEVERAL_BOOLEAN   = make(SEVERAL, BOOLEAN);
+    public static final SequenceType SEVERAL_BYTE      = make(SEVERAL, BYTE);
+    public static final SequenceType SEVERAL_DATE      = make(SEVERAL, DATE);
+    public static final SequenceType SEVERAL_DATETIME  = make(SEVERAL, DATETIME);
+    public static final SequenceType SEVERAL_DECIMAL   = make(SEVERAL, DECIMAL);
+    public static final SequenceType SEVERAL_DOUBLE    = make(SEVERAL, DOUBLE);
+    public static final SequenceType SEVERAL_FLOAT     = make(SEVERAL, FLOAT);
+    public static final SequenceType SEVERAL_INT       = make(SEVERAL, INT);
+    public static final SequenceType SEVERAL_INTEGER   = make(SEVERAL, INTEGER);
+    public static final SequenceType SEVERAL_LONG      = make(SEVERAL, LONG);
+    public static final SequenceType SEVERAL_SHORT     = make(SEVERAL, SHORT);
+    public static final SequenceType SEVERAL_STRING    = make(SEVERAL, STRING);
+    // nodes
+    // public static final SequenceType SEVERAL_NODE     = make(SEVERAL, NODE);
+    public static final SequenceType SEVERAL_ATTRIBUTE = make(SEVERAL, ATTRIBUTE);
+    public static final SequenceType SEVERAL_COMMENT   = make(SEVERAL, COMMENT);
+    public static final SequenceType SEVERAL_DOCUMENT  = make(SEVERAL, DOCUMENT);
+    public static final SequenceType SEVERAL_ELEMENT   = make(SEVERAL, ELEMENT);
+    public static final SequenceType SEVERAL_NAMESPACE = make(SEVERAL, NAMESPACE);
+    public static final SequenceType SEVERAL_PI        = make(SEVERAL, PI);
+    public static final SequenceType SEVERAL_TETX      = make(SEVERAL, TEXT);
 
     /**
      * Create a list of types.

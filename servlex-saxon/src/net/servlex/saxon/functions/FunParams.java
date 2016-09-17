@@ -183,6 +183,53 @@ class FunParams
     }
 
     /**
+     * Return the pos-th parameter, checking it is a node.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item, or if the param is not an element node.
+     * 
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public NodeInfo asNode(int pos, boolean optional)
+            throws XPathException
+    {
+        Item item = asItem(pos, optional);
+        if ( item == null ) {
+            return null;
+        }
+        if ( ! ( item instanceof NodeInfo ) ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a node");
+        }
+        return (NodeInfo) item;
+    }
+
+    /**
+     * Return the pos-th parameter, checking it is a document node.
+     * 
+     * If optional is false and the parameter is the empty sequence, an
+     * {@code XPathException} is thrown.  As well as if there is more than
+     * one item, or if the param is not an element node.
+     * 
+     * @param pos The position of the parameter to analyze, 0-based.
+     * @param optional Can the parameter be the empty sequence?
+     */
+    public NodeInfo asDocument(int pos, boolean optional)
+            throws XPathException
+    {
+        NodeInfo node = asNode(pos, optional);
+        if ( node == null ) {
+            return null;
+        }
+        int kind = node.getNodeKind();
+        if ( kind != Type.DOCUMENT ) {
+            throw new XPathException("The " + ordinal(pos) + " param is not a document (kind: " + kind + ")");
+        }
+        return node;
+    }
+
+    /**
      * Return the pos-th parameter, checking it is an element node.
      * 
      * If optional is false and the parameter is the empty sequence, an
@@ -195,14 +242,10 @@ class FunParams
     public NodeInfo asElement(int pos, boolean optional)
             throws XPathException
     {
-        Item item = asItem(pos, optional);
-        if ( item == null ) {
+        NodeInfo node = asNode(pos, optional);
+        if ( node == null ) {
             return null;
         }
-        if ( ! ( item instanceof NodeInfo ) ) {
-            throw new XPathException("The " + ordinal(pos) + " param is not a node");
-        }
-        NodeInfo node = (NodeInfo) item;
         int kind = node.getNodeKind();
         if ( kind != Type.ELEMENT ) {
             throw new XPathException("The " + ordinal(pos) + " param is not an element (kind: " + kind + ")");
