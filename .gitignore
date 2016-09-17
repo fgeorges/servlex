@@ -14,3 +14,4 @@
 /test/webapps/mapping/dist/
 /test/webapps/xsltforms/dist/
 /servlex/src/java/org/expath/servlex/tools/version.properties
+/website/scripts/node_modules/

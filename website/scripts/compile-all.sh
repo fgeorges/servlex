@@ -5,6 +5,12 @@ tmp=tmp-marked.out
 
 sources=../src/*.md
 
+die() {
+    echo
+    echo "*** $@" 1>&2;
+    exit 1;
+}
+
 if [ -n "$1" ]; then
     sources="../src/${1}.md"
     if [ \! -f "$sources" ]; then
@@ -30,7 +36,8 @@ do
         href=$name
     fi
     echo Compiling $name
-    ./compile-md.js $md > $tmp
+    ./compile-md.js $md > $tmp \
+        || die "Error compiling $md"
     sed \
         -e "/class='__active__' href='${href}'/ {
           s/class='__active__'/class='active'/
