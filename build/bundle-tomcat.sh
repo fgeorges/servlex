@@ -45,12 +45,12 @@ echo                                                                            
 echo "# Added by Servlex bundler for Tomcat"                                          >> "${PROPS}"
 echo "# "                                                                             >> "${PROPS}"
 echo "# The processors implementation class to use"                                   >> "${PROPS}"
-if "$SHIP_PROCESSOR" = "saxon"; then
-    echo "# org.expath.servlex.processors=net.servlex.saxon.Saxon"                    >> "${PROPS}"
-    echo "org.expath.servlex.processors=net.servlex.saxabash.Saxabash"                >> "${PROPS}"
-elif "$SHIP_PROCESSOR" = "saxabash"; then
+if [ "$SHIP_PROCESSOR" = "saxon" ]; then
     echo "org.expath.servlex.processors=net.servlex.saxon.Saxon"                      >> "${PROPS}"
     echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash"              >> "${PROPS}"
+elif [ "$SHIP_PROCESSOR" = "saxabash" ]; then
+    echo "# org.expath.servlex.processors=net.servlex.saxon.Saxon"                    >> "${PROPS}"
+    echo "org.expath.servlex.processors=net.servlex.saxabash.Saxabash"                >> "${PROPS}"
 else
     echo "# org.expath.servlex.processors=net.servlex.saxon.Saxon"                    >> "${PROPS}"
     echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash"              >> "${PROPS}"
@@ -98,11 +98,11 @@ mkdir "${TOMCAT}/profiling"
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
 
 # the processors JAR files and their dependencies
-if "$SHIP_PROCESSOR" = "saxon" -o "$SHIP_PROCESSOR" = "saxabash"; then
+if [ "$SHIP_PROCESSOR" = "saxon" -o "$SHIP_PROCESSOR" = "saxabash" ]; then
     cp "${SAXON_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
     cp "${SAXON_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
 fi
-if "$SHIP_PROCESSOR" = "saxabash"; then
+if [ "$SHIP_PROCESSOR" = "saxabash" ]; then
     cp "${SAXABASH_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
     cp "${SAXABASH_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
 fi
