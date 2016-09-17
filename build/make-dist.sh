@@ -57,7 +57,7 @@ echo "org.expath.servlex.version=${DIST_VER}" > ${VERSION_PROP}
 echo "org.expath.servlex.revision=${REVISION}" >> ${VERSION_PROP}
 
 # build servlex
-( cd ../servlex/ && ant ) || die "Servlex build failed"
+( cd ../servlex/ && ant clean && ant ) || die "Servlex build failed"
 if test \! -f "$WAR"; then
     die "$WAR does not exist"
 fi
