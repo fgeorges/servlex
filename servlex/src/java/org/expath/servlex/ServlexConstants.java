@@ -64,6 +64,9 @@ public class ServlexConstants
     /** The system property name for whether logging HTTP entity content. */
     public static final String DEFAULT_CHARSET_PROPERTY = "org.expath.servlex.default.charset";
 
+    // TODO: The Saxon-specific properties should not be in the Servlex core
+    // codebase...
+
     /** The system property name for the path to a Saxon configuration file. */
     public static final String SAXON_CONFIG_FILE_PROPERTY = "org.expath.servlex.saxon.config.file";
     /** The system property name for which XSLT version to use for XSLT wrappers. */
@@ -72,8 +75,7 @@ public class ServlexConstants
     public static final String SAXON_XSLT_VER_DEFAULT     = "2.0";
 
     /** The default processors implementation class to use. */
-    public static final String DEFAULT_PROCESSORS
-            = "org.expath.servlex.processors.saxon.SaxonCalabash";
+    public static final String DEFAULT_PROCESSORS = "net.servlex.saxon.Saxon";
 }
 
 
