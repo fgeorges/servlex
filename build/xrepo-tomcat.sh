@@ -88,9 +88,19 @@ else
 fi
 
 # saxon
-saxon="$SERVLEX_LIB/saxon9he.jar"
+saxon="$SERVLEX_LIB/saxon9ee.jar"
 if test \! -f "$saxon"; then
-    echo "Warning: Cannot find Saxon: $saxon"
+    saxon="$SERVLEX_LIB/saxon9pe.jar"
+    if test \! -f "$saxon"; then
+        saxon="$SERVLEX_LIB/saxon9he.jar"
+        if test \! -f "$saxon"; then
+            echo "Warning: Cannot find Saxon: $saxon"
+        else
+            CP="$CP:$saxon"
+        fi
+    else
+        CP="$CP:$saxon"
+    fi
 else
     CP="$CP:$saxon"
 fi
