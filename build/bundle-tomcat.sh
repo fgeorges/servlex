@@ -6,8 +6,8 @@ die() {
     exit 1;
 }
 
-SHIP_SERVLEX_SAXON=true
-SHIP_SERVLEX_SAXABASH=false
+SHIP_PROCESSOR=saxon
+#SHIP_PROCESSOR=saxabash
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
@@ -40,26 +40,33 @@ rm -r "${TOMCAT}"
 
 # adding properties to conf/catalina.properties
 PROPS="${TOMCAT}/conf/catalina.properties"
-echo >> "${PROPS}"
-echo >> "${PROPS}"
-echo "# Added by Servlex bundler for Tomcat" >> "${PROPS}"
-echo "# " >> "${PROPS}"
-echo "# The processors implementation class to use" >> "${PROPS}"
-if "$SHIP_SERVLEX_SAXABASH" = "true"; then
-    echo "org.expath.servlex.processors=net.servlex.saxabash.Saxabash" >> "${PROPS}"
-elif "$SHIP_SERVLEX_SAXON" = "true"; then
-    echo "org.expath.servlex.processors=net.servlex.saxon.Saxon" >> "${PROPS}"
+echo                                                                                  >> "${PROPS}"
+echo                                                                                  >> "${PROPS}"
+echo "# Added by Servlex bundler for Tomcat"                                          >> "${PROPS}"
+echo "# "                                                                             >> "${PROPS}"
+echo "# The processors implementation class to use"                                   >> "${PROPS}"
+if "$SHIP_PROCESSOR" = "saxon"; then
+    echo "# org.expath.servlex.processors=net.servlex.saxon.Saxon"                    >> "${PROPS}"
+    echo "org.expath.servlex.processors=net.servlex.saxabash.Saxabash"                >> "${PROPS}"
+elif "$SHIP_PROCESSOR" = "saxabash"; then
+    echo "org.expath.servlex.processors=net.servlex.saxon.Saxon"                      >> "${PROPS}"
+    echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash"              >> "${PROPS}"
 else
-    echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash" >> "${PROPS}"
+    echo "# org.expath.servlex.processors=net.servlex.saxon.Saxon"                    >> "${PROPS}"
+    echo "# org.expath.servlex.processors=net.servlex.saxabash.Saxabash"              >> "${PROPS}"
 fi
-echo "# The location of the repository" >> "${PROPS}"
-echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo' >> "${PROPS}"
-echo "# Uncomment to have Calabash generating profiling data" >> "${PROPS}"
-echo '# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling' >> "${PROPS}"
-echo "# Uncomment to log (in trace level) the actual content of requests/responses" >> "${PROPS}"
-echo "# org.expath.servlex.trace.content=true" >> "${PROPS}"
-echo "# Uncomment to set the default charset of requests (if not set in a request)" >> "${PROPS}"
-echo "# org.expath.servlex.default.charset=UTF-8" >> "${PROPS}"
+echo "# The location of the repository"                                               >> "${PROPS}"
+echo 'org.expath.servlex.repo.dir=${INSTALL_PATH}/repo'                               >> "${PROPS}"
+echo "# Uncomment to have Calabash generating profiling data"                         >> "${PROPS}"
+echo '# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling'                     >> "${PROPS}"
+echo "# Uncomment to log (in trace level) the actual content of requests/responses"   >> "${PROPS}"
+echo "# org.expath.servlex.trace.content=true"                                        >> "${PROPS}"
+echo "# Uncomment to set the default charset of requests (if not set in a request)"   >> "${PROPS}"
+echo "# org.expath.servlex.default.charset=UTF-8"                                     >> "${PROPS}"
+echo "# Uncomment to set the (absolute) location of Saxon config file"                >> "${PROPS}"
+echo "# org.expath.servlex.saxon.config.file=${INSTALL_PATH}/repo/.servlex/saxon.xml" >> "${PROPS}"
+echo "# Uncomment to set the XSLT version to use for XSLT wrappers"                   >> "${PROPS}"
+echo "# org.expath.servlex.saxon.xslt.version=3.0"                                    >> "${PROPS}"
 
 # changing the port numbers in conf/server.xml
 # TODO: Set URIEncoding="UTF-8" on the connector as well?
@@ -91,11 +98,11 @@ mkdir "${TOMCAT}/profiling"
 cp "${BASEDIR}/webapps.xml" "${TOMCAT}/repo/.expath-web/"
 
 # the processors JAR files and their dependencies
-if "$SHIP_SERVLEX_SAXON" = "true" -o "$SHIP_SERVLEX_SAXABASH" = "true"; then
+if "$SHIP_PROCESSOR" = "saxon" -o "$SHIP_PROCESSOR" = "saxabash"; then
     cp "${SAXON_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
     cp "${SAXON_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
 fi
-if "$SHIP_SERVLEX_SAXABASH" = "true"; then
+if "$SHIP_PROCESSOR" = "saxabash"; then
     cp "${SAXABASH_PROC}"       "${TOMCAT}/repo/.servlex/lib/"
     cp "${SAXABASH_DEPS}"/*.jar "${TOMCAT}/repo/.servlex/lib/"
 fi
