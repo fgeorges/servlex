@@ -79,9 +79,10 @@ it is <code>2.0</code>.</p>
 any, must be the path to such a Saxon config file.  The file is used when
 instantiating Saxon, when starting Servlex.  By default, Servlex does not
 provide Saxon with any config file.</p>
-<h4 id="useful-recipes-for-tomcat">Useful recipes for Tomcat</h4>
-<p>If you use Tomcat (e.g. if you installed the Servlex installer, which contains
-Tomcat), you might be used by the following configuration tips.</p>
+<h4 id="useful-recipes">Useful recipes</h4>
+<p>Here are a few configuration tips beyond the scope of Servlex itself, but
+affecting how to configure Saxon and Tomcat (especially if you used the Servlex
+installer, which comes with Saxon and Tomcat).</p>
 <h5 id="changing-the-port-number">Changing the port number</h5>
 <p>You can change the default port number in <code>conf/server.xml</code>.  By default, the
 Servlex installer uses the port number 19757.  Tomcat also uses a few other
@@ -90,20 +91,35 @@ with a prefix of your own, to avoid any clash between two instances of Servlex.<
 <h5 id="using-saxon-pe-or-saxon-ee">Using Saxon-PE or Saxon-EE</h5>
 <p>Saxon-HE is free and open-source, but the versions PE and EE require a license,
 as well as their own JAR file.  If you are the happy owner of Saxon PE or EE,
-you can replace the Saxon JAR file in <code>webapps/ROOT/WEB-INF/lib/</code>, as well as
-copying you license file in th same directory.  And that&#39;s it, Servlex will
-detect the licensed version and will use it.</p>
+you can replace the Saxon JAR file in <code>repo/.servlex/lib/</code>, and create a Saxon
+config file to point to the license.  The path to the Saxon config file must be
+in the property <code>org.expath.servlex.saxon.config.file</code>.  A good place where to
+put it is in <code>repo/.servlex/saxon.xml</code>.  In that case you can add the following
+line to <code>config/catalina.properties</code> to point to it:</p>
+<pre><code class="lang-text">org<span class="hljs-selector-class">.expath</span><span class="hljs-selector-class">.servlex</span><span class="hljs-selector-class">.saxon</span><span class="hljs-selector-class">.config</span><span class="hljs-selector-class">.file</span>=/.../servlex/repo/.servlex/saxon.xml
+</code></pre>
+<p>If you put the Saxon license file in the same directory, the following is an
+example of Saxon config content that points to it, and enable XQuery 3.1 (you
+can find the comprehensive documentation for the Saxon config file format
+<a href="http://saxonica.com/documentation/index.html#!configuration/configuration-file">here</a>):</p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://saxon.sf.net/ns/configuration"</span>
+               <span class="hljs-attr">edition</span>=<span class="hljs-string">"EE"</span>
+               <span class="hljs-attr">label</span>=<span class="hljs-string">"Saxon config for Servlex"</span>
+               <span class="hljs-attr">licenseFileLocation</span>=<span class="hljs-string">"saxon-license.lic"</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">xquery</span> <span class="hljs-attr">version</span>=<span class="hljs-string">"3.1"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span>
+</code></pre>
 <h5 id="increase-log-level">Increase log level</h5>
 <p>In <code>[servlex]/webapps/ROOT/WEB-INF/classes/logging.properties</code>, save
 the following content:</p>
-<pre><code>handlers = org.apache.juli.FileHandler, java.util.logging.ConsoleHandler
+<pre><code>handlers = org<span class="hljs-selector-class">.apache</span><span class="hljs-selector-class">.juli</span><span class="hljs-selector-class">.FileHandler</span>, java<span class="hljs-selector-class">.util</span><span class="hljs-selector-class">.logging</span><span class="hljs-selector-class">.ConsoleHandler</span>
 
-org.expath.servlex.level = FINE
+org<span class="hljs-selector-class">.expath</span><span class="hljs-selector-class">.servlex</span><span class="hljs-selector-class">.level</span> = FINE
 
-org.apache.juli.FileHandler.directory = ${catalina.base}/logs
-org.apache.juli.FileHandler.prefix = ${classloader.webappName}.
+org<span class="hljs-selector-class">.apache</span><span class="hljs-selector-class">.juli</span><span class="hljs-selector-class">.FileHandler</span><span class="hljs-selector-class">.directory</span> = ${catalina.base}/logs
+org<span class="hljs-selector-class">.apache</span><span class="hljs-selector-class">.juli</span><span class="hljs-selector-class">.FileHandler</span><span class="hljs-selector-class">.prefix</span> = ${classloader.webappName}.
 
-java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+java<span class="hljs-selector-class">.util</span><span class="hljs-selector-class">.logging</span><span class="hljs-selector-class">.ConsoleHandler</span><span class="hljs-selector-class">.formatter</span> = java<span class="hljs-selector-class">.util</span><span class="hljs-selector-class">.logging</span><span class="hljs-selector-class">.SimpleFormatter</span>
 </code></pre><p>Change <code>FINE</code> (debug) to <code>FINEST</code> or <code>ALL</code>, for trace-level logging.</p>
             </div>
          </div>

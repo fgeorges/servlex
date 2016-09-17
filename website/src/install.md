@@ -150,7 +150,7 @@ them are commented out, but they serve as a reference for what properties exist.
 # Added by Servlex bundler for Tomcat
 # 
 # The processors implementation class to use
-org.expath.servlex.processors=org.expath.servlex.processors.saxon.SaxonCalabash
+org.expath.servlex.processors=net.servlex.saxon.Saxon
 # The location of the repository
 org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
 # Uncomment to have Calabash generating profiling data
@@ -159,6 +159,10 @@ org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
 # org.expath.servlex.trace.content=true
 # Uncomment to set the default charset of requests (if not set in a request)
 # org.expath.servlex.default.charset=UTF-8
+# Uncomment to set the (absolute) location of Saxon config file
+# org.expath.servlex.saxon.config.file=${INSTALL_PATH}/repo/.servlex/saxon.xml
+# Uncomment to set the XSLT version to use for XSLT wrappers
+# org.expath.servlex.saxon.xslt.version=3.0
 ```
 
 <p></p>

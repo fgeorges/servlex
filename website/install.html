@@ -142,9 +142,9 @@ dependencies):</p>
 <a href="doc">User Guide</a> for comprehensive documentation, but you can use the following
 commands and adapt them as needed (I use <a href="http://httpie.org/">HTTPie</a> myself,
 but you can use CURL as well, as detailed in the User Guide):</p>
-<pre><code class="lang-shell">http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy/manager @webapp-manager-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
-http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy @expath-http-client-saxon-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
-http <span class="hljs-keyword">POST</span> :19757/servlex/~rest/deploy @expath-<span class="hljs-keyword">zip</span>-saxon-<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.<span class="hljs-keyword">n</span>.xaw
+<pre><code class="lang-shell">http <span class="hljs-attribute">POST </span>:<span class="hljs-number">19757</span>/servlex/~rest/deploy/manager <span class="hljs-variable">@webapp-manager-n</span>.n.n.xaw
+http <span class="hljs-attribute">POST </span>:<span class="hljs-number">19757</span>/servlex/~rest/deploy <span class="hljs-variable">@expath-http-client-saxon-n</span>.n.n.xaw
+http <span class="hljs-attribute">POST </span>:<span class="hljs-number">19757</span>/servlex/~rest/deploy <span class="hljs-variable">@expath-zip-saxon-n</span>.n.n.xaw
 </code></pre>
 <p>Of course, if you do not want to use the web interface Webapp Manager, and
 install packages only through the REST endpoint, you do not have to install the
@@ -152,18 +152,22 @@ manager (and none of its dependencies.)</p>
 <h5 id="configuration-properties">Configuration properties</h5>
 <p>The properties added to the Tomcat configuration file are as following.  Most of
 them are commented out, but they serve as a reference for what properties exist.</p>
-<pre><code class="lang-text"># Added by Servlex bundler for Tomcat
-# 
-# The processors implementation class to <span class="hljs-keyword">use</span>
-org.expath.servlex.processors=org.expath.servlex.processors.saxon.SaxonCalabash
-# The location <span class="hljs-keyword">of</span> the repository
+<pre><code class="lang-text"><span class="hljs-meta"># Added by Servlex bundler for Tomcat</span>
+<span class="hljs-meta"># </span>
+<span class="hljs-meta"># The processors implementation class to use</span>
+org.expath.servlex.processors=net.servlex.saxon.Saxon
+<span class="hljs-meta"># The location of the repository</span>
 org.expath.servlex.repo.dir=${INSTALL_PATH}/repo
-# Uncomment <span class="hljs-keyword">to</span> have Calabash generating profiling <span class="hljs-keyword">data</span>
-# org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling
-# Uncomment <span class="hljs-keyword">to</span> <span class="hljs-keyword">log</span> (<span class="hljs-keyword">in</span> <span class="hljs-keyword">trace</span> <span class="hljs-keyword">level</span>) the actual <span class="hljs-keyword">content</span> <span class="hljs-keyword">of</span> requests/responses
-# org.expath.servlex.<span class="hljs-keyword">trace</span>.<span class="hljs-keyword">content</span>=<span class="hljs-literal">true</span>
-# Uncomment <span class="hljs-keyword">to</span> <span class="hljs-keyword">set</span> the <span class="hljs-keyword">default</span> <span class="hljs-keyword">charset</span> <span class="hljs-keyword">of</span> requests (<span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">set</span> <span class="hljs-keyword">in</span> a request)
-# org.expath.servlex.<span class="hljs-keyword">default</span>.<span class="hljs-keyword">charset</span>=UTF<span class="hljs-number">-8</span>
+<span class="hljs-meta"># Uncomment to have Calabash generating profiling data</span>
+<span class="hljs-meta"># org.expath.servlex.profile.dir=${INSTALL_PATH}/profiling</span>
+<span class="hljs-meta"># Uncomment to log (in trace level) the actual content of requests/responses</span>
+<span class="hljs-meta"># org.expath.servlex.trace.content=true</span>
+<span class="hljs-meta"># Uncomment to set the default charset of requests (if not set in a request)</span>
+<span class="hljs-meta"># org.expath.servlex.default.charset=UTF-8</span>
+<span class="hljs-meta"># Uncomment to set the (absolute) location of Saxon config file</span>
+<span class="hljs-meta"># org.expath.servlex.saxon.config.file=${INSTALL_PATH}/repo/.servlex/saxon.xml</span>
+<span class="hljs-meta"># Uncomment to set the XSLT version to use for XSLT wrappers</span>
+<span class="hljs-meta"># org.expath.servlex.saxon.xslt.version=3.0</span>
 </code></pre>
 <p></p>
 

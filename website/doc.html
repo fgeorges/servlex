@@ -81,22 +81,22 @@ responds with a page based on this parameter.</p>
 <code>~rest/deploy/[my-app]</code>, where <code>[my-app]</code> must be replaced by the context root
 under which you want the webapp to be acessible.  For instance, to install a
 webapp to be accessible at:</p>
-<pre><code class="lang-text"><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/foobar/</span>
+<pre><code class="lang-text">http:<span class="hljs-regexp">//</span>localhost:<span class="hljs-number">19757</span><span class="hljs-regexp">/servlex/</span>foobar<span class="hljs-regexp">/</span>
 </code></pre>
 <p>then send the XAW file as a HTTP POST request to:</p>
-<pre><code><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/foobar</span>
+<pre><code>http:<span class="hljs-regexp">//</span>localhost:<span class="hljs-number">19757</span><span class="hljs-regexp">/servlex/</span>~rest<span class="hljs-regexp">/deploy/</span>foobar
 </code></pre><p>In order to install a library package, do not include a context root at the end
 of the endpoint URL, and POST the package to:</p>
-<pre><code><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span>
+<pre><code>http:<span class="hljs-regexp">//</span>localhost:<span class="hljs-number">19757</span><span class="hljs-regexp">/servlex/</span>~rest<span class="hljs-regexp">/deploy</span>
 </code></pre><p>For instance, if you want to use CURL from the command line, or the excellent
 <a href="http://httpie.org/">HTTPie</a>:</p>
-<pre><code class="lang-shell"><span class="hljs-comment"># using CURL</span>
-curl --request POST --data-binary @../path/to/my-app.xaw \
-    <span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/localhost:19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/my-app
+<pre><code class="lang-shell"><span class="hljs-meta"># using CURL</span>
+curl --request POST --data-binary @..<span class="hljs-meta-keyword">/path/</span>to/my-app.xaw \
+<span class="hljs-symbol">    http:</span><span class="hljs-comment">//localhost:19757/servlex/~rest/deploy/my-app</span>
 
-# using HTTPie
-http POST :19757/servlex</span><span class="hljs-regexp">/~rest/deploy</span><span class="hljs-regexp">/my-app \
-    @../path</span><span class="hljs-regexp">/to/my</span>-app.xaw
+<span class="hljs-meta"># using HTTPie</span>
+http POST :<span class="hljs-number">19757</span><span class="hljs-meta-keyword">/servlex/</span>~rest<span class="hljs-meta-keyword">/deploy/</span>my-app \
+    @..<span class="hljs-meta-keyword">/path/</span>to/my-app.xaw
 </code></pre>
 <p>You can set webapp config parameters by simply passing them as URL parameters.
 For instance, if the webapp <code>my-app.xaw</code> provides the parameter <code>content-dir</code>,

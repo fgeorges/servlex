@@ -72,10 +72,11 @@ any, must be the path to such a Saxon config file.  The file is used when
 instantiating Saxon, when starting Servlex.  By default, Servlex does not
 provide Saxon with any config file.
 
-#### Useful recipes for Tomcat
+#### Useful recipes
 
-If you use Tomcat (e.g. if you installed the Servlex installer, which contains
-Tomcat), you might be used by the following configuration tips.
+Here are a few configuration tips beyond the scope of Servlex itself, but
+affecting how to configure Saxon and Tomcat (especially if you used the Servlex
+installer, which comes with Saxon and Tomcat).
 
 ##### Changing the port number
 
@@ -88,9 +89,29 @@ with a prefix of your own, to avoid any clash between two instances of Servlex.
 
 Saxon-HE is free and open-source, but the versions PE and EE require a license,
 as well as their own JAR file.  If you are the happy owner of Saxon PE or EE,
-you can replace the Saxon JAR file in `webapps/ROOT/WEB-INF/lib/`, as well as
-copying you license file in th same directory.  And that's it, Servlex will
-detect the licensed version and will use it.
+you can replace the Saxon JAR file in `repo/.servlex/lib/`, and create a Saxon
+config file to point to the license.  The path to the Saxon config file must be
+in the property `org.expath.servlex.saxon.config.file`.  A good place where to
+put it is in `repo/.servlex/saxon.xml`.  In that case you can add the following
+line to `config/catalina.properties` to point to it:
+
+```text
+org.expath.servlex.saxon.config.file=/.../servlex/repo/.servlex/saxon.xml
+```
+
+If you put the Saxon license file in the same directory, the following is an
+example of Saxon config content that points to it, and enable XQuery 3.1 (you
+can find the comprehensive documentation for the Saxon config file format
+[here](http://saxonica.com/documentation/index.html#!configuration/configuration-file)):
+
+```xml
+<configuration xmlns="http://saxon.sf.net/ns/configuration"
+               edition="EE"
+               label="Saxon config for Servlex"
+               licenseFileLocation="saxon-license.lic">
+   <xquery version="3.1"/>
+</configuration>
+```
 
 ##### Increase log level
 
