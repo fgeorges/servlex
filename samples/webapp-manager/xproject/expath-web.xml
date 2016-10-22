@@ -2,7 +2,7 @@
         xmlns:app="http://servlex.net/ns/webapp-manager"
         name="http://servlex.net/app/manager"
         abbrev="manager"
-        version="0.3.0"
+        version="0.3.1"
         spec="1.0">
 
    <title>Web application manager for a web container.</title>

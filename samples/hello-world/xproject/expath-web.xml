@@ -1,4 +1,4 @@
-<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+<webapp xmlns="http://expath.org/ns/webapp"
         xmlns:app="http://expath.org/ns/samples/servlex/hello"
         name="http://expath.org/samples/servlex/hello"
         abbrev="hello-world"

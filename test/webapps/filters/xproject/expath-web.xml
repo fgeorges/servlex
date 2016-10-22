@@ -1,4 +1,4 @@
-<webapp xmlns="http://expath.org/ns/webapp/descriptor"
+<webapp xmlns="http://expath.org/ns/webapp"
         xmlns:app="http://expath.org/ns/test/servlex/filters-webapp"
         name="http://expath.org/test/servlex/filters-webapp"
         abbrev="filters"
