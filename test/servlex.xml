@@ -2,4 +2,5 @@
    <Parameter name='org.expath.servlex.repo.dir'
               value='/Users/fgeorges/projects/expath/servlex/test/test-repo'
               override='false'/>
+   <Loader loaderClass='net.servlex.loader.RepoClassLoader'/>
 </Context>

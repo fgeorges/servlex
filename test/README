@@ -41,9 +41,10 @@ I've changed the following files in the Tomcat dir:
 
 [**] conf/catalina.properties
 
-Added the prop org.expath.servlex.repo.dir (but should be removed if
-(when) deploy several Servlex instances on the same Tomcat):
+Added the following properties (should repo.dir be removed if (when)
+deploy several Servlex instances on the same Tomcat?):
 
+org.expath.servlex.processors=net.servlex.saxabash.Saxabash
 org.expath.servlex.repo.dir=/Users/fgeorges/projects/expath/servlex/test/test-repo
 
 

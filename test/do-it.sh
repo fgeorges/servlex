@@ -71,7 +71,11 @@ if [[ -d "${REPO}" ]]; then
 fi
 echo "Create repo dir"
 mkdir "${REPO}"
+mkdir "${REPO}/.expath-pkg"
+touch "${REPO}/.expath-pkg/packages.txt"
 mkdir "${REPO}/.expath-web"
+mkdir "${REPO}/.servlex"
+mkdir "${REPO}/.servlex/lib"
 echo '<webapps xmlns="http://expath.org/ns/webapp"/>' > "${REPO}/.expath-web/webapps.xml"
 
 # the context config (specific to Tomcat, contains the context root and the repo dir)
@@ -115,6 +119,7 @@ echo "<Context path='/${ROOT}'>" > $CTXT;
 echo "   <Parameter name='org.expath.servlex.repo.dir'" >> $CTXT;
 echo "              value='${REPO}'" >> $CTXT;
 echo "              override='false'/>" >> $CTXT;
+echo "   <Loader loaderClass='net.servlex.loader.RepoClassLoader'/>" >> $CTXT;
 echo "</Context>" >> $CTXT;
 
 # the text manager URI from Tomcat
@@ -157,6 +162,18 @@ fi
 #     die "The WAR file does not exist at: ${WAR}"
 # fi
 WAR="$BASEDIR/../servlex/dist/servlex.war"
+
+echo "Copying Servlex Loader JAR file..."
+cp "$BASEDIR/../servlex-loader/dist/servlex-loader.jar" "${TOMCAT}/lib/" \
+   || die "Error copying the Servlex Loader JAR file"
+
+echo "Copying Servlex Saxon JAR file and dependencies..."
+cp "$BASEDIR/../servlex-saxon/dist/servlex-saxon.jar" "${REPO}/.servlex/lib/"
+cp "$BASEDIR/../servlex-saxon/lib"/*.jar              "${REPO}/.servlex/lib/"
+
+echo "Copying Servlex Saxabash JAR file and dependencies..."
+cp "$BASEDIR/../servlex-saxabash/dist/servlex-saxabash.jar" "${REPO}/.servlex/lib/"
+cp "$BASEDIR/../servlex-saxabash/lib"/*.jar                 "${REPO}/.servlex/lib/"
 
 # deplpoying it
 # TODO: Seems Tomcat needs path= even with config=!  Report it...
