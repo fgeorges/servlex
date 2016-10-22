@@ -1,56 +1,33 @@
 /****************************************************************************/
-/*  File:       Processors.java                                             */
+/*  File:       LanguageSupportException.java                               */
 /*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2013-04-15                                                  */
+/*  Date:       2016-10-22                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2013 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2016 Florent Georges (see end of file.)               */
 /* ------------------------------------------------------------------------ */
 
 
 package org.expath.servlex.processors;
 
-import javax.xml.transform.Source;
 import org.expath.servlex.TechnicalException;
 
 /**
- * Abstract the provider of XSLT, XQuery and XProc processors.
+ * When a processor does not support a specific language (XSLT, XQuery or XProc).
  *
  * @author Florent Georges
  */
-public interface Processors
+public class LanguageSupportException
+        extends TechnicalException
 {
-    public XSLTProcessor getXSLT()
-            throws TechnicalException
-                 , LanguageSupportException;
+    public LanguageSupportException(String msg)
+    {
+        super(msg);
+    }
 
-    public XQueryProcessor getXQuery()
-            throws TechnicalException
-                 , LanguageSupportException;
-
-    public XProcProcessor getXProc()
-            throws TechnicalException
-                 , LanguageSupportException;
-
-    public Serializer makeSerializer()
-            throws TechnicalException;
-
-    public TreeBuilder makeTreeBuilder(String uri, String prefix)
-            throws TechnicalException;
-
-    public Sequence emptySequence()
-            throws TechnicalException;
-
-    public Sequence buildSequence(Iterable<Item> items)
-            throws TechnicalException;
-
-    public Document buildDocument(Source src)
-            throws TechnicalException;
-
-    public Item buildString(String value)
-            throws TechnicalException;
-
-    public Item buildBinary(byte[] value)
-            throws TechnicalException;
+    public LanguageSupportException(String msg, Throwable cause)
+    {
+        super(msg, cause);
+    }
 }
 
 

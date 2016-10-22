@@ -40,6 +40,7 @@ import org.expath.servlex.processors.XSLTProcessor;
 import static org.expath.servlex.ServlexConstants.SAXON_CONFIG_FILE_PROPERTY;
 import static org.expath.servlex.ServlexConstants.SAXON_XSLT_VER_DEFAULT;
 import static org.expath.servlex.ServlexConstants.SAXON_XSLT_VER_PROPERTY;
+import org.expath.servlex.processors.LanguageSupportException;
 
 /**
  * XSLT, XQuery and XProc processors based on Saxon and Calabash.
@@ -103,8 +104,9 @@ public class Saxon
 
     @Override
     public XProcProcessor getXProc()
+            throws LanguageSupportException
     {
-        throw new UnsupportedOperationException("XProc not supported by this processor");
+        throw new LanguageSupportException("XProc not supported by this processor");
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.expath.servlex.ServerConfig;
 import org.expath.servlex.ServlexException;
 import org.expath.servlex.TechnicalException;
 import org.expath.servlex.WebRepository;
+import org.expath.servlex.processors.LanguageSupportException;
 import org.expath.servlex.tools.Log;
 
 /**
@@ -201,6 +202,9 @@ public class DeployWebapp
         }
         catch ( Repository.AlreadyInstalledException ex ) {
             error(409, "Conflict", "Package is already installed: " + ex.getName() + " / " + ex.getVersion(), ex);
+        }
+        catch ( LanguageSupportException ex ) {
+            error(501, "Not Implemented", "Language not supported: " + ex.getMessage(), ex);
         }
         catch ( PackageException | TechnicalException ex ) {
             error(500, "Internal Server Error", "Error installing the webapp: " + ex.getMessage(), ex);
