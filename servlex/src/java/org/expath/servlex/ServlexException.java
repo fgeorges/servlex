@@ -48,28 +48,9 @@ public class ServlexException
     public void addHeader(String name, String value)
     {
         if ( myHeaders == null ) {
-            myHeaders = new ArrayList<HeaderPair>();
+            myHeaders = new ArrayList<>();
         }
         myHeaders.add(new HeaderPair(name, value));
-    }
-
-    /**
-     * Use the response object to actually send an error to the HTTP client.
-     * 
-     * If calls methods like {@link HttpServletResponse#sendError(int)} to
-     * send to the client an HTTP response representing an error.  The error
-     * represented is derived from this exception itself.  The headers, if
-     * any, are set on the response.
-     */
-    public void sendError(HttpServletResponse resp)
-            throws IOException
-    {
-        if ( myHeaders != null ) {
-            for ( HeaderPair h : myHeaders ) {
-                resp.addHeader(h.name, h.value);
-            }
-        }
-        resp.sendError(myCode, getMessage());
     }
 
     public void setStatus(HttpServletResponse resp)
@@ -83,7 +64,7 @@ public class ServlexException
         resp.setStatus(myCode);
     }
 
-    private int myCode;
+    private final int myCode;
     private List<HeaderPair> myHeaders = null;
 
     private static class HeaderPair {

@@ -151,13 +151,13 @@ public class DeployWebapp
             out.println("<error>");
             out.println("   <msg>" + ex.getUserMessage() + "</msg>");
             out.println("</error>");
-            ex.sendError(resp);
+            ex.setStatus(resp);
         }
         catch ( ServlexException ex ) {
             out.println("<error>");
             out.println("   <msg>Unexpected exception: " + ex.getMessage() + "</msg>");
             out.println("</error>");
-            ex.sendError(resp);
+            ex.setStatus(resp);
         }
         catch ( RuntimeException ex ) {
             out.println("<error>");
@@ -165,7 +165,7 @@ public class DeployWebapp
             out.println("   <msg>Please report this to the mailing list, see Servlex logs");
             out.println("      for additional information about the error.</msg>");
             out.println("</error>");
-            resp.sendError(500, "Internal Server Error");
+            resp.setStatus(500);
         }
     }
 
