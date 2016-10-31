@@ -6,8 +6,8 @@ die() {
     exit 1;
 }
 
-SHIP_PROCESSOR=saxon
-#SHIP_PROCESSOR=saxabash
+#SHIP_PROCESSOR=saxon
+SHIP_PROCESSOR=saxabash
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
@@ -124,7 +124,7 @@ chmod u+x "${TOMCAT}/bin/saxon.sh"
     install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0.xar" \
     || die "Error deploying http-client XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"         \
-    install "${BASEDIR}/apps/expath-zip-saxon-0.8.0.xar" \
+    install "${BASEDIR}/apps/expath-zip-saxon-0.9.0.xar" \
     || die "Error deploying zip XAW"
 
 # replace the Servlex version number
