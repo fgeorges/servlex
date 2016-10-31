@@ -49,19 +49,19 @@ if test \! -d "${LIB}"; then
 fi
 
 # tools-java
-tools_java="$LIB/expath-tools-java-0.1.0.jar"
+tools_java="$LIB/expath-tools-java-0.2.0.jar"
 if test \! -f "$tools_java"; then
     die "Cannot find tools-java JAR: $tools_java"
 fi
 
 # tools-saxon
-tools_saxon="$LIB/expath-tools-saxon-0.1.0.jar"
+tools_saxon="$LIB/expath-tools-saxon-0.3.0.jar"
 if test \! -f "$tools_saxon"; then
     die "Cannot find tools-saxon JAR: $tools_saxon"
 fi
 
 # pkg-java
-pkg_java="$LIB/pkg-java-0.13.1.jar"
+pkg_java="$LIB/pkg-java-0.15.0.jar"
 if test \! -f "$pkg_java"; then
     die "Cannot find pkg-java JAR: $pkg_java"
 fi
