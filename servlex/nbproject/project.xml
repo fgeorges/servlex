@@ -7,15 +7,11 @@
             <minimum-ant-version>1.6.5</minimum-ant-version>
             <web-module-libraries>
                 <library dirs="200">
-                    <file>${file.reference.expath-tools-java-0.1.0.jar}</file>
+                    <file>${file.reference.expath-tools-java-0.2.0.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.expath-tools-saxon-0.1.0.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
-                </library>
-                <library dirs="200">
-                    <file>${file.reference.pkg-java-0.13.1.jar}</file>
+                    <file>${file.reference.pkg-java-0.15.0.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
@@ -24,10 +20,6 @@
                 </library>
                 <library dirs="200">
                     <file>${file.reference.apache-mime4j-dom-0.7.2.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
-                </library>
-                <library dirs="200">
-                    <file>${file.reference.xmlresolver.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
