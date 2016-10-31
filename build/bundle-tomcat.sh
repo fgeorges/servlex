@@ -117,12 +117,15 @@ cp "${BASEDIR}/saxon-tomcat.sh" "${TOMCAT}/bin/saxon.sh"
 chmod u+x "${TOMCAT}/bin/saxon.sh"
 
 # deploy the webapp manager
+echo "Deploy webapp-manager XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"       \
     install "${BASEDIR}/apps/webapp-manager-0.3.1.xaw" \
     || die "Error deploying webapp manager XAW"
+echo "Deploy expath-http-client-saxon XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"                  \
     install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0.xar" \
     || die "Error deploying http-client XAW"
+echo "Deploy expath-zip-saxon XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"         \
     install "${BASEDIR}/apps/expath-zip-saxon-0.9.0.xar" \
     || die "Error deploying zip XAW"
