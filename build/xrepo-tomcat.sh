@@ -49,19 +49,13 @@ if test \! -d "${LIB}"; then
 fi
 
 # tools-java
-tools_java="$LIB/expath-tools-java-0.2.0.jar"
+tools_java=`echo $LIB/expath-tools-java-*.jar`
 if test \! -f "$tools_java"; then
     die "Cannot find tools-java JAR: $tools_java"
 fi
 
-# tools-saxon
-tools_saxon="$LIB/expath-tools-saxon-0.3.0.jar"
-if test \! -f "$tools_saxon"; then
-    die "Cannot find tools-saxon JAR: $tools_saxon"
-fi
-
 # pkg-java
-pkg_java="$LIB/pkg-java-0.15.0.jar"
+pkg_java=`echo $LIB/pkg-java-*.jar`
 if test \! -f "$pkg_java"; then
     die "Cannot find pkg-java JAR: $pkg_java"
 fi
@@ -70,6 +64,14 @@ fi
 CP=$tools_java:$tools_saxon:$pkg_java
 
 SERVLEX_LIB="${SERVLEX}/repo/.servlex/lib"
+
+# tools-saxon
+tools_saxon=`echo $SERVLEX_LIB/expath-tools-saxon-*.jar`
+if test \! -f "$tools_saxon"; then
+    echo "Warning: Cannot find tools-saxon JAR: $tools_saxon"
+else
+    CP="$CP:$tools_saxon"
+fi
 
 # pkg-saxon
 pkg_saxon=`echo $SERVLEX_LIB/pkg-saxon-*.jar`
