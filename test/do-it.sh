@@ -228,13 +228,20 @@ start_tomcat
 
 # run the tests
 HARNESS=http://www.jenitennison.com/xslt/xspec/saxon/harness/xslt.xproc
+XSPEC_MAIN="{http://www.jenitennison.com/xslt/xspec}main"
+# TODO: ...
+XSPEC_HOME=/usr/local/expath/repo/xspec-0.4.0rc1/content
 for suite in "${TESTDIR}"/*.xspec
 do
     echo "Running suite $suite"
-    report=`echo "$suite" | sed 's/.xspec$/.html/'`
-    calabash -i "source=$suite" \
-        "$HARNESS" \
-        > $report
+    base=`echo "$suite" | sed 's/.xspec$//'`
+    # Calabash does not work with EXPath HTTP Client, too old Apache HTTP Client !!!
+    saxon -xsl:"${XSPEC_HOME}/compiler/generate-xspec-tests.xsl" -s:"${suite}" > "${base}.xsl"
+    saxon -xsl:"${base}.xsl" -it:"${XSPEC_MAIN}" > "${base}.xml"
+    saxon -xsl:"${XSPEC_HOME}/reporter/format-xspec-report.xsl" -s:"${base}.xml" > "${base}.html"
+#    calabash -i "source=$suite" \
+#        "$HARNESS" \
+#        > "${base}.html"
 done
 
 # shut Tomcat down
