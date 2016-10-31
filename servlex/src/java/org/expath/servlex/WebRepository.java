@@ -239,12 +239,10 @@ public class WebRepository
             }
             org.expath.pkg.repo.Package pkg = packages.latest();
             // parse the application
-            Application app = expath_parser.loadPackage(pkg);
+            Application app = expath_parser.loadPackage(pkg, decl.getConfigParams());
             if ( app == null ) {
                 throw new TechnicalException("Not an application: " + name + " / " + pkg);
             }
-            // override the config parameters from expath-web.xml with .expath-web/webapps.xml
-            overrideConfigParams(app, decl.getConfigParams());
             LOG.info("Add the application to the store: " + root + " / " + app.getName());
             applications.put(root, app);
         }
@@ -276,17 +274,17 @@ public class WebRepository
     /**
      * Implements the installation methods.
      */
-    private String doInstall(Package pkg, String ctxt_root, Map<String, String> config)
+    private String doInstall(Package pkg, String ctxt_root, Map<String, String> params)
             throws TechnicalException
                  , PackageException
     {
         EXPathWebParser parser = new EXPathWebParser(myProcs);
-        Application app = parser.loadPackage(pkg);
+        Application app = parser.loadPackage(pkg, params);
         if ( app == null ) {
-            if ( ! config.isEmpty() ) {
+            if ( ! params.isEmpty() ) {
                 StringBuilder buf = new StringBuilder(
                         "Context root in null, but config params are provided:");
-                for ( String key : config.keySet() ) {
+                for ( String key : params.keySet() ) {
                     buf.append(' ');
                     buf.append(key);
                 }
@@ -295,33 +293,13 @@ public class WebRepository
             // not a webapp
             return null;
         }
-        // override the config parameters from expath-web.xml with 'config'
-        overrideConfigParams(app, config);
         // by default use the webapp's own abbrev
         String root = ctxt_root == null ? app.getName() : ctxt_root;
         // package is a webapp
         myApps.put(root, app);
         // update [repo]/.expath-web/webapps.xml
-        myWebappsXml.addWebapp(root, pkg.getName(), config);
+        myWebappsXml.addWebapp(root, pkg.getName(), params);
         return root;
-    }
-
-    private void overrideConfigParams(Application app, Map<String, String> config)
-    {
-        for ( Map.Entry<String, String> entry : config.entrySet() ) {
-            String id  = entry.getKey();
-            String val = entry.getValue();
-            ConfigParam cp = app.getConfigParam(id);
-            if ( cp == null ) {
-                LOG.error("Value given in webapps declarations for the config parameter " + id
-                        + ", which is not declared in the web descriptor for: " + app.getName());
-                cp = new ConfigParam(id, null, null, val);
-                app.addConfigParam(cp);
-            }
-            else {
-                cp.setValue(val);
-            }
-        }
     }
 
     /** The logger. */

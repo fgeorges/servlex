@@ -10,6 +10,7 @@
 package org.expath.servlex.parser;
 
 import java.net.URI;
+import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.transform.Source;
@@ -46,12 +47,14 @@ public class EXPathWebParser
      * 
      * @param pkg The package to parse as a webapp.
      * 
+     * @param params The overridden config parameter values.
+     * 
      * @throws ParseException in case of any parsing error (for both
      * {@code expath-web.xml} and {@code servlex.xml}).
      * 
      * @throws TechnicalException in case of any other technical error.
      */
-    public Application loadPackage(Package pkg)
+    public Application loadPackage(Package pkg, Map<String, String> params)
             throws ParseException
                  , TechnicalException
     {
@@ -62,13 +65,13 @@ public class EXPathWebParser
         }
         Application app;
         try {
-            app = parseDescriptorFile(descriptor, pkg, DESC_NS);
+            app = parseDescriptorFile(descriptor, pkg, params, DESC_NS);
         }
         catch ( ParseException ex ) {
             // TODO: For compatibility reason, try to parse using the legacy namespace
             descriptor = getDescriptor(pkg, DESC_FILENAME);
             LOG.error("Parsing the web descriptor for " + pkg.getName() + " failed, trying the legacy namespace.");
-            app = parseDescriptorFile(descriptor, pkg, LEGACY_DESC_NS);
+            app = parseDescriptorFile(descriptor, pkg, params, LEGACY_DESC_NS);
         }
         app.logApplication();
         return app;
@@ -104,12 +107,21 @@ public class EXPathWebParser
      * 
      * TODO: Plug schema validation of servlex.xml.
      */
-    private ParsingContext initContext(Package pkg)
+    private ParsingContext initContext(Package pkg, Map<String, String> params)
             throws ParseException
     {
         // the parsing context, with the default processors
         ParsingContext ctxt = new ParsingContext();
         ctxt.setProcessors(myProcs.getDefault());
+
+        // set the overriden config params
+        for ( Map.Entry<String, String> entry : params.entrySet() ) {
+            String id  = entry.getKey();
+            String val = entry.getValue();
+            ParsingConfigParam cp = new ParsingConfigParam(id);
+            cp.setValue(val);
+            ctxt.addConfigParam(cp);
+        }
 
         // set the base URI
         try {
@@ -173,9 +185,11 @@ public class EXPathWebParser
      * 
      * Note: it is private, but is package-level to be unit-testable.
      * 
+     * @param params The overridden config parameter values.
+     * 
      * @param ns The namespace of the web descriptor.
      */
-    Application parseDescriptorFile(Source descriptor, Package pkg, String ns)
+    Application parseDescriptorFile(Source descriptor, Package pkg, Map<String, String> params, String ns)
             throws ParseException
                  , TechnicalException
     {
@@ -188,7 +202,7 @@ public class EXPathWebParser
         validateSpecNumber(parser);
 
         // the values used to build the application object
-        ParsingContext ctxt = initContext(pkg);
+        ParsingContext ctxt = initContext(pkg, params);
         // TODO: Check the value returned for 'abbrev'.
         String abbrev = parser.getAttribute("abbrev");
         ctxt.setAbbrev(abbrev);
@@ -303,12 +317,12 @@ public class EXPathWebParser
         Processors  procs  = ctxt.getProcessors();
         Application app    = new Application(abbrev, title, pkg, procs);
         // add config params
-        for ( ParsingConfigParam c : ctxt.getConfigParams()) {
+        for ( ParsingConfigParam c : ctxt.getConfigParams().values() ) {
             ConfigParam config = c.makeConfigParam(ctxt);
             app.addConfigParam(config);
         }
         // build the servlets
-        for ( ParsingHandler h : ctxt.getHandlers()) {
+        for ( ParsingHandler h : ctxt.getHandlers() ) {
             AddressHandler handler = h.makeAddressHandler(ctxt, LOG);
             app.addHandler(handler);
         }

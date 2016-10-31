@@ -16,8 +16,6 @@ import org.expath.servlex.model.Resource;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.expath.pkg.repo.Package;

@@ -9,7 +9,6 @@
 
 package org.expath.servlex.parser;
 
-import java.util.regex.Pattern;
 import org.expath.servlex.model.AddressHandler;
 import org.expath.servlex.model.Resource;
 import org.expath.servlex.tools.RegexPattern;

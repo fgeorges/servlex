@@ -26,9 +26,24 @@ class ParsingConfigParam
         myId = id;
     }
 
+    public String getId()
+    {
+        return myId;
+    }
+
+    public String getValue()
+    {
+        return myValue;
+    }
+
     public void setValue(String value)
     {
         myValue = value;
+    }
+
+    public String getURI()
+    {
+        return myUri;
     }
 
     public void setURI(String uri)

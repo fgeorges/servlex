@@ -44,9 +44,6 @@ public class Resource
 
     /**
      * Allow config params in rewrite rules, like "{img-dir}/something".
-     * 
-     * TODO: Are we sure the param value is set at this point?  From webapps.xml,
-     * not only from expath-web.xml?
      */
     @Override
     void setApplication(Application app)

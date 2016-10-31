@@ -12,6 +12,8 @@ package org.expath.servlex.parser;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.expath.pkg.repo.Package;
@@ -54,16 +56,19 @@ public class EXPathWebParserTest
     public void testParseDescriptors_ok()
             throws Exception
     {
+        // fake package
         ProcessorsMap fake = new FakeProcessorsMap();
         Package pkg = new FakePackage("test-pkg-name");
-        // the descriptor
+        // the descriptor to parse
         ClassLoader loader = EXPathWebParserTest.class.getClassLoader();
         InputStream rsrc = loader.getResourceAsStream(FILTERS_ORDER_RSRC);
         Source desc = new StreamSource(rsrc);
+        // the empty param set
+        Map<String, String> params = new HashMap<>();
         // the System Under Test
         EXPathWebParser sut = new EXPathWebParser(fake);
         // parse the descriptor
-        Application result = sut.parseDescriptorFile(desc, pkg, EXPathWebParser.DESC_NS);
+        Application result = sut.parseDescriptorFile(desc, pkg, params, EXPathWebParser.DESC_NS);
         System.err.println("RESULT: " + result);
         result.logApplication();
     }

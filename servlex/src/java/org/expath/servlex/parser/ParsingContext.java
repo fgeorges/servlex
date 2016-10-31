@@ -69,9 +69,17 @@ class ParsingContext
     }
 
     public void addConfigParam(ParsingConfigParam c) {
-        myConfigParams.add(c);
+        String id = c.getId();
+        ParsingConfigParam existing = myConfigParams.get(id);
+        if ( existing == null ) {
+            myConfigParams.put(id, c);
+        }
+        else {
+            existing.setName(c.getName());
+            existing.setDescription(c.getDescription());
+        }
     }
-    public List<ParsingConfigParam> getConfigParams() {
+    public Map<String, ParsingConfigParam> getConfigParams() {
         return myConfigParams;
     }
 
@@ -144,11 +152,11 @@ class ParsingContext
     private String     myTitle  = null;
     private ParsingApp myApp    = null;
     private URI        myBase   = null;
-    private final List<ParsingConfigParam>     myConfigParams   = new ArrayList<>();
-    private final List<ParsingHandler>         myHandlers       = new ArrayList<>();
-    private final Stack<ParsingGroup>          myInScopeGroups  = new Stack<>();
-    private final Map<String, ParsingWrapper>  myWrappers       = new HashMap<>();
-    private final Map<ParsingWrapper, Wrapper> myActualWrappers = new HashMap<>();
+    private final Map<String, ParsingConfigParam> myConfigParams   = new HashMap<>();
+    private final List<ParsingHandler>            myHandlers       = new ArrayList<>();
+    private final Stack<ParsingGroup>             myInScopeGroups  = new Stack<>();
+    private final Map<String, ParsingWrapper>     myWrappers       = new HashMap<>();
+    private final Map<ParsingWrapper, Wrapper>    myActualWrappers = new HashMap<>();
 }
 
 
