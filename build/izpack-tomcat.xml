@@ -8,7 +8,7 @@
 
    <info>
       <appname>Servlex</appname>
-      <appversion>0.11.0pre3</appversion>
+      <appversion>0.11.0pre4</appversion>
       <appsubpath>servlex</appsubpath>
       <javaversion>1.7</javaversion>
       <authors>
@@ -48,8 +48,8 @@
       <pack name="Servlex" preselected="yes" required="yes">
          <description>The Servlex server, bundled with Apache Tomcat 8.0.33.</description>
          <file src="README-SERVLEX-TOMCAT"               targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.11.0pre1/samples/hello-world/"               targetdir="$INSTALL_PATH"/>
-         <file src="servlex-0.11.0pre1/samples/hello-world-0.11.0pre1.xaw" targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.11.0pre4/samples/hello-world/"               targetdir="$INSTALL_PATH"/>
+         <file src="servlex-0.11.0pre4/samples/hello-world-0.11.0pre4.xaw" targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-8.0.33/LICENSE"        targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-8.0.33/NOTICE"         targetdir="$INSTALL_PATH"/>
          <file src="apache-tomcat-8.0.33/RELEASE-NOTES"  targetdir="$INSTALL_PATH"/>

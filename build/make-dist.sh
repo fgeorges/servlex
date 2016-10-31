@@ -4,7 +4,7 @@
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml, as well as in the
 # IZpack file: build/izpack-tomcat.xml
-DIST_VER=0.11.0pre3
+DIST_VER=0.11.0pre4
 DIR=servlex-${DIST_VER}
 BIN="${DIR}/bin"
 SAMPLES="${DIR}/samples"
@@ -15,7 +15,7 @@ JAR=../servlex/dist/servlex.jar
 LOADER=../servlex-loader/dist/servlex-loader.jar
 
 SHIP_SERVLEX_SAXON=true
-SHIP_SERVLEX_SAXABASH=false
+SHIP_SERVLEX_SAXABASH=true
 SAXON_PROC=../servlex-saxon/dist/servlex-saxon.jar
 SAXON_DEPS=../servlex-saxon/lib
 SAXABASH_PROC=../servlex-saxabash/dist/servlex-saxabash.jar
