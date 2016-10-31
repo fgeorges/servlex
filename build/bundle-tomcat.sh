@@ -113,7 +113,7 @@ cp "${BASEDIR}/xrepo-tomcat.sh" "${TOMCAT}/bin/xrepo.sh"
 chmod u+x "${TOMCAT}/bin/xrepo.sh"
 
 # the saxon script
-cp "${BASEDIR}/../../pkg-java/bin/saxon" "${TOMCAT}/bin/saxon.sh"
+cp "${BASEDIR}/saxon-tomcat.sh" "${TOMCAT}/bin/saxon.sh"
 chmod u+x "${TOMCAT}/bin/saxon.sh"
 
 # deploy the webapp manager
