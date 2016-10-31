@@ -108,7 +108,7 @@ fi
 mkdir ${BIN}
 
 cp xrepo-tomcat.sh ${BIN}/xrepo.sh
-cp ../../pkg-java/bin/saxon ${BIN}/saxon.sh
+cp saxon-tomcat.sh ${BIN}/saxon.sh
 chmod u+x ${BIN}/*
 
 # the samples dir
