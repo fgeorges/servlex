@@ -86,7 +86,7 @@
        Test XSLTForms in Servlex.
    -->
 
-   <x:scenario label="xsltforms-001: TODO: ...">
+   <x:scenario label="xsltforms-001: TODO: ..." pending="XSLTForms tests not ready yet...">
       <x:call function="http:send-request">
          <x:param>
             <http:request href="{ $webapp }/..." method="get"/>
