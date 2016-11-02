@@ -10,8 +10,8 @@ doit:
 	    webapps/mapping/dist/mapping-webapp-0.2.0.xaw           mapping     \
 	    webapps/xsltforms/dist/xsltforms-webapp-0.1.0.xaw       xsltforms   \
 	    ../samples/hello-world/dist/hello-world-0.11.0pre3.xaw  hello-world \
-	    ../../http-client-java/build/expath-http-client-saxon-0.13.0.xar "" \
-	    ../../zip-saxon/build/expath-zip-saxon-0.7.0.xar                 "" \
+	    ../build/apps/expath-http-client-saxon-0.14.0.xar       ""          \
+	    ../build/apps/expath-zip-saxon-0.9.0.xar                ""          \
 	    ../samples/webapp-manager/dist/webapp-manager-0.3.1.xaw manager
 
 # deploy the H2O website (Servlex must run)
