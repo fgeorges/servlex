@@ -155,12 +155,14 @@ public class DeployWebapp
             ex.setStatus(resp);
         }
         catch ( ServlexException ex ) {
+            LOG.debug("Unexpected exception when deploying app", ex);
             out.println("<error>");
             out.println("   <msg>Unexpected exception: " + ex.getMessage() + "</msg>");
             out.println("</error>");
             ex.setStatus(resp);
         }
         catch ( RuntimeException ex ) {
+            LOG.info("Unexpected runtime error when deploying app", ex);
             out.println("<error>");
             out.println("   <msg>Unexpected runtime error: " + ex.getMessage() + "</msg>");
             out.println("   <msg>Please report this to the mailing list, see Servlex logs");

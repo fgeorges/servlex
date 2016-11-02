@@ -23,7 +23,6 @@ import org.expath.pkg.repo.Repository;
 import org.expath.pkg.repo.Storage;
 import org.expath.pkg.repo.UserInteractionStrategy;
 import org.expath.servlex.model.Application;
-import org.expath.servlex.model.ConfigParam;
 import org.expath.servlex.parser.EXPathWebParser;
 import org.expath.servlex.parser.WebappDecl;
 import org.expath.servlex.parser.WebappsParser;
