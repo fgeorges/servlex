@@ -4,7 +4,7 @@
 # the version number.  Don't forget to keep the following file in sync
 # too: samples/hello-world/xproject/project.xml, as well as in the
 # IZpack file: build/izpack-tomcat.xml
-DIST_VER=0.11.0pre4
+DIST_VER=0.11.0pre5
 DIR=servlex-${DIST_VER}
 BIN="${DIR}/bin"
 SAMPLES="${DIR}/samples"
