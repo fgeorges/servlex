@@ -81,9 +81,7 @@ public class ServerConfig
     {
         LOG.info("ServerConfig with repository: " + repo);
         String clazz = System.getProperty(PROCESSORS_PROPERTY, DEFAULT_PROCESSORS);
-        myProcessors = new ProcessorsMap(clazz, repo, this);
-        myRepo = new WebRepository(repo, myProcessors);
-        init();
+        init(new ProcessorsMap(clazz, repo, this), repo);
     }
 
     /**
@@ -93,9 +91,7 @@ public class ServerConfig
             throws TechnicalException
     {
         LOG.info("ServerConfig with repository: " + repo + ", and processors: " + procs);
-        myProcessors = new ProcessorsMap(procs, repo, this);
-        myRepo = new WebRepository(repo, myProcessors);
-        init();
+        init(new ProcessorsMap(procs, repo, this), repo);
     }
 
     /**
@@ -232,12 +228,59 @@ public class ServerConfig
         return myProcessors.getDefault();
     }
 
-    private void init()
+    private void init(ProcessorsMap procs, Repository repo)
             throws TechnicalException
     {
+        myProcessors = procs;
+        myRepo = new WebRepository(repo, myProcessors);
         myProfileDir = initProfiling();
         myTraceContent = initTracing();
         myDefaultCharset = initCharset();
+        // log a summary of the config...
+        LOG.info("*** Servlex initialization report ***");
+        // simple vars
+        LOG.info("[**] profile dir: " + myProfileDir);
+        LOG.info("[**] trace content: " + myTraceContent);
+        LOG.info("[**] default charset: " + myDefaultCharset);
+        // the repo
+        LOG.info("[**] the repo: " + myRepo);
+        LOG.info("      - can install: " + myRepo.canInstall());
+        LOG.info("      - single app: " + myRepo.isSingleApp());
+        if ( myRepo.isSingleApp() ) {
+            Application app = myRepo.getApplication();
+            LOG.info("      - appplication: " + app.getName());
+            LOG.info("          o title: " + app.getTitle());
+            for ( String p : app.getConfigParamNames() ) {
+                LOG.info("          o config param: " + p + " = " + app.getConfigParam(p).getValue());
+            }
+        }
+        else {
+            for ( String root : myRepo.getContextRoots() ) {
+                Application app = myRepo.getApplication(root);
+                LOG.info("      - context root: " + root);
+                LOG.info("          o app name: " + app.getName());
+                LOG.info("          o app title: " + app.getTitle());
+                for ( String p : app.getConfigParamNames() ) {
+                    LOG.info("          o app config param: " + p + " = " + app.getConfigParam(p).getValue());
+                }
+            }
+        }
+        // processors
+        Processors dflt = myProcessors.getDefault();
+        String dflt_class = dflt.getClass().getCanonicalName();
+        LOG.info("[**] default processor: " + dflt_class);
+        for ( String line : dflt.info() ) {
+            LOG.info("      - " + line);
+        }
+        for ( String extra_class : myProcessors.inCache() ) {
+            if ( ! extra_class.equals(dflt_class) ) {
+                LOG.info("[**] extra available processor: " + dflt_class);
+                for ( String line : dflt.info() ) {
+                    LOG.info("      - " + line);
+                }
+            }
+        }
+        LOG.info("End of Servlex report ***");
     }
 
     private static Repository initRepo(Storage storage)

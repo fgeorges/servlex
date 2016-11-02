@@ -51,6 +51,13 @@ public interface Processors
 
     public Item buildBinary(byte[] value)
             throws TechnicalException;
+
+    /**
+     * Return info about this processor, its configuration, anything relevant.
+     * 
+     * @return An array of string, suitable to be displayed as lines in logs.
+     */
+    public String[] info();
 }
 
 

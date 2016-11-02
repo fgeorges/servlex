@@ -13,6 +13,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.expath.pkg.repo.Repository;
 import org.expath.servlex.ServerConfig;
 import org.expath.servlex.TechnicalException;
@@ -65,6 +66,11 @@ public class ProcessorsMap
     public Processors getDefault()
     {
         return myDefault;
+    }
+
+    public Set<String> inCache()
+    {
+        return myMap.keySet();
     }
 
     public synchronized Processors getProcessors(String class_name)
@@ -124,7 +130,7 @@ public class ProcessorsMap
     }
 
     /** The map with all processors implementations. */
-    private Map<String, Processors> myMap = new HashMap<>();
+    private final Map<String, Processors> myMap = new HashMap<>();
     /** The default processors. */
     private Processors myDefault;
     /** The repo to use to instantiate new Processors objects. */

@@ -9,6 +9,10 @@
 
 package net.servlex.saxabash;
 
+import com.xmlcalabash.core.XProcConstants;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import net.servlex.saxon.Saxon;
 import org.expath.pkg.repo.PackageException;
 import org.expath.pkg.repo.Repository;
@@ -33,12 +37,18 @@ public class Saxabash
             throws TechnicalException
     {
         super(repo, config);
+        List<String> info = new ArrayList<>();
+        info.add("this is a Saxabash instance");
+        info.addAll(Arrays.asList(myInfo));
         try {
             myXProc = new CalabashXProc(getSaxon(), getRepository(), config, this);
+            info.add("calabash processor: " + myXProc);
+            info.add("calabash version: " + XProcConstants.XPROC_VERSION);
         }
         catch ( PackageException ex ) {
             throw new TechnicalException("Error initializing the saxon and calabash processors", ex);
         }
+        myInfo = info.toArray(new String[]{});
     }
 
     @Override

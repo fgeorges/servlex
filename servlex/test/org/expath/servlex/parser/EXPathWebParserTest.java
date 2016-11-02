@@ -163,7 +163,12 @@ public class EXPathWebParserTest
         {
             throw new UnsupportedOperationException();
         }
-        
+
+        @Override
+        public String[] info()
+        {
+            return new String[]{ "Fake test Processors object" };
+        }
     }
 
     private static class FakeXSLT

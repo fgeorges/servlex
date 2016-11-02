@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.expath.pkg.repo.Package;
 import org.expath.servlex.runtime.Invocation;
 import org.expath.servlex.ServlexException;
@@ -109,6 +110,11 @@ public class Application
     public ConfigParam getConfigParam(String id)
     {
         return myConfigParams.get(id);
+    }
+
+    public Set<String> getConfigParamNames()
+    {
+        return myConfigParams.keySet();
     }
 
     /**

@@ -9,12 +9,15 @@
 
 package net.servlex.saxon;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import net.servlex.saxon.model.SaxonDocument;
 import net.servlex.saxon.model.SaxonItem;
 import net.servlex.saxon.model.SaxonSequence;
 import net.servlex.saxon.model.SaxonEmptySequence;
 import javax.xml.transform.Source;
+import net.sf.saxon.Version;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -58,21 +61,50 @@ public class Saxon
     public Saxon(Repository repo, ServerConfig config)
             throws TechnicalException
     {
+        List<String> info = new ArrayList<>();
+        // the config file property
         String file = System.getProperty(SAXON_CONFIG_FILE_PROPERTY);
+        info.add("config file property name: " + SAXON_CONFIG_FILE_PROPERTY);
+        info.add("config file property value: " + file);
         try {
+            // actually instantiate Saxon
             myRepo = new SaxonRepository(repo);
-            mySaxon = SaxonHelper.makeSaxon(myRepo, this, config, file);
+            mySaxon = SaxonHelper.makeSaxon(myRepo, this, config, file, info);
             myXslt = new SaxonXSLT(this);
             myXQuery = new SaxonXQuery(mySaxon, repo);
         }
         catch ( PackageException ex ) {
             throw new TechnicalException("Error initializing the saxon processors", ex);
         }
+        // the XSLT version to use
         String ver = System.getProperty(SAXON_XSLT_VER_PROPERTY, SAXON_XSLT_VER_DEFAULT);
+        info.add("xslt version property name: " + SAXON_XSLT_VER_PROPERTY);
+        info.add("xslt version property default: " + SAXON_XSLT_VER_DEFAULT);
+        info.add("xslt version property value: " + ver);
         if ( ! XSLT_VERSION_RE.matcher(ver).matches() ) {
             throw new TechnicalException("Default XSLT version for wrappers is not valid: '" + ver + "'");
         }
         myXsltVersion = ver;
+        // gathering more info on the instantiated Saxon
+        info.add("is schema aware: " + mySaxon.isSchemaAware());
+        info.add("edition: " + mySaxon.getSaxonEdition());
+        info.add("product version: " + mySaxon.getSaxonProductVersion());
+        mySaxon.getUnderlyingConfiguration().displayLicenseMessage();
+        info.add("software edition: " + Version.softwareEdition);
+        info.add("platform: " + Version.platform.getPlatformVersion());
+        info.add("config class: " + Version.configurationClass);
+        {
+            int[] sver = Version.getStructuredVersionNumber();
+            info.add("structured version: " + sver[0] + "." + sver[1] + "." + sver[2] + "." + sver[3]);
+        }
+        info.add("major release date: " + Version.getMajorReleaseDate());
+        info.add("release date: " + Version.getReleaseDate());
+        info.add("product name: " + Version.getProductName());
+        info.add("product title: " + Version.getProductTitle());
+        info.add("product vendor: " + Version.getProductVendor());
+        info.add("product version: " + Version.getProductVersion());
+        info.add("website address: " + Version.getWebSiteAddress());
+        myInfo = info.toArray(new String[]{});
     }
 
     public SaxonRepository getRepository()
@@ -173,6 +205,12 @@ public class Saxon
         return SaxonEmptySequence.getInstance();
     }
 
+    @Override
+    public String[] info()
+    {
+        return myInfo;
+    }
+
     /**
      * TODO: Work around, see http://saxon.markmail.org/thread/sufwctvikfphdh2m
      */
@@ -186,6 +224,7 @@ public class Saxon
         }
     }
 
+    protected String[] myInfo;
     private final Processor mySaxon;
     private final SaxonRepository myRepo;
     private final SaxonXSLT myXslt;

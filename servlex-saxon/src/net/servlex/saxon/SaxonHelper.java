@@ -62,18 +62,25 @@ public class SaxonHelper
         return "{" + node.getURI() + "}" + node.getLocalPart();
     }
 
-    public static Processor makeSaxon(SaxonRepository repo, Processors procs, ServerConfig config, String config_file)
+    public static Processor makeSaxon(
+            SaxonRepository repo,
+            Processors      procs,
+            ServerConfig    config,
+            String          config_file,
+            List<String>    info)
             throws PackageException
     {
         Processor saxon;
         if ( config_file == null ) {
             saxon = new Processor(true);
+            info.add("Saxon instantiated with no config file");
         }
         else {
             File   f = new File(config_file);
             Source c = new StreamSource(f);
             try {
                 saxon = new Processor(c);
+                info.add("Saxon instantiated with: " + f.getAbsolutePath());
             }
             catch ( SaxonApiException ex ) {
                 throw new PackageException("Error instantiating Saxon with config file: " + config_file, ex);
