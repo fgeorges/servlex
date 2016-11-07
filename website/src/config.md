@@ -47,6 +47,9 @@ files (if you use XProc).
 If this option is set to `true`, Servlex logs the entire entity content (that
 is, the "payload" or "body") of the requests, not only its XML representation.
 
+This takes any effect only if the log level is at least DEBUG.  See below for
+increasing the log level.
+
 ##### org.expath.servlex.default.charset
 
 The default charset to use if it is not explicitly defined on the request.  The
