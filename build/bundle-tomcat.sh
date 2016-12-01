@@ -123,7 +123,7 @@ echo "Deploy webapp-manager XAW"
     || die "Error deploying webapp manager XAW"
 echo "Deploy expath-http-client-saxon XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"                  \
-    install "${BASEDIR}/apps/expath-http-client-saxon-0.12.0.xar" \
+    install "${BASEDIR}/apps/expath-http-client-saxon-0.14.0.xar" \
     || die "Error deploying http-client XAW"
 echo "Deploy expath-zip-saxon XAW"
 "${TOMCAT}/bin/xrepo.sh" --repo "${TOMCAT}/repo"         \
