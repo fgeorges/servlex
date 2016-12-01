@@ -236,12 +236,12 @@ do
     echo "Running suite $suite"
     base=`echo "$suite" | sed 's/.xspec$//'`
     # Calabash does not work with EXPath HTTP Client, too old Apache HTTP Client !!!
-    saxon -xsl:"${XSPEC_HOME}/compiler/generate-xspec-tests.xsl" -s:"${suite}" > "${base}.xsl"
-    saxon -xsl:"${base}.xsl" -it:"${XSPEC_MAIN}" > "${base}.xml"
-    saxon -xsl:"${XSPEC_HOME}/reporter/format-xspec-report.xsl" -s:"${base}.xml" > "${base}.html"
-#    calabash -i "source=$suite" \
-#        "$HARNESS" \
-#        > "${base}.html"
+#    saxon -xsl:"${XSPEC_HOME}/compiler/generate-xspec-tests.xsl" -s:"${suite}" > "${base}.xsl"
+#    saxon -xsl:"${base}.xsl" -it:"${XSPEC_MAIN}" > "${base}.xml"
+#    saxon -xsl:"${XSPEC_HOME}/reporter/format-xspec-report.xsl" -s:"${base}.xml" > "${base}.html"
+    calabash -i "source=$suite" \
+        "$HARNESS" \
+        > "${base}.html"
 done
 
 # shut Tomcat down
