@@ -56,7 +56,7 @@ public class RequestParser
      * Parse the request, to produce the web:request element, and the bodies.
      *
      * The web:request element is written to the tree builder helper object. The
-     * bodies are returned as an {@link XdmValue}, that is, a sequence of items
+     * bodies are returned as an {@code XdmValue}, that is, a sequence of items
      * (each being either a document node, a string or a base64 binary item,
      * depending on the type of the body part, see the Webapp spec).
      *
@@ -64,20 +64,20 @@ public class RequestParser
      * following (but please see the Webapp spec for complete ref):
      *
      * <pre>
-     * &lt;request servlet="name" path="/some/page" method="post">
-     *    &lt;uri>http://localhost:8090/servlex/my-webapp/catalog/yo&lt;/uri>
-     *    &lt;context-root>/servlex/my-webapp&lt;/context-root>
-     *    &lt;path>
-     *       &lt;part>/catalog/&lt;/part>
-     *       &lt;match name="something">yo&lt;/match>
-     *    &lt;/path>
-     *    &lt;param name="..." value="..."/> &lt;!-- either uri query or posted form data -->
-     *    &lt;header name="..." value="..."/>
-     *    &lt;multipart ...>
-     *       &lt;header name="..." value="..."/>
-     *       &lt;body .../>
-     *    &lt;/multipart ...>
-     * &lt;/request>
+     * &lt;request servlet="name" path="/some/page" method="post"&gt;
+     *    &lt;uri&gt;http://localhost:8090/servlex/my-webapp/catalog/yo&lt;/uri&gt;
+     *    &lt;context-root&gt;/servlex/my-webapp&lt;/context-root&gt;
+     *    &lt;path&gt;
+     *       &lt;part&gt;/catalog/&lt;/part&gt;
+     *       &lt;match name="something"&gt;yo&lt;/match&gt;
+     *    &lt;/path&gt;
+     *    &lt;param name="..." value="..."/&gt; &lt;!-- either uri query or posted form data --&gt;
+     *    &lt;header name="..." value="..."/&gt;
+     *    &lt;multipart ...&gt;
+     *       &lt;header name="..." value="..."/&gt;
+     *       &lt;body .../&gt;
+     *    &lt;/multipart ...&gt;
+     * &lt;/request&gt;
      * </pre>
      *
      * TODO: The web:multipart and web:body elements should cary more info, as

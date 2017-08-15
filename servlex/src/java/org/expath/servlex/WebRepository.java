@@ -137,7 +137,7 @@ public class WebRepository
      * @return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * @param archive The package for the webapp, as a {@link File) object.
+     * @param archive The package for the webapp, as a {@link File} object.
      * 
      * @param root The context root under which to make the webapp available.
      * Must be {@code null} for libraries.
@@ -163,7 +163,7 @@ public class WebRepository
      * @return the name of the newly installed webapp, or null if the package
      * is not a webapp.
      * 
-     * @param uri The package for the webapp, as a {@link URI) object.
+     * @param uri The package for the webapp, as a {@link URI} object.
      * 
      * @param root The context root under which to make the webapp available.
      * Must be {@code null} for libraries.
