@@ -48,7 +48,7 @@ if [[ ! -d "${BASEDIR}" ]]; then
 fi
 
 # the Tomcat dir
-TOMCAT=${BASEDIR}/apache-tomcat-8.0.33
+TOMCAT=${BASEDIR}/apache-tomcat-8.0.41
 #TOMCAT=${BASEDIR}/apache-tomcat-8.5.0
 #TOMCAT=${BASEDIR}/apache-tomcat-9.0.0.M4
 if [[ ! -d "${TOMCAT}" ]]; then
@@ -152,11 +152,10 @@ fi
 # the Servlex WAR file
 # TODO: FIXME: How to make the path absolute without hard-coding it?
 # (it is passed over HTTP, so has to be absolute)
-# WAR="${BASEDIR}/../servlex/dist/servlex.war"
-# if [[ ! -f "${WAR}" ]]; then
-#     die "The WAR file does not exist at: ${WAR}"
-# fi
 WAR="$BASEDIR/../servlex/dist/servlex.war"
+if [[ ! -f "${WAR}" ]]; then
+    die "The WAR file does not exist at: ${WAR}"
+fi
 
 # deplpoying it
 # TODO: Seems Tomcat needs path= even with config=!  Report it...

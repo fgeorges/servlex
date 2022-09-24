@@ -22,7 +22,7 @@ for md in $sources
 do
     # the entry name, with no extension
     name=`echo $md | sed s/\\\\.\\\\.\\\\/src\\\\/// | sed s/.md//`
-    html=../${name}.html
+    html=../build/${name}.html
     # index's href is "."
     if [ "$name" = index ]; then
         href=\\.
@@ -32,16 +32,21 @@ do
     echo Compiling $name
     ./compile-md.js $md > $tmp
     sed \
-        -e "/class='__active__' href='${href}'/ {
-          s/class='__active__'/class='active'/
-        }" \
-        -e "/class='__active__' href='.*'/ {
-          s/class='__active__' //
-        }" \
         -e "/__CONTENT__/ {
           r $tmp
           d
         }" < template.html > $html
+    # sed \
+    #     -e "/class='__active__' href='${href}'/ {
+    #       s/class='__active__'/class='active'/
+    #     }" \
+    #     -e "/class='__active__' href='.*'/ {
+    #       s/class='__active__' //
+    #     }" \
+    #     -e "/__CONTENT__/ {
+    #       r $tmp
+    #       d
+    #     }" < template.html > $html
 done
 
 rm $tmp

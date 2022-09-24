@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/node
 
 var fs     = require('fs');
 var marked = require('marked');
